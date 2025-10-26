@@ -24,15 +24,15 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
 
         {/* 主内容区域 */}
         <div className='relative min-w-0 flex-1 transition-all duration-300 flex flex-col'>
-          {/* 桌面端左上角返回按钮 */}
-          {['/play', '/live'].includes(activePath) && (
+          {/* 桌面端左上角返回按钮 - 仅播放页面显示 */}
+          {activePath === '/play' && (
             <div className='absolute top-3 left-1 z-20 hidden md:flex'>
               <BackButton />
             </div>
           )}
 
           {/* 主内容 */}
-          <main className='flex-1 md:min-h-0 mb-14 md:mb-0 md:mt-0 mt-12'>
+          <main className='flex-1 md:min-h-[calc(100vh-4rem)] mb-14 md:mb-0 md:mt-0 mt-12'>
             {children}
           </main>
 

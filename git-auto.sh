@@ -27,11 +27,8 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     exit 1
 fi
 
-# 在仓库根目录运行
-cd "$(git rev-parse --show-toplevel)" || {
-    error "无法切换到仓库根目录"
-    exit 1
-}
+# 在当前目录执行
+step "在当前目录执行: $(pwd)"
 
 # 检查提交信息
 if [ -z "$1" ]; then

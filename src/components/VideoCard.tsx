@@ -101,10 +101,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     const router = useRouter();
     const [favorited, setFavorited] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [imageError, setImageError] = useState(false);
     const [showMobileActions, setShowMobileActions] = useState(false);
     const [searchFavorited, setSearchFavorited] = useState<boolean | null>(
       null
     ); // 搜索结果的收藏状态
+    const [imageLoadTimeout, setImageLoadTimeout] =
+      useState<NodeJS.Timeout | null>(null);
 
     // 可外部修改的可控字段
     const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -148,6 +151,43 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         ? 'movie'
         : 'tv'
       : type;
+
+    // 检查poster是否有效
+    useEffect(() => {
+      // 如果poster为空或无效，直接显示错误占位符
+      if (!actualPoster || !processImageUrl(actualPoster)) {
+        setImageError(true);
+        setIsLoading(false);
+      } else {
+        // 重置状态（当poster改变时）
+        setImageError(false);
+        setIsLoading(false);
+      }
+    }, [actualPoster]);
+
+    // 图片加载超时机制 - 10秒后如果还没加载完成，显示错误占位符
+    useEffect(() => {
+      if (
+        actualPoster &&
+        processImageUrl(actualPoster) &&
+        !isLoading &&
+        !imageError
+      ) {
+        const timeout = setTimeout(() => {
+          if (!isLoading && !imageError) {
+            setImageError(true);
+          }
+        }, 10000); // 10秒超时
+        setImageLoadTimeout(timeout);
+
+        return () => {
+          clearTimeout(timeout);
+        };
+      } else if (imageLoadTimeout) {
+        clearTimeout(imageLoadTimeout);
+        setImageLoadTimeout(null);
+      }
+    }, [actualPoster, isLoading, imageError]);
 
     // 获取收藏状态（搜索结果、豆瓣和短剧页面不检查）
     useEffect(() => {
@@ -690,10 +730,16 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               return false;
             }}
           >
-            {/* 骨架屏 */}
-            {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
+            {/* 加载中动画 */}
+            {!isLoading && !imageError && (
+              <ImagePlaceholder aspectRatio='aspect-[2/3]' type='loading' />
+            )}
+            {/* 错误占位符 */}
+            {imageError && (
+              <ImagePlaceholder aspectRatio='aspect-[2/3]' type='error' />
+            )}
             {/* 图片 - 只在有 poster 且处理后的URL有效时渲染 */}
-            {actualPoster && processImageUrl(actualPoster) && (
+            {actualPoster && processImageUrl(actualPoster) && !imageError && (
               <Image
                 src={processImageUrl(actualPoster)}
                 alt={actualTitle}
@@ -704,8 +750,20 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 referrerPolicy='no-referrer'
                 loading={priority ? undefined : 'lazy'}
                 priority={priority}
-                onLoad={() => setIsLoading(true)}
+                onLoad={() => {
+                  setIsLoading(true);
+                  if (imageLoadTimeout) {
+                    clearTimeout(imageLoadTimeout);
+                    setImageLoadTimeout(null);
+                  }
+                }}
                 onError={(e) => {
+                  // 清除超时定时器
+                  if (imageLoadTimeout) {
+                    clearTimeout(imageLoadTimeout);
+                    setImageLoadTimeout(null);
+                  }
+
                   // 图片加载失败时的重试机制
                   const img = e.target as HTMLImageElement;
                   if (!img.dataset.retried) {
@@ -715,6 +773,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                         img.src = processImageUrl(actualPoster);
                       }
                     }, 2000);
+                  } else {
+                    // 重试后仍然失败，显示错误占位符
+                    setImageError(true);
                   }
                 }}
                 style={
@@ -869,7 +930,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-2 right-2 bg-blue-500/80 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',

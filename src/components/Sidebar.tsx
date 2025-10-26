@@ -39,21 +39,20 @@ const SidebarContext = createContext<SidebarContextType>({
 
 export const useSidebar = () => useContext(SidebarContext);
 
-// Logo 组件，支持展开/收起功能
+// Logo 组件，仅用于首页跳转
 interface LogoProps {
   isCollapsed: boolean;
-  onClick?: () => void;
 }
 
-const Logo = ({ isCollapsed, onClick }: LogoProps) => {
+const Logo = ({ isCollapsed }: LogoProps) => {
   const { siteName } = useSite();
 
   if (isCollapsed) {
     return (
-      <button
-        onClick={onClick}
-        className='flex items-center justify-center hover:opacity-80 transition-opacity duration-200 cursor-pointer'
-        title='点击展开侧边栏'
+      <Link
+        href='/'
+        className='flex items-center justify-center hover:opacity-80 transition-opacity duration-200'
+        title='返回首页'
       >
         <Image
           src='/logo.png'
@@ -61,8 +60,17 @@ const Logo = ({ isCollapsed, onClick }: LogoProps) => {
           width={32}
           height={32}
           className='rounded-lg'
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            if (!img.dataset.retried) {
+              img.dataset.retried = 'true';
+              setTimeout(() => {
+                img.src = '/logo.png';
+              }, 2000);
+            }
+          }}
         />
-      </button>
+      </Link>
     );
   }
 
@@ -77,6 +85,15 @@ const Logo = ({ isCollapsed, onClick }: LogoProps) => {
         width={40}
         height={40}
         className='rounded-lg'
+        onError={(e) => {
+          const img = e.target as HTMLImageElement;
+          if (!img.dataset.retried) {
+            img.dataset.retried = 'true';
+            setTimeout(() => {
+              img.src = '/logo.png';
+            }, 2000);
+          }
+        }}
       />
       <span className='text-lg font-bold text-gray-700 dark:text-gray-300 tracking-tight mt-2'>
         {siteName}
@@ -228,11 +245,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             {/* 顶部 Logo 区域 */}
             <div className='relative pt-4 pb-4'>
               <div className='flex flex-col items-center justify-center transition-all duration-200'>
-                {isCollapsed ? (
-                  <Logo isCollapsed={true} onClick={handleToggle} />
-                ) : (
-                  <Logo isCollapsed={false} />
-                )}
+                <Logo isCollapsed={isCollapsed} />
               </div>
             </div>
 

@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
           SiteName: config.SiteConfig.SiteName,
           Announcement: config.SiteConfig.Announcement,
           // 其他公开的站点配置可以在这里添加
-        }
+        },
       };
 
       const result = {
@@ -76,7 +76,12 @@ export async function GET(request: NextRequest) {
         Config: publicConfig,
       };
 
-      console.log('返回公开配置给', userRole, '，包含主题配置:', !!publicConfig.ThemeConfig);
+      console.log(
+        '返回公开配置给',
+        userRole,
+        '，包含主题配置:',
+        !!publicConfig.ThemeConfig
+      );
       return NextResponse.json(result, {
         headers: {
           'Cache-Control': 'public, max-age=60', // 公开配置可以缓存1分钟

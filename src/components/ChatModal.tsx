@@ -1,8 +1,24 @@
 'use client';
 
-import { MessageCircle, Search, Users, X, Send, UserPlus, Smile, Image as ImageIcon, Paperclip } from 'lucide-react';
+import {
+  MessageCircle,
+  Search,
+  Users,
+  X,
+  Send,
+  UserPlus,
+  Smile,
+  Image as ImageIcon,
+  Paperclip,
+} from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { ChatMessage, Conversation, Friend, FriendRequest, WebSocketMessage } from '../lib/types';
+import {
+  ChatMessage,
+  Conversation,
+  Friend,
+  FriendRequest,
+  WebSocketMessage,
+} from '../lib/types';
 import { getAuthInfoFromBrowserCookie } from '../lib/auth';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useToast } from './Toast';
@@ -20,12 +36,13 @@ export function ChatModal({
   onClose,
   onMessageCountChange,
   onChatCountReset,
-  onFriendRequestCountReset
+  onFriendRequestCountReset,
 }: ChatModalProps) {
   const [activeTab, setActiveTab] = useState<'chat' | 'friends'>('chat');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,10 +52,14 @@ export function ChatModal({
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [unreadFriendRequestCount, setUnreadFriendRequestCount] = useState(0);
-  const [conversationUnreadCounts, setConversationUnreadCounts] = useState<{ [key: string]: number }>({});
+  const [conversationUnreadCounts, setConversationUnreadCounts] = useState<{
+    [key: string]: number;
+  }>({});
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [userAvatars, setUserAvatars] = useState<{ [username: string]: string | null }>({});
+  const [userAvatars, setUserAvatars] = useState<{
+    [username: string]: string | null;
+  }>({});
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 });
@@ -55,7 +76,7 @@ export function ChatModal({
     setIsDragging(true);
     setDragStartPosition({
       x: e.clientX - dragPosition.x,
-      y: e.clientY - dragPosition.y
+      y: e.clientY - dragPosition.y,
     });
   };
 
@@ -65,51 +86,57 @@ export function ChatModal({
     setIsDragging(true);
     setDragStartPosition({
       x: touch.clientX - dragPosition.x,
-      y: touch.clientY - dragPosition.y
+      y: touch.clientY - dragPosition.y,
     });
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
 
-    const newX = e.clientX - dragStartPosition.x;
-    const newY = e.clientY - dragStartPosition.y;
+      const newX = e.clientX - dragStartPosition.x;
+      const newY = e.clientY - dragStartPosition.y;
 
-    // 允许在全屏范围内拖动，保留边距避免完全移出
-    const edgePadding = 40;
-    const maxX = window.innerWidth - edgePadding;
-    const minX = - (window.innerWidth - edgePadding);
-    const maxY = window.innerHeight - edgePadding;
-    const minY = - (window.innerHeight - edgePadding);
+      // 允许在全屏范围内拖动，保留边距避免完全移出
+      const edgePadding = 40;
+      const maxX = window.innerWidth - edgePadding;
+      const minX = -(window.innerWidth - edgePadding);
+      const maxY = window.innerHeight - edgePadding;
+      const minY = -(window.innerHeight - edgePadding);
 
-    setDragPosition({
-      x: Math.max(minX, Math.min(maxX, newX)),
-      y: Math.max(minY, Math.min(maxY, newY))
-    });
-  }, [isDragging, dragStartPosition]);
+      setDragPosition({
+        x: Math.max(minX, Math.min(maxX, newX)),
+        y: Math.max(minY, Math.min(maxY, newY)),
+      });
+    },
+    [isDragging, dragStartPosition]
+  );
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDragging) return;
-    const touch = e.touches[0];
-    if (!touch) return;
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      if (!touch) return;
 
-    const newX = touch.clientX - dragStartPosition.x;
-    const newY = touch.clientY - dragStartPosition.y;
+      const newX = touch.clientX - dragStartPosition.x;
+      const newY = touch.clientY - dragStartPosition.y;
 
-    const edgePadding = 40;
-    const maxX = window.innerWidth - edgePadding;
-    const minX = - (window.innerWidth - edgePadding);
-    const maxY = window.innerHeight - edgePadding;
-    const minY = - (window.innerHeight - edgePadding);
+      const edgePadding = 40;
+      const maxX = window.innerWidth - edgePadding;
+      const minX = -(window.innerWidth - edgePadding);
+      const maxY = window.innerHeight - edgePadding;
+      const minY = -(window.innerHeight - edgePadding);
 
-    // 阻止页面滚动
-    e.preventDefault();
+      // 阻止页面滚动
+      e.preventDefault();
 
-    setDragPosition({
-      x: Math.max(minX, Math.min(maxX, newX)),
-      y: Math.max(minY, Math.min(maxY, newY))
-    });
-  }, [isDragging, dragStartPosition]);
+      setDragPosition({
+        x: Math.max(minX, Math.min(maxX, newX)),
+        y: Math.max(minY, Math.min(maxY, newY)),
+      });
+    },
+    [isDragging, dragStartPosition]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -138,7 +165,9 @@ export function ChatModal({
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchmove', handleTouchMove, {
+        passive: false,
+      });
       document.addEventListener('touchend', handleTouchEnd);
       document.body.style.cursor = 'grabbing';
       document.body.style.userSelect = 'none';
@@ -152,7 +181,13 @@ export function ChatModal({
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [
+    isDragging,
+    handleMouseMove,
+    handleMouseUp,
+    handleTouchMove,
+    handleTouchEnd,
+  ]);
 
   // 实时搜索功能
   useEffect(() => {
@@ -169,126 +204,208 @@ export function ChatModal({
 
   // 常用表情列表
   const emojis = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
-    '🙂', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝',
-    '🤗', '🤔', '😐', '😑', '😶', '🙄', '😏', '😣', '😥', '😮',
-    '🤐', '😯', '😴', '😫', '😪', '😵', '🤯', '🤠', '🥳', '😎',
-    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👏', '🙌', '👐',
-    '❤️', '💙', '💚', '💛', '💜', '🧡', '🖤', '🤍', '🤎', '💕',
-    '💖', '💗', '💘', '💝', '💞', '💟', '❣️', '💔', '❤️‍🔥', '💯'
+    '😀',
+    '😃',
+    '😄',
+    '😁',
+    '😆',
+    '😅',
+    '😂',
+    '🤣',
+    '😊',
+    '😇',
+    '🙂',
+    '😍',
+    '🥰',
+    '😘',
+    '😗',
+    '😙',
+    '😚',
+    '😋',
+    '😛',
+    '😝',
+    '🤗',
+    '🤔',
+    '😐',
+    '😑',
+    '😶',
+    '🙄',
+    '😏',
+    '😣',
+    '😥',
+    '😮',
+    '🤐',
+    '😯',
+    '😴',
+    '😫',
+    '😪',
+    '😵',
+    '🤯',
+    '🤠',
+    '🥳',
+    '😎',
+    '👍',
+    '👎',
+    '👌',
+    '✌️',
+    '🤞',
+    '🤟',
+    '🤘',
+    '👏',
+    '🙌',
+    '👐',
+    '❤️',
+    '💙',
+    '💚',
+    '💛',
+    '💜',
+    '🧡',
+    '🖤',
+    '🤍',
+    '🤎',
+    '💕',
+    '💖',
+    '💗',
+    '💘',
+    '💝',
+    '💞',
+    '💟',
+    '❣️',
+    '💔',
+    '❤️‍🔥',
+    '💯',
   ];
 
   // 获取用户真实头像
-  const fetchUserAvatar = useCallback(async (username: string) => {
-    // 如果已经缓存了该用户的头像（包括 null 值），直接返回
-    if (username in userAvatars) {
-      return userAvatars[username];
-    }
-
-    try {
-      const response = await fetch(`/api/avatar?user=${encodeURIComponent(username)}`);
-      if (response.ok) {
-        const data = await response.json();
-        const avatar = data.avatar || null;
-
-        // 缓存头像结果
-        setUserAvatars(prev => ({
-          ...prev,
-          [username]: avatar
-        }));
-
-        return avatar;
+  const fetchUserAvatar = useCallback(
+    async (username: string) => {
+      // 如果已经缓存了该用户的头像（包括 null 值），直接返回
+      if (username in userAvatars) {
+        return userAvatars[username];
       }
-    } catch (error) {
-      console.error('获取用户头像失败:', error);
-    }
 
-    // 获取失败时缓存 null
-    setUserAvatars(prev => ({
-      ...prev,
-      [username]: null
-    }));
+      try {
+        const response = await fetch(
+          `/api/avatar?user=${encodeURIComponent(username)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const avatar = data.avatar || null;
 
-    return null;
-  }, [userAvatars]);
+          // 缓存头像结果
+          setUserAvatars((prev) => ({
+            ...prev,
+            [username]: avatar,
+          }));
+
+          return avatar;
+        }
+      } catch (error) {
+        console.error('获取用户头像失败:', error);
+      }
+
+      // 获取失败时缓存 null
+      setUserAvatars((prev) => ({
+        ...prev,
+        [username]: null,
+      }));
+
+      return null;
+    },
+    [userAvatars]
+  );
 
   // 预加载用户头像
-  const preloadUserAvatars = useCallback(async (usernames: string[]) => {
-    const promises = usernames
-      .filter(username => !(username in userAvatars)) // 只加载未缓存的头像
-      .map(username => fetchUserAvatar(username));
+  const preloadUserAvatars = useCallback(
+    async (usernames: string[]) => {
+      const promises = usernames
+        .filter((username) => !(username in userAvatars)) // 只加载未缓存的头像
+        .map((username) => fetchUserAvatar(username));
 
-    await Promise.allSettled(promises);
-  }, [userAvatars, fetchUserAvatar]);
+      await Promise.allSettled(promises);
+    },
+    [userAvatars, fetchUserAvatar]
+  );
 
   // 使用 useCallback 稳定 onMessage 函数引用
-  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
-    switch (message.type) {
-      case 'message':
-        const conversationId = message.data.conversation_id;
+  const handleWebSocketMessage = useCallback(
+    (message: WebSocketMessage) => {
+      switch (message.type) {
+        case 'message':
+          const conversationId = message.data.conversation_id;
 
-        // 预加载消息发送者的头像
-        if (message.data.sender_id) {
-          preloadUserAvatars([message.data.sender_id]);
-        }
-
-        // 收到新消息的处理逻辑
-        if (selectedConversation && conversationId === selectedConversation.id && isOpen) {
-          // 只有当模态框打开且用户正在查看这个对话时，才只刷新消息列表
-          loadMessages(selectedConversation.id);
-        } else if (conversationId) {
-          // 所有其他情况都增加未读消息计数（包括模态框关闭时的当前对话）
-          setConversationUnreadCounts(prev => {
-            const newCounts = {
-              ...prev,
-              [conversationId]: (prev[conversationId] || 0) + 1
-            };
-            return newCounts;
-          });
-
-          // 如果用户正在查看这个对话且模态框是打开的，同时刷新消息列表
-          if (selectedConversation && conversationId === selectedConversation.id && isOpen) {
-            loadMessages(selectedConversation.id);
+          // 预加载消息发送者的头像
+          if (message.data.sender_id) {
+            preloadUserAvatars([message.data.sender_id]);
           }
-        }
-        loadConversations();
-        break;
-      case 'friend_request':
-        // 收到好友申请
 
-        // 预加载好友申请发送者的头像
-        if (message.data.from_user) {
-          preloadUserAvatars([message.data.from_user]);
-        }
+          // 收到新消息的处理逻辑
+          if (
+            selectedConversation &&
+            conversationId === selectedConversation.id &&
+            isOpen
+          ) {
+            // 只有当模态框打开且用户正在查看这个对话时，才只刷新消息列表
+            loadMessages(selectedConversation.id);
+          } else if (conversationId) {
+            // 所有其他情况都增加未读消息计数（包括模态框关闭时的当前对话）
+            setConversationUnreadCounts((prev) => {
+              const newCounts = {
+                ...prev,
+                [conversationId]: (prev[conversationId] || 0) + 1,
+              };
+              return newCounts;
+            });
 
-        setUnreadFriendRequestCount(prev => prev + 1);
-        loadFriendRequests();
-        break;
-      case 'friend_accepted':
-        // 好友申请被接受
-        loadFriends();
-        break;
-      case 'user_status':
-        // 用户状态变化
-        setFriends(prevFriends =>
-          prevFriends.map(friend =>
-            friend.username === message.data.userId
-              ? { ...friend, status: message.data.status }
-              : friend
-          )
-        );
-        break;
-      case 'online_users':
-        // 更新在线用户列表
-        setOnlineUsers(message.data.users || []);
-        break;
-      case 'connection_confirmed':
-        // 连接确认，请求在线用户列表
-        break;
-      default:
-        break;
-    }
-  }, [selectedConversation, preloadUserAvatars]);
+            // 如果用户正在查看这个对话且模态框是打开的，同时刷新消息列表
+            if (
+              selectedConversation &&
+              conversationId === selectedConversation.id &&
+              isOpen
+            ) {
+              loadMessages(selectedConversation.id);
+            }
+          }
+          loadConversations();
+          break;
+        case 'friend_request':
+          // 收到好友申请
+
+          // 预加载好友申请发送者的头像
+          if (message.data.from_user) {
+            preloadUserAvatars([message.data.from_user]);
+          }
+
+          setUnreadFriendRequestCount((prev) => prev + 1);
+          loadFriendRequests();
+          break;
+        case 'friend_accepted':
+          // 好友申请被接受
+          loadFriends();
+          break;
+        case 'user_status':
+          // 用户状态变化
+          setFriends((prevFriends) =>
+            prevFriends.map((friend) =>
+              friend.username === message.data.userId
+                ? { ...friend, status: message.data.status }
+                : friend
+            )
+          );
+          break;
+        case 'online_users':
+          // 更新在线用户列表
+          setOnlineUsers(message.data.users || []);
+          break;
+        case 'connection_confirmed':
+          // 连接确认，请求在线用户列表
+          break;
+        default:
+          break;
+      }
+    },
+    [selectedConversation, preloadUserAvatars]
+  );
 
   // WebSocket 连接 - 始终保持连接以接收实时消息
   const { isConnected, sendMessage: sendWebSocketMessage } = useWebSocket({
@@ -373,7 +490,10 @@ export function ChatModal({
 
   // 计算总的未读聊天消息数量
   useEffect(() => {
-    const totalChatCount = Object.values(conversationUnreadCounts).reduce((sum, count) => sum + count, 0);
+    const totalChatCount = Object.values(conversationUnreadCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
     setUnreadChatCount(totalChatCount);
   }, [conversationUnreadCounts]);
 
@@ -400,7 +520,7 @@ export function ChatModal({
   // 获取用户显示名称
   const getDisplayName = (username: string) => {
     if (username === currentUser?.username) return '我';
-    const friend = friends.find(f => f.username === username);
+    const friend = friends.find((f) => f.username === username);
     return friend?.nickname || username;
   };
 
@@ -410,12 +530,16 @@ export function ChatModal({
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    const messageDay = new Date(
+      messageDate.getFullYear(),
+      messageDate.getMonth(),
+      messageDate.getDate()
+    );
 
     const timeStr = messageDate.toLocaleTimeString('zh-CN', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
 
     if (messageDay.getTime() === today.getTime()) {
@@ -429,7 +553,7 @@ export function ChatModal({
       const dateStr = messageDate.toLocaleDateString('zh-CN', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
       });
       return `${dateStr}-${timeStr}`;
     }
@@ -437,12 +561,14 @@ export function ChatModal({
 
   // 处理表情选择
   const handleEmojiSelect = (emoji: string) => {
-    setNewMessage(prev => prev + emoji);
+    setNewMessage((prev) => prev + emoji);
     setShowEmojiPicker(false);
   };
 
   // 处理图片上传
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -521,7 +647,7 @@ export function ChatModal({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
     });
   };
 
@@ -533,9 +659,12 @@ export function ChatModal({
         setConversations(data);
 
         // 预加载所有对话参与者的头像
-        const allParticipants = data.reduce((acc: string[], conv: Conversation) => {
-          return [...acc, ...conv.participants];
-        }, []);
+        const allParticipants = data.reduce(
+          (acc: string[], conv: Conversation) => {
+            return [...acc, ...conv.participants];
+          },
+          []
+        );
         const uniqueParticipants = Array.from(new Set<string>(allParticipants));
         preloadUserAvatars(uniqueParticipants);
       }
@@ -568,7 +697,9 @@ export function ChatModal({
         setFriendRequests(data);
 
         // 预加载好友请求发送者的头像
-        const requestSenders = data.map((request: FriendRequest) => request.from_user);
+        const requestSenders = data.map(
+          (request: FriendRequest) => request.from_user
+        );
         const uniqueSenders = Array.from(new Set<string>(requestSenders));
         preloadUserAvatars(uniqueSenders);
       }
@@ -579,18 +710,29 @@ export function ChatModal({
 
   const loadMessages = async (conversationId: string) => {
     try {
-      const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`);
+      const response = await fetch(
+        `/api/chat/messages?conversationId=${conversationId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
 
         // 预加载所有发送者的头像
-        const senderIds = Array.from(new Set<string>(data.map((msg: ChatMessage) => msg.sender_id)));
+        const senderIds = Array.from(
+          new Set<string>(data.map((msg: ChatMessage) => msg.sender_id))
+        );
         preloadUserAvatars(senderIds);
       } else {
         // 处理非200状态码
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Failed to load messages - Status:', response.status, 'Error:', errorData);
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: 'Unknown error' }));
+        console.error(
+          'Failed to load messages - Status:',
+          response.status,
+          'Error:',
+          errorData
+        );
 
         if (response.status === 401) {
           showError('未授权', '请重新登录');
@@ -663,7 +805,9 @@ export function ChatModal({
     }
 
     try {
-      const response = await fetch(`/api/chat/search-users?q=${encodeURIComponent(friendSearchQuery)}`);
+      const response = await fetch(
+        `/api/chat/search-users?q=${encodeURIComponent(friendSearchQuery)}`
+      );
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data);
@@ -721,7 +865,10 @@ export function ChatModal({
     }
   };
 
-  const handleFriendRequest = async (requestId: string, status: 'accepted' | 'rejected') => {
+  const handleFriendRequest = async (
+    requestId: string,
+    status: 'accepted' | 'rejected'
+  ) => {
     try {
       const response = await fetch('/api/chat/friend-requests', {
         method: 'PUT',
@@ -742,12 +889,12 @@ export function ChatModal({
     }
   };
 
-  const filteredConversations = conversations.filter(conv =>
+  const filteredConversations = conversations.filter((conv) =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const isFriend = (username: string) => {
-    return friends.some(friend => friend.username === username);
+    return friends.some((friend) => friend.username === username);
   };
 
   const isUserOnline = (username: string) => {
@@ -758,9 +905,10 @@ export function ChatModal({
   const startConversationWithFriend = async (friendUsername: string) => {
     try {
       // 尝试查找现有对话
-      const existingConv = conversations.find(conv =>
-        conv.participants.includes(friendUsername) &&
-        conv.participants.includes(currentUser?.username || '')
+      const existingConv = conversations.find(
+        (conv) =>
+          conv.participants.includes(friendUsername) &&
+          conv.participants.includes(currentUser?.username || '')
       );
 
       if (existingConv) {
@@ -819,9 +967,9 @@ export function ChatModal({
     // 清除该对话的未读消息计数
     const resetCount = conversationUnreadCounts[conv.id] || 0;
     if (resetCount > 0) {
-      setConversationUnreadCounts(prev => ({
+      setConversationUnreadCounts((prev) => ({
         ...prev,
-        [conv.id]: 0
+        [conv.id]: 0,
       }));
       // 通知父组件重置聊天计数
       onChatCountReset?.(resetCount);
@@ -832,101 +980,120 @@ export function ChatModal({
 
   return (
     <div
-      className={`z-[2147483647] ${isMobile
-        ? 'fixed top-0 left-0 right-0 bottom-0 bg-white dark:bg-gray-900'
-        : 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'
-        }`}
+      className={`fixed inset-0 z-[2147483647] ${
+        isMobile
+          ? 'flex items-center justify-center bg-black bg-opacity-50 p-4'
+          : 'flex items-center justify-center bg-black bg-opacity-50'
+      }`}
       style={{
         zIndex: '2147483647',
-        ...(isMobile && {
-          paddingTop: '56px', // 减少顶部padding
-          paddingBottom: '72px' // 减少底部padding
-        })
+        minHeight: '100vh',
+        minHeight: '100dvh',
       }}
     >
       <div
-        className={`${isMobile
-          ? 'w-full bg-white dark:bg-gray-900 flex flex-col'
-          : 'w-full max-w-6xl h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
-          }`}
+        className={`${
+          isMobile
+            ? 'w-full max-w-md h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col relative'
+            : 'w-full max-w-4xl h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
+        }`}
         style={{
-          transform: !isMobile ? `translate(${dragPosition.x}px, ${dragPosition.y}px)` : 'none',
+          transform: !isMobile
+            ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
+            : 'none',
           transition: isDragging ? 'none' : 'transform 0.2s ease-out',
-          ...(isMobile && {
-            height: 'calc(100vh - 128px)', // 调整为新的padding总和
-            minHeight: 'calc(100vh - 128px)'
-          })
         }}
       >
         {/* 拖动头部 - 仅桌面端显示 */}
         <div
-          className="absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-gray-800 rounded-t-lg cursor-grab active:cursor-grabbing hidden md:flex items-center justify-center"
+          className='absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-gray-800 rounded-t-lg cursor-grab active:cursor-grabbing hidden md:flex items-center justify-between'
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
-          <div className="flex space-x-1">
-            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+          <div className='flex-1'></div>
+          <div className='flex space-x-1'>
+            <div className='w-2 h-2 bg-gray-400 rounded-full'></div>
+            <div className='w-2 h-2 bg-gray-400 rounded-full'></div>
+            <div className='w-2 h-2 bg-gray-400 rounded-full'></div>
+          </div>
+          <div className='flex-1 flex justify-end'>
+            <button
+              onClick={onClose}
+              className='p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors'
+              aria-label='关闭'
+            >
+              <X className='w-5 h-5' />
+            </button>
           </div>
         </div>
+        {/* 移动端关闭按钮 */}
+        <button
+          onClick={onClose}
+          className='absolute top-2 right-2 z-10 p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors md:hidden'
+          aria-label='关闭'
+        >
+          <X className='w-6 h-6' />
+        </button>
         {/* 左侧面板 */}
-        <div className={`${isMobile
-          ? `w-full flex flex-col ${selectedConversation ? 'hidden' : 'flex'}`
-          : `w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col mt-8 h-auto ${selectedConversation ? 'block' : 'block'}`
+        <div
+          className={`${
+            isMobile
+              ? `w-full ${selectedConversation ? 'hidden' : 'flex flex-col'}`
+              : `w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col mt-8 h-auto`
           }`}
           style={{
             ...(isMobile && {
               height: '100%',
-              maxHeight: '100%'
-            })
-          }}>
+              maxHeight: '100%',
+            }),
+          }}
+        >
           {/* 头部 */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <h2 className="text-lg font-semibold">聊天</h2>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'
-                  }`} title={isConnected ? '已连接' : '未连接'} />
-              </div>
-              <button
-                onClick={onClose}
-                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
+            <div className='flex items-center space-x-2 mb-4'>
+              <h2 className='text-lg font-semibold'>聊天</h2>
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isConnected ? 'bg-green-400' : 'bg-red-400'
+                }`}
+                title={isConnected ? '已连接' : '未连接'}
+              />
             </div>
 
             {/* 标签页 */}
-            <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className='flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1'>
               <button
                 onClick={() => handleTabChange('chat')}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${activeTab === 'chat'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${
+                  activeTab === 'chat'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
-                <MessageCircle className="w-4 h-4 inline-block mr-1" />
+                <MessageCircle className='w-4 h-4 inline-block mr-1' />
                 对话
                 {unreadChatCount > 0 && activeTab !== 'chat' && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center'>
                     {unreadChatCount > 99 ? '99+' : unreadChatCount}
                   </span>
                 )}
               </button>
               <button
                 onClick={() => handleTabChange('friends')}
-                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${activeTab === 'friends'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors relative ${
+                  activeTab === 'friends'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
-                <Users className="w-4 h-4 inline-block mr-1" />
+                <Users className='w-4 h-4 inline-block mr-1' />
                 好友
                 {unreadFriendRequestCount > 0 && activeTab !== 'friends' && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadFriendRequestCount > 99 ? '99+' : unreadFriendRequestCount}
+                  <span className='absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center'>
+                    {unreadFriendRequestCount > 99
+                      ? '99+'
+                      : unreadFriendRequestCount}
                   </span>
                 )}
               </button>
@@ -934,62 +1101,73 @@ export function ChatModal({
           </div>
 
           {/* 搜索栏 */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
             {activeTab === 'chat' ? (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
                 <input
-                  type="text"
-                  placeholder="搜索对话..."
+                  type='text'
+                  placeholder='搜索对话...'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className='w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                 />
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className='space-y-2'>
+                <div className='relative'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
                   <input
-                    type="text"
-                    placeholder="搜索用户..."
+                    type='text'
+                    placeholder='搜索用户...'
                     value={friendSearchQuery}
                     onChange={(e) => {
                       setFriendSearchQuery(e.target.value);
                     }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className='w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                   />
                 </div>
 
                 {/* 搜索结果显示在搜索框下方 */}
                 {searchResults.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">搜索结果</h4>
+                  <div className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto'>
+                    <div className='p-2'>
+                      <h4 className='text-xs font-medium text-gray-500 dark:text-gray-400 mb-2'>
+                        搜索结果
+                      </h4>
                       {searchResults.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                          <div className="flex items-center space-x-3 flex-1">
+                        <div
+                          key={user.id}
+                          className='flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                        >
+                          <div className='flex items-center space-x-3 flex-1'>
                             {/* 用户头像 */}
                             <img
                               src={getAvatarUrl(user.username)}
                               alt={user.nickname || user.username}
-                              className="w-8 h-8 rounded-full ring-1 ring-gray-200 dark:ring-gray-600"
+                              className='w-8 h-8 rounded-full ring-1 ring-gray-200 dark:ring-gray-600'
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
+                                target.nextElementSibling?.classList.remove(
+                                  'hidden'
+                                );
                               }}
                             />
-                            <div className="hidden w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium ring-1 ring-gray-200 dark:ring-gray-600">
-                              {(user.nickname || user.username).charAt(0).toUpperCase()}
+                            <div className='hidden'>
+                              {(user.nickname || user.username)
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
 
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                            <div className='flex-1 min-w-0'>
+                              <div className='font-medium text-gray-900 dark:text-white text-sm truncate'>
                                 {user.nickname || user.username}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {isFriend(user.username) ? '已是好友' : '陌生人'}
+                              <div className='text-xs text-gray-500 dark:text-gray-400'>
+                                {isFriend(user.username)
+                                  ? '已是好友'
+                                  : '陌生人'}
                               </div>
                             </div>
                           </div>
@@ -997,10 +1175,10 @@ export function ChatModal({
                           {!isFriend(user.username) && (
                             <button
                               onClick={() => sendFriendRequest(user.username)}
-                              className="ml-2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                              title="发送好友申请"
+                              className='ml-2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                              title='发送好友申请'
                             >
-                              <UserPlus className="w-3 h-3" />
+                              <UserPlus className='w-3 h-3' />
                             </button>
                           )}
                         </div>
@@ -1013,45 +1191,57 @@ export function ChatModal({
           </div>
 
           {/* 列表内容 */}
-          <div className="flex-1 overflow-y-auto">
+          <div className='flex-1 overflow-y-auto'>
             {activeTab === 'chat' ? (
-              <div className="space-y-1 p-2">
+              <div className='space-y-1 p-2'>
                 {filteredConversations.map((conv) => {
                   // 获取对话头像 - 私人对话显示对方头像，群聊显示群组图标
                   const getConversationAvatar = () => {
                     if (conv.participants.length === 2) {
                       // 私人对话：显示对方用户的头像
-                      const otherUser = conv.participants.find(p => p !== currentUser?.username);
+                      const otherUser = conv.participants.find(
+                        (p) => p !== currentUser?.username
+                      );
                       return otherUser ? (
-                        <div className="relative">
+                        <div className='relative'>
                           <img
                             src={getAvatarUrl(otherUser)}
                             alt={getDisplayName(otherUser)}
-                            className="w-12 h-12 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm"
+                            className='w-12 h-12 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm'
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
-                              target.nextElementSibling?.classList.remove('hidden');
+                              target.nextElementSibling?.classList.remove(
+                                'hidden'
+                              );
                             }}
                           />
-                          <div className="hidden w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-white dark:ring-gray-700 shadow-sm">
+                          <div className='hidden'>
                             {getDisplayName(otherUser).charAt(0).toUpperCase()}
                           </div>
                           {/* 在线状态指示器 */}
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white dark:border-gray-700 ${isUserOnline(otherUser) ? 'bg-green-400' : 'bg-gray-400'
-                            }`} />
+                          <div
+                            className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white dark:border-gray-700 ${
+                              isUserOnline(otherUser)
+                                ? 'bg-green-400'
+                                : 'bg-gray-400'
+                            }`}
+                          />
                         </div>
                       ) : null;
                     } else {
                       // 群聊：显示群组图标和参与者头像叠加
-                      const firstThreeParticipants = conv.participants.slice(0, 3);
+                      const firstThreeParticipants = conv.participants.slice(
+                        0,
+                        3
+                      );
                       return (
-                        <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white dark:ring-gray-700">
-                            <Users className="w-6 h-6" />
+                        <div className='relative'>
+                          <div className='w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white dark:ring-gray-700'>
+                            <Users className='w-6 h-6' />
                           </div>
                           {/* 群聊成员数量指示 */}
-                          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-gray-700">
+                          <div className='absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold border-2 border-white dark:border-gray-700'>
                             {conv.participants.length}
                           </div>
                         </div>
@@ -1063,47 +1253,51 @@ export function ChatModal({
                     <button
                       key={conv.id}
                       onClick={() => handleConversationSelect(conv)}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 relative ${selectedConversation?.id === conv.id
-                        ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
-                        }`}
+                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 relative ${
+                        selectedConversation?.id === conv.id
+                          ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
+                      }`}
                     >
-                      <div className="flex items-center space-x-3">
+                      <div className='flex items-center space-x-3'>
                         {/* 对话头像 */}
-                        <div className="flex-shrink-0">
+                        <div className='flex-shrink-0'>
                           {getConversationAvatar()}
                         </div>
 
                         {/* 对话信息 */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="font-medium text-gray-900 dark:text-white truncate">
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center justify-between mb-1'>
+                            <div className='font-medium text-gray-900 dark:text-white truncate'>
                               {conv.name}
                             </div>
                             {/* 最后消息时间 */}
                             {conv.last_message?.timestamp && (
-                              <div className="text-xs text-gray-400 dark:text-gray-500 ml-2 flex-shrink-0">
-                                {new Date(conv.last_message.timestamp).toLocaleTimeString('zh-CN', {
+                              <div className='text-xs text-gray-400 dark:text-gray-500 ml-2 flex-shrink-0'>
+                                {new Date(
+                                  conv.last_message.timestamp
+                                ).toLocaleTimeString('zh-CN', {
                                   hour: '2-digit',
-                                  minute: '2-digit'
+                                  minute: '2-digit',
                                 })}
                               </div>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-500 dark:text-gray-400 truncate flex-1 mr-2">
+                          <div className='flex items-center justify-between'>
+                            <div className='text-sm text-gray-500 dark:text-gray-400 truncate flex-1 mr-2'>
                               {conv.last_message?.message_type === 'image'
                                 ? '[图片]'
-                                : (conv.last_message?.content || '暂无消息')
-                              }
+                                : conv.last_message?.content || '暂无消息'}
                             </div>
 
                             {/* 未读消息数量 */}
                             {conversationUnreadCounts[conv.id] > 0 && (
-                              <div className="flex-shrink-0">
-                                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                                  {conversationUnreadCounts[conv.id] > 99 ? '99+' : conversationUnreadCounts[conv.id]}
+                              <div className='flex-shrink-0'>
+                                <span className='inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full'>
+                                  {conversationUnreadCounts[conv.id] > 99
+                                    ? '99+'
+                                    : conversationUnreadCounts[conv.id]}
                                 </span>
                               </div>
                             )}
@@ -1115,63 +1309,85 @@ export function ChatModal({
                 })}
               </div>
             ) : (
-              <div className="space-y-2 p-2">
+              <div className='space-y-2 p-2'>
                 {/* 好友申请 */}
-                {friendRequests.filter(req => req.to_user === currentUser?.username && req.status === 'pending').length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">好友申请</h3>
+                {friendRequests.filter(
+                  (req) =>
+                    req.to_user === currentUser?.username &&
+                    req.status === 'pending'
+                ).length > 0 && (
+                  <div className='mb-4'>
+                    <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                      好友申请
+                    </h3>
                     {friendRequests
-                      .filter(req => req.to_user === currentUser?.username && req.status === 'pending')
+                      .filter(
+                        (req) =>
+                          req.to_user === currentUser?.username &&
+                          req.status === 'pending'
+                      )
                       .map((request) => (
-                        <div key={request.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow">
-                          <div className="flex items-center space-x-3 mb-3">
+                        <div
+                          key={request.id}
+                          className='p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:shadow-sm transition-shadow'
+                        >
+                          <div className='flex items-center space-x-3 mb-3'>
                             {/* 申请者头像 */}
-                            <div className="flex-shrink-0">
+                            <div className='flex-shrink-0'>
                               <img
                                 src={getAvatarUrl(request.from_user)}
                                 alt={request.from_user}
-                                className="w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm"
+                                className='w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm'
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
-                                  target.nextElementSibling?.classList.remove('hidden');
+                                  target.nextElementSibling?.classList.remove(
+                                    'hidden'
+                                  );
                                 }}
                               />
-                              <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-white dark:ring-gray-700 shadow-sm">
+                              <div className='hidden'>
                                 {request.from_user.charAt(0).toUpperCase()}
                               </div>
                             </div>
 
                             {/* 申请者信息 */}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            <div className='flex-1 min-w-0'>
+                              <div className='text-sm font-medium text-gray-900 dark:text-white truncate'>
                                 {request.from_user}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(request.created_at).toLocaleString('zh-CN', {
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
+                              <div className='text-xs text-gray-500 dark:text-gray-400'>
+                                {new Date(request.created_at).toLocaleString(
+                                  'zh-CN',
+                                  {
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  }
+                                )}
                               </div>
                             </div>
                           </div>
 
-                          <div className="text-xs text-gray-600 dark:text-gray-300 mb-3 pl-13">
+                          <div className='text-xs text-gray-600 dark:text-gray-300 mb-3 pl-13'>
                             {request.message}
                           </div>
 
-                          <div className="flex space-x-2 pl-13">
+                          <div className='flex space-x-2 pl-13'>
                             <button
-                              onClick={() => handleFriendRequest(request.id, 'accepted')}
-                              className="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors font-medium"
+                              onClick={() =>
+                                handleFriendRequest(request.id, 'accepted')
+                              }
+                              className='px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-colors font-medium'
                             >
                               接受
                             </button>
                             <button
-                              onClick={() => handleFriendRequest(request.id, 'rejected')}
-                              className="px-3 py-1.5 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                              onClick={() =>
+                                handleFriendRequest(request.id, 'rejected')
+                              }
+                              className='px-3 py-1.5 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 transition-colors font-medium'
                             >
                               拒绝
                             </button>
@@ -1182,183 +1398,242 @@ export function ChatModal({
                 )}
 
                 {/* 好友列表 */}
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">我的好友</h3>
+                <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                  我的好友
+                </h3>
                 {friends.map((friend) => (
                   <button
                     key={friend.id}
                     onClick={() => startConversationWithFriend(friend.username)}
-                    className="w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className='w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className='flex items-center space-x-3'>
                       {/* 好友头像 */}
-                      <div className="relative">
+                      <div className='relative'>
                         <img
                           src={getAvatarUrl(friend.username)}
                           alt={friend.nickname || friend.username}
-                          className="w-10 h-10 rounded-full"
+                          className='w-10 h-10 rounded-full'
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
-                            target.nextElementSibling?.classList.remove('hidden');
+                            target.nextElementSibling?.classList.remove(
+                              'hidden'
+                            );
                           }}
                         />
-                        <div className="hidden w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                          {(friend.nickname || friend.username).charAt(0).toUpperCase()}
+                        <div className='hidden'>
+                          {(friend.nickname || friend.username)
+                            .charAt(0)
+                            .toUpperCase()}
                         </div>
                         {/* 在线状态指示器 */}
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${isUserOnline(friend.username) ? 'bg-green-400' : 'bg-gray-400'
-                          }`} />
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${
+                            isUserOnline(friend.username)
+                              ? 'bg-green-400'
+                              : 'bg-gray-400'
+                          }`}
+                        />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="font-medium text-gray-900 dark:text-white">
+                      <div className='flex-1 text-left'>
+                        <div className='font-medium text-gray-900 dark:text-white'>
                           {friend.nickname || friend.username}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className='text-xs text-gray-500 dark:text-gray-400'>
                           {isUserOnline(friend.username) ? '在线' : '离线'}
                         </div>
                       </div>
                     </div>
                   </button>
                 ))}
-
               </div>
             )}
           </div>
         </div>
 
         {/* 右侧聊天区域 */}
-        <div className={`${isMobile
-          ? `w-full flex flex-col ${selectedConversation ? 'flex' : 'hidden'}`
-          : `flex-1 flex flex-col mt-8 ${selectedConversation ? 'block' : 'block'}`
+        <div
+          className={`${
+            isMobile
+              ? `w-full ${selectedConversation ? 'flex flex-col' : 'hidden'}`
+              : `flex-1 flex flex-col mt-8`
           }`}
           style={{
             ...(isMobile && {
               height: '100%',
-              maxHeight: '100%'
-            })
-          }}>
+              maxHeight: '100%',
+            }),
+          }}
+        >
           {selectedConversation ? (
             <>
               {/* 聊天头部 */}
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div className="flex items-center space-x-2">
+              <div className='p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'>
+                <div className='flex items-center space-x-2'>
                   {/* 移动端返回按钮 */}
                   {isMobile && (
                     <button
                       onClick={() => setSelectedConversation(null)}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                      className='p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full'
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M15 19l-7-7 7-7'
+                        />
                       </svg>
                     </button>
                   )}
                   {/* 对话头像（显示对方用户的头像，如果是群聊则显示群组图标） */}
-                  <div className="flex-shrink-0">
+                  <div className='flex-shrink-0'>
                     {selectedConversation.participants.length === 2 ? (
                       // 私人对话：显示对方的头像
                       (() => {
-                        const otherUser = selectedConversation.participants.find(p => p !== currentUser?.username);
+                        const otherUser =
+                          selectedConversation.participants.find(
+                            (p) => p !== currentUser?.username
+                          );
                         return otherUser ? (
-                          <div className="relative">
+                          <div className='relative'>
                             <img
                               src={getAvatarUrl(otherUser)}
                               alt={getDisplayName(otherUser)}
-                              className="w-12 h-12 rounded-full"
+                              className='w-12 h-12 rounded-full'
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
+                                target.nextElementSibling?.classList.remove(
+                                  'hidden'
+                                );
                               }}
                             />
-                            <div className="hidden w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                              {getDisplayName(otherUser).charAt(0).toUpperCase()}
+                            <div className='hidden'>
+                              {getDisplayName(otherUser)
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
                             {/* 在线状态 */}
-                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${isUserOnline(otherUser) ? 'bg-green-400' : 'bg-gray-400'
-                              }`} />
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800 ${
+                                isUserOnline(otherUser)
+                                  ? 'bg-green-400'
+                                  : 'bg-gray-400'
+                              }`}
+                            />
                           </div>
                         ) : null;
                       })()
                     ) : (
                       // 群聊：显示群组图标
-                      <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-medium">
-                        <Users className="w-6 h-6" />
+                      <div className='w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-medium'>
+                        <Users className='w-6 h-6' />
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                  <div className='flex-1 min-w-0'>
+                    <h3 className='font-medium text-gray-900 dark:text-white truncate text-sm'>
                       {selectedConversation.name}
                     </h3>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {selectedConversation.participants.length === 2 ? (
-                        // 私人对话：显示在线状态
-                        (() => {
-                          const otherUser = selectedConversation.participants.find(p => p !== currentUser?.username);
-                          return otherUser ? (
-                            <span className="flex items-center space-x-1">
-                              <span>{isUserOnline(otherUser) ? '在线' : '离线'}</span>
-                              <span>•</span>
-                              <span>{selectedConversation.participants.length} 人</span>
-                            </span>
-                          ) : `${selectedConversation.participants.length} 人`;
-                        })()
-                      ) : (
-                        // 群聊：显示参与者数量
-                        `${selectedConversation.participants.length} 人`
-                      )}
+                    <div className='text-xs text-gray-500 dark:text-gray-400'>
+                      {selectedConversation.participants.length === 2
+                        ? // 私人对话：显示在线状态
+                          (() => {
+                            const otherUser =
+                              selectedConversation.participants.find(
+                                (p) => p !== currentUser?.username
+                              );
+                            return otherUser ? (
+                              <span className='flex items-center space-x-1'>
+                                <span>
+                                  {isUserOnline(otherUser) ? '在线' : '离线'}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {selectedConversation.participants.length} 人
+                                </span>
+                              </span>
+                            ) : (
+                              `${selectedConversation.participants.length} 人`
+                            );
+                          })()
+                        : // 群聊：显示参与者数量
+                          `${selectedConversation.participants.length} 人`}
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* 消息列表 */}
-              <div className={`flex-1 overflow-y-auto space-y-4 bg-gradient-to-b from-gray-50/30 to-white/50 dark:from-gray-800/30 dark:to-gray-900/50 ${isMobile ? 'p-3' : 'p-6'
-                }`}>
+              <div
+                className={`flex-1 overflow-y-auto space-y-4 bg-gradient-to-b from-gray-50/30 to-white/50 dark:from-gray-800/30 dark:to-gray-900/50 ${
+                  isMobile ? 'p-3' : 'p-6'
+                }`}
+              >
                 {messages.map((message, index) => {
-                  const isOwnMessage = message.sender_id === currentUser?.username;
+                  const isOwnMessage =
+                    message.sender_id === currentUser?.username;
                   const prevMessage = index > 0 ? messages[index - 1] : null;
-                  const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                  const nextMessage =
+                    index < messages.length - 1 ? messages[index + 1] : null;
                   // 每条消息都显示头像
-                  const showName = !prevMessage || prevMessage.sender_id !== message.sender_id;
-                  const isSequential = prevMessage && prevMessage.sender_id === message.sender_id;
+                  const showName =
+                    !prevMessage || prevMessage.sender_id !== message.sender_id;
+                  const isSequential =
+                    prevMessage && prevMessage.sender_id === message.sender_id;
 
                   return (
                     <div
                       key={message.id}
-                      className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} ${isSequential ? 'mt-1' : 'mt-4'}`}
+                      className={`flex ${
+                        isOwnMessage ? 'justify-end' : 'justify-start'
+                      } ${isSequential ? 'mt-1' : 'mt-4'}`}
                     >
-                      <div className={`flex items-end space-x-3 max-w-xs lg:max-w-md xl:max-w-lg ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div
+                        className={`flex items-end space-x-3 max-w-xs lg:max-w-md xl:max-w-lg ${
+                          isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
+                        }`}
+                      >
                         {/* 头像 - 每条消息都显示 */}
-                        <div className="flex-shrink-0">
-                          <div className="relative">
+                        <div className='flex-shrink-0'>
+                          <div className='relative'>
                             <img
                               src={getAvatarUrl(message.sender_id)}
                               alt={getDisplayName(message.sender_id)}
-                              className="w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-600 shadow-md"
+                              className='w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-600 shadow-md'
                               onError={(e) => {
                                 // 头像加载失败时显示文字头像
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
+                                target.nextElementSibling?.classList.remove(
+                                  'hidden'
+                                );
                               }}
                             />
-                            <div className="hidden w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-white dark:ring-gray-600 shadow-md">
-                              {getDisplayName(message.sender_id).charAt(0).toUpperCase()}
+                            <div className='hidden'>
+                              {getDisplayName(message.sender_id)
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
                             {/* 在线状态指示器 */}
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full ring-2 ring-white dark:ring-gray-700"></div>
+                            <div className='absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full ring-2 ring-white dark:ring-gray-700'></div>
                           </div>
                         </div>
 
                         {/* 消息内容 */}
-                        <div className="flex flex-col min-w-0">
+                        <div className='flex flex-col min-w-0'>
                           {/* 发送者名称（仅在非连续消息时显示） */}
                           {!isOwnMessage && showName && (
-                            <div className="mb-2 px-1">
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <div className='mb-2 px-1'>
+                              <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
                                 {getDisplayName(message.sender_id)}
                               </span>
                             </div>
@@ -1366,17 +1641,18 @@ export function ChatModal({
 
                           {/* 消息气泡 */}
                           <div
-                            className={`relative px-5 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${isOwnMessage
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 rounded-br-md'
-                              : 'bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white shadow-gray-900/10 dark:shadow-black/20 ring-1 ring-gray-200/50 dark:ring-gray-600/50 rounded-bl-md'
-                              }`}
+                            className={`relative px-5 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${
+                              isOwnMessage
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 rounded-br-md'
+                                : 'bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white shadow-gray-900/10 dark:shadow-black/20 ring-1 ring-gray-200/50 dark:ring-gray-600/50 rounded-bl-md'
+                            }`}
                           >
                             {message.message_type === 'image' ? (
-                              <div className="group">
+                              <div className='group'>
                                 <img
                                   src={message.content}
-                                  alt="图片消息"
-                                  className="max-w-full h-auto rounded-xl cursor-pointer transition-transform group-hover:scale-[1.02] shadow-md"
+                                  alt='图片消息'
+                                  className='max-w-full h-auto rounded-xl cursor-pointer transition-transform group-hover:scale-[1.02] shadow-md'
                                   style={{ maxHeight: '300px' }}
                                   onClick={() => {
                                     // 点击图片放大查看
@@ -1402,26 +1678,33 @@ export function ChatModal({
                                   }}
                                 />
                                 {/* 图片遮罩 */}
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-xl transition-colors pointer-events-none"></div>
+                                <div className='absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-xl transition-colors pointer-events-none'></div>
                               </div>
                             ) : (
-                              <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              <div className='text-sm leading-relaxed whitespace-pre-wrap break-words'>
                                 {message.content}
                               </div>
                             )}
 
                             {/* 消息气泡装饰尾巴 */}
                             <div
-                              className={`absolute bottom-2 w-3 h-3 ${isOwnMessage
-                                ? 'right-0 -mr-1.5 bg-gradient-to-br from-blue-500 to-blue-600'
-                                : 'left-0 -ml-1.5 bg-white/90 dark:bg-gray-700/90 ring-1 ring-gray-200/50 dark:ring-gray-600/50'
-                                } transform rotate-45`}
+                              className={`absolute bottom-2 w-3 h-3 ${
+                                isOwnMessage
+                                  ? 'right-0 -mr-1.5 bg-gradient-to-br from-blue-500 to-blue-600'
+                                  : 'left-0 -ml-1.5 bg-white/90 dark:bg-gray-700/90 ring-1 ring-gray-200/50 dark:ring-gray-600/50'
+                              } transform rotate-45`}
                             ></div>
                           </div>
 
                           {/* 时间戳显示在消息气泡下方 */}
-                          <div className={`mt-1 px-1 ${isOwnMessage ? 'flex justify-end' : 'flex justify-start'}`}>
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                          <div
+                            className={`mt-1 px-1 ${
+                              isOwnMessage
+                                ? 'flex justify-end'
+                                : 'flex justify-start'
+                            }`}
+                          >
+                            <span className='text-xs text-gray-400 dark:text-gray-500'>
                               {formatMessageTime(message.timestamp)}
                             </span>
                           </div>
@@ -1433,29 +1716,31 @@ export function ChatModal({
                 <div ref={messagesEndRef} />
 
                 {/* 消息列表底部装饰 */}
-                <div className="h-4"></div>
+                <div className='h-4'></div>
               </div>
 
               {/* 消息输入区域 */}
-              <div className="border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 relative">
+              <div className='border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 relative'>
                 {/* 表情选择器 - 绝对定位，不占据文档流空间 */}
                 {showEmojiPicker && (
-                  <div className="emoji-picker-container absolute left-4 right-4 bottom-full mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl z-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">选择表情</h3>
+                  <div className='emoji-picker-container absolute left-4 right-4 bottom-full mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl z-50'>
+                    <div className='flex items-center justify-between mb-3'>
+                      <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                        选择表情
+                      </h3>
                       <button
                         onClick={() => setShowEmojiPicker(false)}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors"
+                        className='p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors'
                       >
-                        <X className="w-4 h-4" />
+                        <X className='w-4 h-4' />
                       </button>
                     </div>
-                    <div className="grid grid-cols-9 gap-1 max-h-40 overflow-y-auto custom-scrollbar">
+                    <div className='grid grid-cols-9 gap-1 max-h-40 overflow-y-auto custom-scrollbar'>
                       {emojis.map((emoji, index) => (
                         <button
                           key={index}
                           onClick={() => handleEmojiSelect(emoji)}
-                          className="p-2 text-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                          className='p-2 text-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95'
                           title={emoji}
                         >
                           {emoji}
@@ -1467,70 +1752,79 @@ export function ChatModal({
 
                 {/* 主输入区域 */}
                 <div className={`${isMobile ? 'p-2' : 'p-3'} pb-safe`}>
-                  <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-600/80 backdrop-blur-sm">
+                  <div className='bg-white dark:bg-gray-700 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-600/80 backdrop-blur-sm'>
                     {/* 顶部工具栏 */}
-                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-100 dark:border-gray-600">
+                    <div className='flex items-center justify-between px-3 py-1.5 border-b border-gray-100 dark:border-gray-600'>
                       {/* 左侧功能按钮组 */}
-                      <div className="flex items-center space-x-1">
+                      <div className='flex items-center space-x-1'>
                         {/* 表情按钮 */}
                         <button
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className={`emoji-picker-container p-2 rounded-xl transition-all duration-200 transform hover:scale-105 ${showEmojiPicker
-                            ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                            }`}
-                          title="表情"
+                          className={`emoji-picker-container p-2 rounded-xl transition-all duration-200 transform hover:scale-105 ${
+                            showEmojiPicker
+                              ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                              : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                          }`}
+                          title='表情'
                         >
-                          <Smile className="w-5 h-5" />
+                          <Smile className='w-5 h-5' />
                         </button>
 
                         {/* 图片上传按钮 */}
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingImage}
-                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                          title="上传图片"
+                          className='p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                          title='上传图片'
                         >
                           {uploadingImage ? (
-                            <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                            <div className='w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin' />
                           ) : (
-                            <ImageIcon className="w-5 h-5" />
+                            <ImageIcon className='w-5 h-5' />
                           )}
                         </button>
 
                         {/* 隐藏的文件输入 */}
                         <input
                           ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
+                          type='file'
+                          accept='image/*'
+                          className='hidden'
                           onChange={handleImageUpload}
                         />
 
                         {/* 附件按钮（预留） */}
                         <button
-                          className="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-200 transform hover:scale-105"
+                          className='p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-200 transform hover:scale-105'
                           disabled
-                          title="附件（即将开放）"
+                          title='附件（即将开放）'
                         >
-                          <Paperclip className="w-5 h-5" />
+                          <Paperclip className='w-5 h-5' />
                         </button>
                       </div>
 
                       {/* 右侧状态指示 */}
-                      <div className="flex items-center space-x-2">
+                      <div className='flex items-center space-x-2'>
                         {/* 字符计数 */}
-                        <span className="text-xs text-gray-400">
+                        <span className='text-xs text-gray-400'>
                           {newMessage.length > 0 && (
-                            <span className={newMessage.length > 500 ? 'text-red-500' : ''}>
+                            <span
+                              className={
+                                newMessage.length > 500 ? 'text-red-500' : ''
+                              }
+                            >
                               {newMessage.length}/1000
                             </span>
                           )}
                         </span>
                         {/* 连接状态 */}
-                        <div className="flex items-center space-x-1">
-                          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-                          <span className="text-xs text-gray-400">
+                        <div className='flex items-center space-x-1'>
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              isConnected ? 'bg-green-400' : 'bg-red-400'
+                            }`}
+                          />
+                          <span className='text-xs text-gray-400'>
                             {isConnected ? '在线' : '离线'}
                           </span>
                         </div>
@@ -1538,13 +1832,13 @@ export function ChatModal({
                     </div>
 
                     {/* 消息输入区域 */}
-                    <div className="p-3">
-                      <div className="relative">
+                    <div className='p-3'>
+                      <div className='relative'>
                         <textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder="输入消息内容... 按Enter发送，Shift+Enter换行"
-                          className="w-full px-3 py-2 pr-14 bg-gray-50 dark:bg-gray-600 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-500 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[40px] max-h-28 transition-all duration-200"
+                          placeholder='输入消息内容... 按Enter发送，Shift+Enter换行'
+                          className='w-full px-3 py-2 pr-14 bg-gray-50 dark:bg-gray-600 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-500 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[40px] max-h-28 transition-all duration-200'
                           rows={1}
                           maxLength={1000}
                           style={{ height: 'auto' }}
@@ -1552,7 +1846,8 @@ export function ChatModal({
                             // 自动调整高度
                             const target = e.target as HTMLTextAreaElement;
                             target.style.height = 'auto';
-                            target.style.height = Math.min(target.scrollHeight, 128) + 'px';
+                            target.style.height =
+                              Math.min(target.scrollHeight, 128) + 'px';
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1566,35 +1861,39 @@ export function ChatModal({
                         <button
                           onClick={handleSendMessage}
                           disabled={!newMessage.trim() || uploadingImage}
-                          className="absolute right-2 bottom-2 p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl"
-                          title={!newMessage.trim() ? '请输入消息内容' : '发送消息 (Enter)'}
+                          className='absolute right-2 bottom-2 p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl'
+                          title={
+                            !newMessage.trim()
+                              ? '请输入消息内容'
+                              : '发送消息 (Enter)'
+                          }
                         >
-                          <Send className="w-4 h-4" />
+                          <Send className='w-4 h-4' />
                         </button>
                       </div>
                     </div>
 
                     {/* 底部信息栏 */}
-                    <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-600/50 rounded-b-2xl border-t border-gray-100 dark:border-gray-600">
-                      <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center space-x-1">
+                    <div className='flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-600/50 rounded-b-2xl border-t border-gray-100 dark:border-gray-600'>
+                      <div className='flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400'>
+                        <span className='flex items-center space-x-1'>
                           <span>📝</span>
                           <span>支持文字</span>
                         </span>
-                        <span className="flex items-center space-x-1">
+                        <span className='flex items-center space-x-1'>
                           <span>😊</span>
                           <span>表情</span>
                         </span>
-                        <span className="flex items-center space-x-1">
+                        <span className='flex items-center space-x-1'>
                           <span>🖼️</span>
                           <span>图片 (5MB内)</span>
                         </span>
                       </div>
 
-                      <div className="text-xs text-gray-400">
+                      <div className='text-xs text-gray-400'>
                         {uploadingImage ? (
-                          <span className="flex items-center space-x-1 text-blue-500">
-                            <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          <span className='flex items-center space-x-1 text-blue-500'>
+                            <div className='w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin' />
                             <span>上传中...</span>
                           </span>
                         ) : (
@@ -1608,7 +1907,7 @@ export function ChatModal({
             </>
           ) : (
             !isMobile && (
-              <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+              <div className='flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400'>
                 选择一个对话开始聊天
               </div>
             )

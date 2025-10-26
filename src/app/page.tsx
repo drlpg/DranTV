@@ -23,6 +23,7 @@ import { DoubanItem } from '@/lib/types';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import Carousel from '@/components/Carousel';
 import ContinueWatching from '@/components/ContinueWatching';
+import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
@@ -89,7 +90,41 @@ function HomeClient() {
           ]);
 
         if (moviesData.code === 200) {
-          setHotMovies(moviesData.list);
+          // 先尝试获取TMDB横版海报，然后再设置state
+          try {
+            const top5Movies = moviesData.list.slice(0, 5);
+            const tmdbResponse = await fetch('/api/tmdb/backdrop', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                items: top5Movies.map((movie: any) => ({
+                  title: movie.title,
+                  year: movie.year,
+                  type: 'movie',
+                })),
+              }),
+            });
+
+            if (tmdbResponse.ok) {
+              const { backdrops } = await tmdbResponse.json();
+              // 更新电影数据，添加横版海报
+              const updatedMovies = moviesData.list.map(
+                (movie: any, index: number) => {
+                  if (index < 5 && backdrops[index]) {
+                    return { ...movie, backdrop: backdrops[index] };
+                  }
+                  return movie;
+                }
+              );
+              setHotMovies(updatedMovies);
+            } else {
+              // TMDB API失败，使用原始数据
+              setHotMovies(moviesData.list);
+            }
+          } catch (error) {
+            // 异常时使用原始数据
+            setHotMovies(moviesData.list);
+          }
         }
 
         if (tvShowsData.code === 200) {
@@ -172,9 +207,9 @@ function HomeClient() {
 
   return (
     <PageLayout>
-      <div className='px-2 sm:px-10 py-4 sm:py-8 overflow-visible'>
+      <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
         {/* 顶部 Tab 切换 */}
-        <div className='mb-8 flex justify-center items-center relative'>
+        <div className='mb-[22px] sm:mb-8 flex justify-center items-center relative'>
           <CapsuleSwitch
             options={[
               { label: '首页', value: 'home' },
@@ -188,7 +223,7 @@ function HomeClient() {
           <div className='hidden md:flex items-center gap-2 absolute right-0'>
             <Link
               href='/search'
-              className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors'
+              className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/10 transition-colors'
             >
               <svg
                 className='w-full h-full'
@@ -257,7 +292,8 @@ function HomeClient() {
                   items={hotMovies.slice(0, 5).map((movie) => ({
                     id: movie.id,
                     title: movie.title,
-                    image: movie.poster,
+                    image: movie.backdrop || movie.poster,
+                    rate: movie.rate,
                   }))}
                 />
               </section>
@@ -281,23 +317,20 @@ function HomeClient() {
                 </div>
                 <ScrollableRow>
                   {loading
-                    ? // 加载状态显示灰色占位数据
+                    ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                            <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+                          <DoubanCardSkeleton />
                         </div>
                       ))
                     : // 显示真实数据
                       hotMovies.map((movie, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard
                             from='douban'
@@ -330,23 +363,20 @@ function HomeClient() {
                 </div>
                 <ScrollableRow>
                   {loading
-                    ? // 加载状态显示灰色占位数据
+                    ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                            <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+                          <DoubanCardSkeleton />
                         </div>
                       ))
                     : // 显示真实数据
                       hotTvShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard
                             from='douban'
@@ -377,16 +407,13 @@ function HomeClient() {
                 </div>
                 <ScrollableRow>
                   {loading
-                    ? // 加载状态显示灰色占位数据
+                    ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                            <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+                          <DoubanCardSkeleton />
                         </div>
                       ))
                     : // 展示当前日期的番剧
@@ -453,16 +480,13 @@ function HomeClient() {
                 </div>
                 <ScrollableRow>
                   {loading
-                    ? // 加载状态显示灰色占位数据
+                    ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
                         >
-                          <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                            <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                          </div>
-                          <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
+                          <DoubanCardSkeleton />
                         </div>
                       ))
                     : // 显示真实数据

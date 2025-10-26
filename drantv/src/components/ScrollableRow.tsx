@@ -89,26 +89,76 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
   const handleScrollRightClick = () => {
     if (containerRef.current) {
       const container = containerRef.current;
-      const scrollAmount = container.clientWidth;
-      const targetScroll = container.scrollLeft + scrollAmount;
+      const children = Array.from(container.children) as HTMLElement[];
+      const containerRect = container.getBoundingClientRect();
+      const scrollLeft = container.scrollLeft;
 
-      container.scrollTo({
-        left: targetScroll,
-        behavior: 'smooth',
-      });
+      // 找到第一个右边缘超出可视区域的元素
+      let targetElement: HTMLElement | null = null;
+
+      for (const child of children) {
+        const childRightRelativeToScroll = child.offsetLeft + child.offsetWidth;
+        const visibleRight = scrollLeft + containerRect.width;
+
+        // 如果元素的右边缘超出可视区域，这就是我们要滚动到的目标
+        if (childRightRelativeToScroll > visibleRight + 1) {
+          targetElement = child;
+          break;
+        }
+      }
+
+      if (targetElement) {
+        // 滚动到目标元素的左边缘
+        container.scrollTo({
+          left: targetElement.offsetLeft,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
   const handleScrollLeftClick = () => {
     if (containerRef.current) {
       const container = containerRef.current;
-      const scrollAmount = container.clientWidth;
-      const targetScroll = Math.max(0, container.scrollLeft - scrollAmount);
+      const children = Array.from(container.children) as HTMLElement[];
+      const scrollLeft = container.scrollLeft;
 
-      container.scrollTo({
-        left: targetScroll,
-        behavior: 'smooth',
-      });
+      // 找到第一个左边缘在可视区域左侧的元素（从右向左查找）
+      let targetElement: HTMLElement | null = null;
+
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        const childLeft = child.offsetLeft;
+
+        // 如果元素的左边缘在当前滚动位置的左侧
+        if (childLeft < scrollLeft - 1) {
+          targetElement = child;
+          break;
+        }
+      }
+
+      if (targetElement) {
+        const container = containerRef.current;
+        const containerWidth = container.clientWidth;
+        const targetWidth = targetElement.offsetWidth;
+
+        // 计算目标位置：让该元素的右边缘对齐可视区域右边缘
+        const targetScroll = Math.max(
+          0,
+          targetElement.offsetLeft + targetWidth - containerWidth
+        );
+
+        container.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth',
+        });
+      } else {
+        // 如果没找到，就滚动到开头
+        container.scrollTo({
+          left: 0,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
@@ -152,7 +202,7 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
       {showLeftScroll && (
         <button
           onClick={handleScrollLeftClick}
-          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
+          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
@@ -160,14 +210,14 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
             transform: 'translate(-50%, -50%)',
           }}
         >
-          <ChevronLeft className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+          <ChevronLeft className='w-6 h-6 text-white' />
         </button>
       )}
 
       {showRightScroll && (
         <button
           onClick={handleScrollRightClick}
-          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
+          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
@@ -175,7 +225,7 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
             transform: 'translate(50%, -50%)',
           }}
         >
-          <ChevronRight className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+          <ChevronRight className='w-6 h-6 text-white' />
         </button>
       )}
     </div>

@@ -72,10 +72,9 @@ export async function POST(request: NextRequest) {
       typeof DisableYellowFilter !== 'boolean' ||
       typeof FluidSearch !== 'boolean' ||
       typeof RequireDeviceCode !== 'boolean' ||
-      (CustomTheme && (
-        typeof CustomTheme.selectedTheme !== 'string' ||
-        typeof CustomTheme.customCSS !== 'string'
-      ))
+      (CustomTheme &&
+        (typeof CustomTheme.selectedTheme !== 'string' ||
+          typeof CustomTheme.customCSS !== 'string'))
     ) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }

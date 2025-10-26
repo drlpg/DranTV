@@ -39,6 +39,7 @@ interface AuthInfo {
 export const UserMenu: React.FC = () => {
   const router = useRouter();
   const { showError, showSuccess } = useToast();
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
@@ -80,7 +81,6 @@ export const UserMenu: React.FC = () => {
       html.style.overflow = 'hidden';
 
       return () => {
-
         // 恢复所有原始样式
         body.style.overflow = originalBodyOverflow;
         html.style.overflow = originalHtmlOverflow;
@@ -94,8 +94,12 @@ export const UserMenu: React.FC = () => {
   const [enableOptimization, setEnableOptimization] = useState(true);
   const [fluidSearch, setFluidSearch] = useState(true);
   const [liveDirectConnect, setLiveDirectConnect] = useState(false);
-  const [doubanDataSource, setDoubanDataSource] = useState('cmliussss-cdn-tencent');
-  const [doubanImageProxyType, setDoubanImageProxyType] = useState('cmliussss-cdn-tencent');
+  const [doubanDataSource, setDoubanDataSource] = useState(
+    'cmliussss-cdn-tencent'
+  );
+  const [doubanImageProxyType, setDoubanImageProxyType] = useState(
+    'cmliussss-cdn-tencent'
+  );
   const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
@@ -181,7 +185,8 @@ export const UserMenu: React.FC = () => {
 
       const savedDoubanDataSource = localStorage.getItem('doubanDataSource');
       const defaultDoubanProxyType =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent';
+        (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
+        'cmliussss-cdn-tencent';
       if (savedDoubanDataSource !== null) {
         setDoubanDataSource(savedDoubanDataSource);
       } else if (defaultDoubanProxyType) {
@@ -201,7 +206,8 @@ export const UserMenu: React.FC = () => {
         'doubanImageProxyType'
       );
       const defaultDoubanImageProxyType =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent';
+        (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
+        'cmliussss-cdn-tencent';
       if (savedDoubanImageProxyType !== null) {
         setDoubanImageProxyType(savedDoubanImageProxyType);
       } else if (defaultDoubanImageProxyType) {
@@ -292,6 +298,26 @@ export const UserMenu: React.FC = () => {
     }
   }, [isDoubanImageProxyDropdownOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        isOpen
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const handleMenuClick = () => {
     setIsOpen(!isOpen);
   };
@@ -317,7 +343,6 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleChangePassword = () => {
-    setIsOpen(false);
     setIsChangePasswordOpen(true);
     setNewPassword('');
     setConfirmPassword('');
@@ -334,7 +359,9 @@ export const UserMenu: React.FC = () => {
   // 头像相关处理函数
   const fetchUserAvatar = async (username: string) => {
     try {
-      const response = await fetch(`/api/avatar?user=${encodeURIComponent(username)}`);
+      const response = await fetch(
+        `/api/avatar?user=${encodeURIComponent(username)}`
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.avatar) {
@@ -347,7 +374,6 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleChangeAvatar = () => {
-    setIsOpen(false);
     setIsChangeAvatarOpen(true);
     setSelectedImage('');
     setShowCropper(false);
@@ -363,7 +389,9 @@ export const UserMenu: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handleAvatarSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarSelected = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -434,13 +462,17 @@ export const UserMenu: React.FC = () => {
     );
 
     return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        }
-      }, 'image/jpeg', 0.9);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          }
+        },
+        'image/jpeg',
+        0.9
+      );
     });
   };
 
@@ -472,7 +504,10 @@ export const UserMenu: React.FC = () => {
     try {
       setIsUploadingAvatar(true);
 
-      const croppedImageBase64 = await getCroppedImage(imageRef.current, completedCrop);
+      const croppedImageBase64 = await getCroppedImage(
+        imageRef.current,
+        completedCrop
+      );
 
       // 上传到服务器
       const response = await fetch('/api/avatar', {
@@ -547,7 +582,6 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleSettings = () => {
-    setIsOpen(false);
     setIsSettingsOpen(true);
   };
 
@@ -633,11 +667,13 @@ export const UserMenu: React.FC = () => {
 
   const handleResetSettings = () => {
     const defaultDoubanProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent';
+      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
+      'cmliussss-cdn-tencent';
     const defaultDoubanProxy =
       (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
     const defaultDoubanImageProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent';
+      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
+      'cmliussss-cdn-tencent';
     const defaultDoubanImageProxyUrl =
       (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
     const defaultFluidSearch =
@@ -696,7 +732,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 菜单面板 */}
-      <div className='fixed top-14 right-4 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1001] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
+      <div className='fixed top-14 right-4 md:top-20 md:right-10 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1001] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
         {/* 用户信息区域 */}
         <div className='px-3 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50'>
           <div className='flex items-center gap-3'>
@@ -705,10 +741,21 @@ export const UserMenu: React.FC = () => {
               {avatarUrl ? (
                 <Image
                   src={avatarUrl}
-                  alt="用户头像"
+                  alt='用户头像'
                   fill
-                  sizes="40px"
+                  sizes='40px'
                   className='object-cover'
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    if (!img.dataset.retried) {
+                      img.dataset.retried = 'true';
+                      setTimeout(() => {
+                        if (avatarUrl) {
+                          img.src = avatarUrl;
+                        }
+                      }, 2000);
+                    }
+                  }}
                 />
               ) : (
                 <div className='w-full h-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center'>
@@ -723,12 +770,13 @@ export const UserMenu: React.FC = () => {
                   当前用户
                 </span>
                 <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${(authInfo?.role || 'user') === 'owner'
-                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                    : (authInfo?.role || 'user') === 'admin'
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                    (authInfo?.role || 'user') === 'owner'
+                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                      : (authInfo?.role || 'user') === 'admin'
                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                       : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                    }`}
+                  }`}
                 >
                   {getRoleText(authInfo?.role || 'user')}
                 </span>
@@ -816,12 +864,13 @@ export const UserMenu: React.FC = () => {
                 updateStatus &&
                 updateStatus !== UpdateStatus.FETCH_FAILED && (
                   <div
-                    className={`w-2 h-2 rounded-full -translate-y-2 ${updateStatus === UpdateStatus.HAS_UPDATE
-                      ? 'bg-yellow-500'
-                      : updateStatus === UpdateStatus.NO_UPDATE
+                    className={`w-2 h-2 rounded-full -translate-y-2 ${
+                      updateStatus === UpdateStatus.HAS_UPDATE
+                        ? 'bg-yellow-500'
+                        : updateStatus === UpdateStatus.NO_UPDATE
                         ? 'bg-green-400'
                         : ''
-                      }`}
+                    }`}
                   ></div>
                 )}
             </div>
@@ -852,9 +901,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 设置面板 */}
-      <div
-        className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'
-      >
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
           className='flex-1 p-6 overflow-y-auto'
@@ -916,8 +963,9 @@ export const UserMenu: React.FC = () => {
                 {/* 下拉箭头 */}
                 <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                   <ChevronDown
-                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isDoubanDropdownOpen ? 'rotate-180' : ''
-                      }`}
+                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                      isDoubanDropdownOpen ? 'rotate-180' : ''
+                    }`}
                   />
                 </div>
 
@@ -932,10 +980,11 @@ export const UserMenu: React.FC = () => {
                           handleDoubanDataSourceChange(option.value);
                           setIsDoubanDropdownOpen(false);
                         }}
-                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${doubanDataSource === option.value
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                          : 'text-gray-900 dark:text-gray-100'
-                          }`}
+                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          doubanDataSource === option.value
+                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                            : 'text-gray-900 dark:text-gray-100'
+                        }`}
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanDataSource === option.value && (
@@ -953,7 +1002,10 @@ export const UserMenu: React.FC = () => {
                   <button
                     type='button'
                     onClick={() =>
-                      window.open(getThanksInfo(doubanDataSource)!.url, '_blank')
+                      window.open(
+                        getThanksInfo(doubanDataSource)!.url,
+                        '_blank'
+                      )
                     }
                     className='flex items-center justify-center gap-1.5 w-full px-3 text-xs text-gray-500 dark:text-gray-400 cursor-pointer'
                   >
@@ -1021,8 +1073,9 @@ export const UserMenu: React.FC = () => {
                 {/* 下拉箭头 */}
                 <div className='absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none'>
                   <ChevronDown
-                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${isDoubanDropdownOpen ? 'rotate-180' : ''
-                      }`}
+                    className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+                      isDoubanDropdownOpen ? 'rotate-180' : ''
+                    }`}
                   />
                 </div>
 
@@ -1037,10 +1090,11 @@ export const UserMenu: React.FC = () => {
                           handleDoubanImageProxyTypeChange(option.value);
                           setIsDoubanImageProxyDropdownOpen(false);
                         }}
-                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${doubanImageProxyType === option.value
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                          : 'text-gray-900 dark:text-gray-100'
-                          }`}
+                        className={`w-full px-3 py-2.5 text-left text-sm transition-colors duration-150 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          doubanImageProxyType === option.value
+                            ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                            : 'text-gray-900 dark:text-gray-100'
+                        }`}
                       >
                         <span className='truncate'>{option.label}</span>
                         {doubanImageProxyType === option.value && (
@@ -1188,7 +1242,9 @@ export const UserMenu: React.FC = () => {
                     type='checkbox'
                     className='sr-only peer'
                     checked={liveDirectConnect}
-                    onChange={(e) => handleLiveDirectConnectToggle(e.target.checked)}
+                    onChange={(e) =>
+                      handleLiveDirectConnectToggle(e.target.checked)
+                    }
                   />
                   <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
                   <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
@@ -1229,9 +1285,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 修改密码面板 */}
-      <div
-        className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'
-      >
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
           className='h-full p-6'
@@ -1329,20 +1383,33 @@ export const UserMenu: React.FC = () => {
 
   return (
     <>
-      <div className='relative'>
+      <div className='relative' ref={menuRef}>
         <button
           onClick={handleMenuClick}
-          className={`${isMobile ? 'w-9 h-9 p-2' : 'w-10 h-10 p-2'} rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200/50 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors overflow-hidden`}
+          className={`${
+            isMobile ? 'w-9 h-9 p-2' : 'w-10 h-10 p-2'
+          } rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/20 transition-colors overflow-hidden`}
           aria-label='User Menu'
         >
           {avatarUrl ? (
             <div className='w-full h-full rounded-full overflow-hidden relative'>
               <Image
                 src={avatarUrl}
-                alt="用户头像"
+                alt='用户头像'
                 fill
-                sizes="40px"
+                sizes='40px'
                 className='object-cover'
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (!img.dataset.retried) {
+                    img.dataset.retried = 'true';
+                    setTimeout(() => {
+                      if (avatarUrl) {
+                        img.src = avatarUrl;
+                      }
+                    }, 2000);
+                  }
+                }}
               />
             </div>
           ) : (
@@ -1404,10 +1471,21 @@ export const UserMenu: React.FC = () => {
                         {avatarUrl ? (
                           <Image
                             src={avatarUrl}
-                            alt="用户头像"
+                            alt='用户头像'
                             fill
-                            sizes="96px"
+                            sizes='96px'
                             className='object-cover'
+                            onError={(e) => {
+                              const img = e.target as HTMLImageElement;
+                              if (!img.dataset.retried) {
+                                img.dataset.retried = 'true';
+                                setTimeout(() => {
+                                  if (avatarUrl) {
+                                    img.src = avatarUrl;
+                                  }
+                                }, 2000);
+                              }
+                            }}
                           />
                         ) : (
                           <div className='w-full h-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center'>
@@ -1420,9 +1498,9 @@ export const UserMenu: React.FC = () => {
                       <div>
                         <input
                           ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
+                          type='file'
+                          accept='image/*'
+                          className='hidden'
                           onChange={handleAvatarSelected}
                           disabled={isUploadingAvatar}
                         />
@@ -1444,16 +1522,21 @@ export const UserMenu: React.FC = () => {
                       <div className='w-full max-w-md'>
                         <ReactCrop
                           crop={crop}
-                          onChange={(_: PixelCrop, percentCrop: PercentCrop) => setCrop(percentCrop)}
-                          onComplete={(crop: PixelCrop) => setCompletedCrop(crop)}
+                          onChange={(_: PixelCrop, percentCrop: PercentCrop) =>
+                            setCrop(percentCrop)
+                          }
+                          onComplete={(crop: PixelCrop) =>
+                            setCompletedCrop(crop)
+                          }
                           aspect={1}
                           circularCrop
                         >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             ref={imageRef}
                             src={selectedImage}
-                            alt="Crop me"
-                            className="max-w-full max-h-64 object-contain"
+                            alt='Crop me'
+                            className='max-w-full max-h-64 object-contain'
                             onLoad={onImageLoad}
                           />
                         </ReactCrop>

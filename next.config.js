@@ -15,9 +15,16 @@ const nextConfig = {
     instrumentationHook: process.env.NODE_ENV === 'production',
   },
 
-  // Uncoment to add domain whitelist
+  // 图片优化配置
   images: {
-    unoptimized: true,
+    unoptimized: false, // 启用图片优化
+    formats: ['image/webp', 'image/avif'], // 支持现代图片格式
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840], // 响应式图片尺寸
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // 图标等小图片尺寸
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 缓存30天
+    dangerouslyAllowSVG: true, // 允许SVG
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
@@ -71,10 +78,7 @@ const nextConfig = {
     config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
     // Add TypeScript module resolution support
-    config.resolve.modules = [
-      path.resolve(__dirname, 'src'),
-      'node_modules'
-    ];
+    config.resolve.modules = [path.resolve(__dirname, 'src'), 'node_modules'];
 
     config.resolve.fallback = {
       ...config.resolve.fallback,
