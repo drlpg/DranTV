@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 
 interface ScrollableRowProps {
   children: React.ReactNode;
-  scrollDistance?: number;
 }
 
-export default function ScrollableRow({
-  children,
-  scrollDistance = 1000,
-}: ScrollableRowProps) {
+export default function ScrollableRow({ children }: ScrollableRowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const checkScroll = () => {
     if (containerRef.current) {
@@ -27,6 +25,22 @@ export default function ScrollableRow({
 
       setShowRightScroll(canScrollRight);
       setShowLeftScroll(canScrollLeft);
+
+      // 计算页面数量和当前页
+      const maxScroll = scrollWidth - clientWidth;
+      if (maxScroll > 0) {
+        // 根据可视区域宽度计算页数（每页约为一个可视区域）
+        const pages = Math.ceil(scrollWidth / clientWidth);
+        setTotalPages(pages);
+
+        // 计算当前在第几页
+        const progress = scrollLeft / maxScroll;
+        const page = Math.round(progress * (pages - 1));
+        setCurrentPage(page);
+      } else {
+        setTotalPages(1);
+        setCurrentPage(0);
+      }
     }
   };
 
@@ -74,19 +88,77 @@ export default function ScrollableRow({
 
   const handleScrollRightClick = () => {
     if (containerRef.current) {
-      containerRef.current.scrollBy({
-        left: scrollDistance,
-        behavior: 'smooth',
-      });
+      const container = containerRef.current;
+      const children = Array.from(container.children) as HTMLElement[];
+      const containerRect = container.getBoundingClientRect();
+      const scrollLeft = container.scrollLeft;
+
+      // 找到第一个右边缘超出可视区域的元素
+      let targetElement: HTMLElement | null = null;
+
+      for (const child of children) {
+        const childRightRelativeToScroll = child.offsetLeft + child.offsetWidth;
+        const visibleRight = scrollLeft + containerRect.width;
+
+        // 如果元素的右边缘超出可视区域，这就是我们要滚动到的目标
+        if (childRightRelativeToScroll > visibleRight + 1) {
+          targetElement = child;
+          break;
+        }
+      }
+
+      if (targetElement) {
+        // 滚动到目标元素的左边缘
+        container.scrollTo({
+          left: targetElement.offsetLeft,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
   const handleScrollLeftClick = () => {
     if (containerRef.current) {
-      containerRef.current.scrollBy({
-        left: -scrollDistance,
-        behavior: 'smooth',
-      });
+      const container = containerRef.current;
+      const children = Array.from(container.children) as HTMLElement[];
+      const scrollLeft = container.scrollLeft;
+
+      // 找到第一个左边缘在可视区域左侧的元素（从右向左查找）
+      let targetElement: HTMLElement | null = null;
+
+      for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        const childLeft = child.offsetLeft;
+
+        // 如果元素的左边缘在当前滚动位置的左侧
+        if (childLeft < scrollLeft - 1) {
+          targetElement = child;
+          break;
+        }
+      }
+
+      if (targetElement) {
+        const container = containerRef.current;
+        const containerWidth = container.clientWidth;
+        const targetWidth = targetElement.offsetWidth;
+
+        // 计算目标位置：让该元素的右边缘对齐可视区域右边缘
+        const targetScroll = Math.max(
+          0,
+          targetElement.offsetLeft + targetWidth - containerWidth
+        );
+
+        container.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth',
+        });
+      } else {
+        // 如果没找到，就滚动到开头
+        container.scrollTo({
+          left: 0,
+          behavior: 'smooth',
+        });
+      }
     }
   };
 
@@ -102,67 +174,59 @@ export default function ScrollableRow({
     >
       <div
         ref={containerRef}
-        className='flex space-x-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-12 sm:pb-14 px-4 sm:px-6'
+        className='flex gap-3 sm:gap-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-6 sm:pb-10 snap-x snap-mandatory'
         onScroll={checkScroll}
+        style={{
+          scrollPaddingLeft: '0px',
+          scrollSnapType: 'x mandatory',
+        }}
       >
         {children}
       </div>
+
+      {/* 胶囊形状滚动指示器 */}
+      {totalPages > 1 && (
+        <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5'>
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <div
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentPage
+                  ? 'w-6 bg-blue-500 dark:bg-blue-400 scale-110'
+                  : 'w-1.5 bg-gray-300 dark:bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+      )}
       {showLeftScroll && (
-        <div
-          className={`hidden sm:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
+        <button
+          onClick={handleScrollLeftClick}
+          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
-            background: 'transparent',
-            pointerEvents: 'none', // 允许点击穿透
+            top: 'calc(0.5rem + min(11rem, 24vw) * 0.75)',
+            transform: 'translate(-50%, -50%)',
           }}
         >
-          <div
-            className='absolute inset-0 flex items-center justify-center'
-            style={{
-              top: '40%',
-              bottom: '60%',
-              left: '-4.5rem',
-              pointerEvents: 'auto',
-            }}
-          >
-            <button
-              onClick={handleScrollLeftClick}
-              className='w-12 h-12 bg-white/95 rounded-full shadow-lg flex items-center justify-center hover:bg-white border border-gray-200 transition-transform hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600'
-            >
-              <ChevronLeft className='w-6 h-6 text-gray-600 dark:text-gray-300' />
-            </button>
-          </div>
-        </div>
+          <ChevronLeft className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+        </button>
       )}
 
       {showRightScroll && (
-        <div
-          className={`hidden sm:flex absolute right-0 top-0 bottom-0 w-16 items-center justify-center z-[600] transition-opacity duration-200 ${
+        <button
+          onClick={handleScrollRightClick}
+          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
-            background: 'transparent',
-            pointerEvents: 'none', // 允许点击穿透
+            top: 'calc(0.5rem + min(11rem, 24vw) * 0.75)',
+            transform: 'translate(50%, -50%)',
           }}
         >
-          <div
-            className='absolute inset-0 flex items-center justify-center'
-            style={{
-              top: '40%',
-              bottom: '60%',
-              right: '-4.5rem',
-              pointerEvents: 'auto',
-            }}
-          >
-            <button
-              onClick={handleScrollRightClick}
-              className='w-12 h-12 bg-white/95 rounded-full shadow-lg flex items-center justify-center hover:bg-white border border-gray-200 transition-transform hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600'
-            >
-              <ChevronRight className='w-6 h-6 text-gray-600 dark:text-gray-300' />
-            </button>
-          </div>
-        </div>
+          <ChevronRight className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+        </button>
       )}
     </div>
   );

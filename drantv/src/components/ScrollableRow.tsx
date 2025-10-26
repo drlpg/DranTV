@@ -1,0 +1,183 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+interface ScrollableRowProps {
+  children: React.ReactNode;
+}
+
+export default function ScrollableRow({ children }: ScrollableRowProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const checkScroll = () => {
+    if (containerRef.current) {
+      const { scrollWidth, clientWidth, scrollLeft } = containerRef.current;
+
+      // 计算是否需要左右滚动按钮
+      const threshold = 1; // 容差值，避免浮点误差
+      const canScrollRight =
+        scrollWidth - (scrollLeft + clientWidth) > threshold;
+      const canScrollLeft = scrollLeft > threshold;
+
+      setShowRightScroll(canScrollRight);
+      setShowLeftScroll(canScrollLeft);
+
+      // 计算页面数量和当前页
+      const maxScroll = scrollWidth - clientWidth;
+      if (maxScroll > 0) {
+        // 根据可视区域宽度计算页数（每页约为一个可视区域）
+        const pages = Math.ceil(scrollWidth / clientWidth);
+        setTotalPages(pages);
+
+        // 计算当前在第几页
+        const progress = scrollLeft / maxScroll;
+        const page = Math.round(progress * (pages - 1));
+        setCurrentPage(page);
+      } else {
+        setTotalPages(1);
+        setCurrentPage(0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // 多次延迟检查，确保内容已完全渲染
+    checkScroll();
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkScroll);
+
+    // 创建一个 ResizeObserver 来监听容器大小变化
+    const resizeObserver = new ResizeObserver(() => {
+      // 延迟执行检查
+      checkScroll();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      resizeObserver.disconnect();
+    };
+  }, [children]); // 依赖 children，当子组件变化时重新检查
+
+  // 添加一个额外的效果来监听子组件的变化
+  useEffect(() => {
+    if (containerRef.current) {
+      // 监听 DOM 变化
+      const observer = new MutationObserver(() => {
+        setTimeout(checkScroll, 100);
+      });
+
+      observer.observe(containerRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+
+      return () => observer.disconnect();
+    }
+  }, []);
+
+  const handleScrollRightClick = () => {
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const scrollAmount = container.clientWidth;
+      const targetScroll = container.scrollLeft + scrollAmount;
+
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleScrollLeftClick = () => {
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const scrollAmount = container.clientWidth;
+      const targetScroll = Math.max(0, container.scrollLeft - scrollAmount);
+
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  return (
+    <div
+      className='relative'
+      onMouseEnter={() => {
+        setIsHovered(true);
+        // 当鼠标进入时重新检查一次
+        checkScroll();
+      }}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div
+        ref={containerRef}
+        className='flex gap-3 sm:gap-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-6 sm:pb-10 snap-x snap-mandatory'
+        onScroll={checkScroll}
+        style={{
+          scrollPaddingLeft: '0px',
+          scrollSnapType: 'x mandatory',
+        }}
+      >
+        {children}
+      </div>
+
+      {/* 胶囊形状滚动指示器 */}
+      {totalPages > 1 && (
+        <div className='absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5'>
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <div
+              key={index}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentPage
+                  ? 'w-6 bg-blue-500 dark:bg-blue-400 scale-110'
+                  : 'w-1.5 bg-gray-300 dark:bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+      {showLeftScroll && (
+        <button
+          onClick={handleScrollLeftClick}
+          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            top: 'calc(0.5rem + min(11rem, 24vw) * 0.75)',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <ChevronLeft className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+        </button>
+      )}
+
+      {showRightScroll && (
+        <button
+          onClick={handleScrollRightClick}
+          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-white/95 rounded-full shadow-lg items-center justify-center hover:bg-white border border-gray-200 transition-all hover:scale-105 dark:bg-gray-800/90 dark:hover:bg-gray-700 dark:border-gray-600 z-[600] ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            top: 'calc(0.5rem + min(11rem, 24vw) * 0.75)',
+            transform: 'translate(50%, -50%)',
+          }}
+        >
+          <ChevronRight className='w-6 h-6 text-gray-600 dark:text-gray-300' />
+        </button>
+      )}
+    </div>
+  );
+}
