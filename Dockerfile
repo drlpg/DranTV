@@ -129,8 +129,8 @@ USER nextjs
 # 暴露HTTP和WebSocket端口
 EXPOSE 3000 3001
 
-# 添加健康检查 - 增加启动等待时间
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+# 添加健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node /app/healthcheck.js
 
 # 设置WebSocket端口环境变量
