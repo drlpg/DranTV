@@ -289,13 +289,16 @@ function HomeClient() {
               {/* 轮播图 */}
               <section className='mb-6 sm:mb-8'>
                 <Carousel
-                  items={hotMovies.slice(0, 5).map((movie) => ({
-                    id: movie.id,
-                    title: movie.title,
-                    image: movie.backdrop || movie.poster,
-                    rate: movie.rate,
-                    link: `/play?source=douban&id=${movie.id}`,
-                  }))}
+                  items={hotMovies
+                    .slice(0, 5)
+                    .filter((movie) => movie.backdrop)
+                    .map((movie) => ({
+                      id: movie.id,
+                      title: movie.title,
+                      image: movie.backdrop,
+                      rate: movie.rate,
+                      link: `/play?source=douban&id=${movie.id}`,
+                    }))}
                 />
               </section>
 
