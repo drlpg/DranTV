@@ -16,34 +16,22 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# 先复制所有文件
+# 复制 package.json 和 pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml* ./
+
+# 安装依赖（如果 lockfile 不存在或不匹配，使用 --no-frozen-lockfile）
+RUN pnpm install --no-frozen-lockfile
+
+# 复制其余文件
 COPY . .
-
-# 然后检查文件
-RUN echo "文件列表:" && ls -la && \
-    echo "检查 tsconfig.json:" && \
-    if [ -f "tsconfig.json" ]; then \
-        echo "tsconfig.json 存在"; \
-    else \
-        echo "tsconfig.json 不存在"; \
-        echo "查找所有文件:"; \
-        find . -type f -name "*tsconfig*"; \
-        exit 1; \
-    fi
-
-
-# 安装所有依赖
-RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# 复制依赖
-COPY --from=deps /app/node_modules ./node_modules
-# 复制全部源代码
-COPY . .
+# 从 deps 阶段复制 node_modules 和所有文件
+COPY --from=deps /app ./
 
 ENV DOCKER_ENV=true
 
