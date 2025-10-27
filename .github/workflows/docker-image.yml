@@ -62,7 +62,6 @@ jobs:
           images: ghcr.io/${{ steps.lowercase.outputs.owner }}/drantv
           tags: |
             type=raw,value=${{ github.event.inputs.tag || 'latest' }},enable={{is_default_branch}}
-            type=sha,prefix={{branch}}-
 
       - name: Build and push by digest
         id: build
@@ -120,23 +119,6 @@ jobs:
         run: |
           docker buildx imagetools create -t ghcr.io/${{ steps.lowercase.outputs.owner }}/drantv:${{ github.event.inputs.tag || 'latest' }} \
             $(printf 'ghcr.io/${{ steps.lowercase.outputs.owner }}/drantv@sha256:%s ' *)
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs:
-      - merge
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Trigger ClawCloud deployment
-        run: |
-          if [ -n "${{ secrets.CLAWCLOUD_WEBHOOK_URL }}" ]; then
-            curl -X POST "${{ secrets.CLAWCLOUD_WEBHOOK_URL }}" \
-              -H "Content-Type: application/json" \
-              -d '{"source":"github","event":"push","repository":"${{ github.repository }}","ref":"${{ github.ref }}"}'
-            echo "✅ ClawCloud 部署已触发"
-          else
-            echo "⚠️ 未配置 CLAWCLOUD_WEBHOOK_URL，跳过自动部署"
-          fi
 
   cleanup-refresh:
     runs-on: ubuntu-latest
