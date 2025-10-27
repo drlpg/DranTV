@@ -38,3 +38,7 @@ coverage/
 *.log
 *.tmp
 *.temp
+
+# 项目管理脚本
+organize-project.bat
+git-auto.sh

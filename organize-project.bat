@@ -7,7 +7,7 @@ echo.
 echo 说明：此脚本将完全重建 DranTV 文件夹
 echo       删除旧的 DranTV 文件夹并创建新的
 echo       根据最新项目结构组织文件
-echo       目标路径：D:\Dran\DranTV\DranTV\deploy\DranTV
+echo       目标路径：D:\Dran\DranTV\Backup\DranTV
 echo.
 
 REM 检查是否在项目根目录
@@ -24,12 +24,12 @@ echo 1. 创建备份文件夹: %backupFolder%
 mkdir "%backupFolder%" 2>nul
 
 REM 设置目标路径
-set "targetPath=D:\Dran\DranTV\DranTV\deploy\DranTV"
+set "targetPath=D:\Dran\DranTV\Backup\DranTV"
 
 REM 确保目标文件夹的父目录存在
-if not exist "D:\Dran\DranTV\DranTV\deploy" (
-    echo    创建 deploy 文件夹...
-    mkdir "D:\Dran\DranTV\DranTV\deploy"
+if not exist "D:\Dran\DranTV\Backup" (
+    echo    创建 Backup 文件夹...
+    mkdir "D:\Dran\DranTV\Backup"
 )
 
 REM 备份现有 DranTV 文件夹
