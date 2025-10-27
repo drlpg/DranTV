@@ -1,4 +1,11 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# 检查 CHANGELOG 是否被修改
+if git diff --cached --name-only | grep -q "^CHANGELOG$"; then
+  echo "检测到 CHANGELOG 变更，正在重新生成 changelog.ts..."
+  node scripts/convert-changelog.js
+  git add src/lib/changelog.ts
+fi
+
 npx lint-staged
