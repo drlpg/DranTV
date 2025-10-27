@@ -139,6 +139,14 @@ export const UserMenu: React.FC = () => {
   // 版本检查相关状态
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [hasViewedUpdate, setHasViewedUpdate] = useState(() => {
+    // 从 localStorage 读取已查看的版本号
+    if (typeof window !== 'undefined') {
+      const viewedVersion = localStorage.getItem('viewedUpdateVersion');
+      return viewedVersion === CURRENT_VERSION;
+    }
+    return false;
+  });
 
   // 确保组件已挂载
   useEffect(() => {
@@ -874,6 +882,11 @@ export const UserMenu: React.FC = () => {
           <button
             onClick={() => {
               setIsVersionPanelOpen(true);
+              // 打开版本面板时标记为已查看，并保存到 localStorage
+              setHasViewedUpdate(true);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('viewedUpdateVersion', CURRENT_VERSION);
+              }
               handleCloseMenu();
             }}
             className='w-full px-3 py-2 text-center flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-xs'
@@ -881,6 +894,7 @@ export const UserMenu: React.FC = () => {
             <div className='flex items-center gap-1'>
               <span className='font-mono'>v{CURRENT_VERSION}</span>
               {!isChecking &&
+                !hasViewedUpdate &&
                 updateStatus &&
                 updateStatus !== UpdateStatus.FETCH_FAILED && (
                   <div
@@ -1436,7 +1450,7 @@ export const UserMenu: React.FC = () => {
             <User className='w-6 h-6' />
           )}
         </button>
-        {updateStatus === UpdateStatus.HAS_UPDATE && (
+        {!hasViewedUpdate && updateStatus === UpdateStatus.HAS_UPDATE && (
           <div className='absolute top-[2px] right-[2px] w-2 h-2 bg-yellow-500 rounded-full'></div>
         )}
       </div>

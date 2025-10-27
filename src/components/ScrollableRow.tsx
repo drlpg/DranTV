@@ -202,7 +202,7 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
       {showLeftScroll && (
         <button
           onClick={handleScrollLeftClick}
-          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-10 ${
+          className={`hidden sm:flex absolute left-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
@@ -217,7 +217,7 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
       {showRightScroll && (
         <button
           onClick={handleScrollRightClick}
-          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-10 ${
+          className={`hidden sm:flex absolute right-0 w-12 h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center border-0 transition-all hover:scale-105 dark:bg-blue-500/50 dark:hover:bg-blue-500/80 z-[600] ${
             isHovered ? 'opacity-100' : 'opacity-0'
           }`}
           style={{

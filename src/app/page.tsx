@@ -551,7 +551,7 @@ function HomeClient() {
             }}
           >
             <div className='flex justify-between items-start mb-4'>
-              <h3 className='text-2xl font-bold tracking-tight text-gray-800 dark:text-white border-b border-blue-500 pb-1'>
+              <h3 className='flex-1 text-2xl font-bold tracking-tight text-gray-800 dark:text-white text-center'>
                 提示
               </h3>
               <button
@@ -563,14 +563,17 @@ function HomeClient() {
             <div className='mb-6'>
               <div className='relative overflow-hidden rounded-lg mb-4 bg-blue-50 dark:bg-blue-900/20'>
                 <div className='absolute inset-y-0 left-0 w-1.5 bg-blue-500 dark:bg-blue-400'></div>
-                <p className='ml-4 text-gray-600 dark:text-gray-300 leading-relaxed'>
+                <p
+                  className='py-5 pr-5 text-gray-600 dark:text-gray-300 leading-relaxed'
+                  style={{ marginLeft: '26px' }}
+                >
                   {announcement}
                 </p>
               </div>
             </div>
             <button
               onClick={() => handleCloseAnnouncement(announcement)}
-              className='w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 transition-all duration-300 transform hover:-translate-y-0.5'
+              className='w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white font-medium shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 transition-all duration-300'
             >
               我知道了
             </button>

@@ -1,5 +1,9 @@
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tailwindForms = require('@tailwindcss/forms');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const tailwindScrollbar = require('tailwind-scrollbar');
 
 const config: Config = {
   darkMode: 'class',
@@ -37,7 +41,8 @@ const config: Config = {
         'theme-surface': 'rgb(var(--color-theme-surface) / <alpha-value>)',
         'theme-accent': 'rgb(var(--color-theme-accent) / <alpha-value>)',
         'theme-text': 'rgb(var(--color-theme-text) / <alpha-value>)',
-        'theme-text-secondary': 'rgb(var(--color-theme-text-secondary) / <alpha-value>)',
+        'theme-text-secondary':
+          'rgb(var(--color-theme-text-secondary) / <alpha-value>)',
         'theme-border': 'rgb(var(--color-theme-border) / <alpha-value>)',
         // 扩展主题颜色
         'theme-success': 'rgb(var(--color-theme-success) / <alpha-value>)',
@@ -97,7 +102,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [tailwindForms, tailwindScrollbar({ nocompatible: true })],
 } satisfies Config;
 
 export default config;

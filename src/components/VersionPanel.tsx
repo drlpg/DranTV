@@ -354,7 +354,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
         </div>
 
         {/* 内容区域 */}
-        <div className='p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-140px)] sm:max-h-[calc(90vh-120px)]'>
+        <div className='p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-140px)] sm:max-h-[calc(90vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500'>
           <div className='space-y-3 sm:space-y-6'>
             {/* 远程更新信息 */}
             {hasUpdate && (
@@ -550,7 +550,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
             )}
 
             {/* 变更日志标题 */}
-            <div className='border-b border-gray-200 dark:border-gray-700 pb-4'>
+            <div className='pb-4'>
               <h4 className='text-lg font-semibold text-gray-800 dark:text-gray-200 pb-3 sm:pb-4'>
                 变更日志
               </h4>

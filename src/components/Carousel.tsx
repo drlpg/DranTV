@@ -138,10 +138,10 @@ export default function Carousel({
                 />
               </>
             )}
-            {/* 评分徽章 */}
+            {/* 推荐徽章 */}
             {item.rate && (
-              <div className='absolute top-4 right-4 bg-blue-500/80 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-md shadow-lg transition-all duration-300 ease-out hover:scale-110'>
-                {item.rate}
+              <div className='absolute top-4 left-4 bg-blue-500/80 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-md shadow-lg transition-all duration-300 ease-out hover:scale-110'>
+                推荐
               </div>
             )}
             {/* 渐变遮罩 */}

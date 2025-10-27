@@ -263,19 +263,19 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
   const categories: MultiLevelCategory[] = [
     ...(contentType !== 'anime-tv' && contentType !== 'anime-movie'
       ? [
-        {
-          key: 'type',
-          label: '类型',
-          options: getTypeOptions(contentType),
-        },
-      ]
+          {
+            key: 'type',
+            label: '类型',
+            options: getTypeOptions(contentType),
+          },
+        ]
       : [
-        {
-          key: 'label',
-          label: '类型',
-          options: getLabelOptions(contentType),
-        },
-      ]),
+          {
+            key: 'label',
+            label: '类型',
+            options: getLabelOptions(contentType),
+          },
+        ]),
     {
       key: 'region',
       label: '地区',
@@ -286,7 +286,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
       label: '年代',
       options: [
         { label: '全部', value: 'all' },
-        { label: '2020年代', value: '2020s' },
+        // 前10年以具体年份命名
         { label: '2025', value: '2025' },
         { label: '2024', value: '2024' },
         { label: '2023', value: '2023' },
@@ -294,26 +294,33 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
         { label: '2021', value: '2021' },
         { label: '2020', value: '2020' },
         { label: '2019', value: '2019' },
+        { label: '2018', value: '2018' },
+        { label: '2017', value: '2017' },
+        { label: '2016', value: '2016' },
+        // 之后按年代命名（豆瓣API格式）
         { label: '2010年代', value: '2010s' },
         { label: '2000年代', value: '2000s' },
+        // 再之后以年代命名
         { label: '90年代', value: '1990s' },
         { label: '80年代', value: '1980s' },
         { label: '70年代', value: '1970s' },
         { label: '60年代', value: '1960s' },
+        { label: '50年代', value: '1950s' },
+        // 最后以"更早"结尾
         { label: '更早', value: 'earlier' },
       ],
     },
     // 只在电视剧和综艺时显示平台选项
     ...(contentType === 'tv' ||
-      contentType === 'show' ||
-      contentType === 'anime-tv'
+    contentType === 'show' ||
+    contentType === 'anime-tv'
       ? [
-        {
-          key: 'platform',
-          label: '平台',
-          options: getPlatformOptions(contentType),
-        },
-      ]
+          {
+            key: 'platform',
+            label: '平台',
+            options: getPlatformOptions(contentType),
+          },
+        ]
       : []),
     {
       key: 'sort',
@@ -329,6 +336,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
           value: 'R',
         },
         { label: '高分优先', value: 'S' },
+        { label: '最近更新', value: 'time' },
       ],
     },
   ];
@@ -516,19 +524,21 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
           >
             <button
               onClick={() => handleCategoryClick(category.key)}
-              className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${activeCategory === category.key
+              className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+                activeCategory === category.key
                   ? isDefaultValue(category.key)
                     ? 'text-gray-900 dark:text-gray-100 cursor-default'
-                    : 'text-green-600 dark:text-green-400 cursor-default'
+                    : 'text-blue-600 dark:text-blue-400 cursor-default'
                   : isDefaultValue(category.key)
-                    ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
-                    : 'text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer'
-                }`}
+                  ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
+                  : 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer'
+              }`}
             >
               <span>{getDisplayText(category.key)}</span>
               <svg
-                className={`inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${activeCategory === category.key ? 'rotate-180' : ''
-                  }`}
+                className={`inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${
+                  activeCategory === category.key ? 'rotate-180' : ''
+                }`}
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -571,10 +581,11 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
                       onClick={() =>
                         handleOptionSelect(activeCategory, option.value)
                       }
-                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-left ${isOptionSelected(activeCategory, option.value)
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-700'
+                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 flex items-center justify-center ${
+                        isOptionSelected(activeCategory, option.value)
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80'
-                        }`}
+                      }`}
                     >
                       {option.label}
                     </button>
