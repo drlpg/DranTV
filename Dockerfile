@@ -34,9 +34,18 @@ WORKDIR /app
 COPY --from=deps /app ./
 
 ENV DOCKER_ENV=true
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# 生成生产构建
-RUN pnpm run build
+# 生成生产构建（添加详细日志）
+RUN echo "=== 开始构建 ===" && \
+    echo "Node 版本:" && node --version && \
+    echo "pnpm 版本:" && pnpm --version && \
+    echo "当前目录:" && pwd && \
+    echo "目录内容:" && ls -la && \
+    echo "package.json scripts:" && cat package.json | grep -A 10 "scripts" && \
+    echo "=== 执行构建命令 ===" && \
+    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1)
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
