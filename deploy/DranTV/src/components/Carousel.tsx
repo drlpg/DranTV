@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface CarouselItem {
   id: string;
@@ -21,6 +22,7 @@ export default function Carousel({
   items,
   autoPlayInterval = 5000,
 }: CarouselProps) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
@@ -56,13 +58,16 @@ export default function Carousel({
     setImageLoaded((prev) => new Set(prev).add(index));
   };
 
+  const handleItemClick = (item: CarouselItem) => {
+    if (item.link) {
+      router.push(item.link);
+    }
+  };
+
   // 如果没有数据，显示骨架屏
   if (items.length === 0) {
     return (
-      <div
-        className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto bg-gray-100 dark:bg-gray-800'
-        style={{ height: window.innerWidth >= 768 ? '60vh' : 'auto' }}
-      >
+      <div className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60vh] bg-gray-100 dark:bg-gray-800'>
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='relative w-[20%] h-[20%] min-w-[50px] min-h-[50px] max-w-[100px] max-h-[100px]'>
             <Image
@@ -80,8 +85,7 @@ export default function Carousel({
 
   return (
     <div
-      className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto'
-      style={{ height: window.innerWidth >= 768 ? '60vh' : 'auto' }}
+      className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60vh]'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -92,7 +96,8 @@ export default function Carousel({
             key={item.id}
             className={`absolute inset-0 transition-opacity duration-500 ${
               index === currentIndex ? 'opacity-100' : 'opacity-0'
-            }`}
+            } ${item.link ? 'cursor-pointer' : ''}`}
+            onClick={() => handleItemClick(item)}
           >
             {imageErrors.has(index) ? (
               // 图片加载失败时显示占位符

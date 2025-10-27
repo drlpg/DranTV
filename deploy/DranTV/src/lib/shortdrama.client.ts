@@ -14,7 +14,7 @@ export interface ShortDramaItem {
   score: number;
   total_episodes?: string;
   vod_class?: string; // 添加分类字段
-  vod_tag?: string;   // 添加标签字段
+  vod_tag?: string; // 添加标签字段
 }
 
 export interface ShortDramaListResponse {
@@ -44,25 +44,39 @@ export interface ShortDramaSearchResponse {
   list: ShortDramaItem[];
 }
 
+export interface ShortDramaParseResponse {
+  success: boolean;
+  data?: {
+    url?: string;
+    urls?: string[];
+    [key: string]: unknown;
+  };
+  error?: string;
+}
+
 // 获取分类种类
-export const getShortDramaCategories = async (): Promise<ShortDramaCategoriesResponse> => {
-  const response = await fetch('/api/shortdrama/categories');
-  if (!response.ok) {
-    throw new Error('Failed to fetch short drama categories');
-  }
-  return response.json();
-};
+export const getShortDramaCategories =
+  async (): Promise<ShortDramaCategoriesResponse> => {
+    const response = await fetch('/api/shortdrama/categories');
+    if (!response.ok) {
+      throw new Error('Failed to fetch short drama categories');
+    }
+    return response.json();
+  };
 
 // 获取随机推荐
 export const getShortDramaRecommend = async (params: {
   categoryId?: string;
   size?: string;
 }): Promise<ShortDramaRecommendResponse> => {
-  const url = new URL('/api/shortdrama/recommend', window.location.origin);
-  if (params.categoryId) url.searchParams.append('categoryId', params.categoryId);
-  if (params.size) url.searchParams.append('size', params.size);
+  const searchParams = new URLSearchParams();
+  if (params.categoryId) searchParams.append('categoryId', params.categoryId);
+  if (params.size) searchParams.append('size', params.size);
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/recommend${
+    searchParams.toString() ? `?${searchParams.toString()}` : ''
+  }`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to fetch short drama recommendations');
   }
@@ -74,11 +88,12 @@ export const getShortDramaList = async (params: {
   categoryId: string;
   page?: string;
 }): Promise<ShortDramaListResponse> => {
-  const url = new URL('/api/shortdrama/list', window.location.origin);
-  url.searchParams.append('categoryId', params.categoryId);
-  if (params.page) url.searchParams.append('page', params.page);
+  const searchParams = new URLSearchParams();
+  searchParams.append('categoryId', params.categoryId);
+  if (params.page) searchParams.append('page', params.page);
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/list?${searchParams.toString()}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to fetch short drama list');
   }
@@ -89,10 +104,11 @@ export const getShortDramaList = async (params: {
 export const searchShortDrama = async (params: {
   name: string;
 }): Promise<ShortDramaSearchResponse> => {
-  const url = new URL('/api/shortdrama/search', window.location.origin);
-  url.searchParams.append('name', params.name);
+  const searchParams = new URLSearchParams();
+  searchParams.append('name', params.name);
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/search?${searchParams.toString()}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to search short drama');
   }
@@ -103,10 +119,13 @@ export const searchShortDrama = async (params: {
 export const getShortDramaLatest = async (params: {
   page?: string;
 }): Promise<ShortDramaItem[]> => {
-  const url = new URL('/api/shortdrama/latest', window.location.origin);
-  if (params.page) url.searchParams.append('page', params.page);
+  const searchParams = new URLSearchParams();
+  if (params.page) searchParams.append('page', params.page);
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/latest${
+    searchParams.toString() ? `?${searchParams.toString()}` : ''
+  }`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to fetch latest short drama');
   }
@@ -117,12 +136,13 @@ export const getShortDramaLatest = async (params: {
 export const getShortDramaSingleParse = async (params: {
   id: string;
   episode?: number;
-}): Promise<any> => {
-  const url = new URL('/api/shortdrama/parse/single', window.location.origin);
-  url.searchParams.append('id', params.id);
-  if (params.episode) url.searchParams.append('episode', params.episode.toString());
+}): Promise<ShortDramaParseResponse> => {
+  const searchParams = new URLSearchParams();
+  searchParams.append('id', params.id);
+  if (params.episode) searchParams.append('episode', params.episode.toString());
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/parse/single?${searchParams.toString()}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to parse single episode');
   }
@@ -133,12 +153,13 @@ export const getShortDramaSingleParse = async (params: {
 export const getShortDramaBatchParse = async (params: {
   id: number;
   episodes?: string;
-}): Promise<any> => {
-  const url = new URL('/api/shortdrama/parse/batch', window.location.origin);
-  url.searchParams.append('id', params.id.toString());
-  if (params.episodes) url.searchParams.append('episodes', params.episodes);
+}): Promise<ShortDramaParseResponse> => {
+  const searchParams = new URLSearchParams();
+  searchParams.append('id', params.id.toString());
+  if (params.episodes) searchParams.append('episodes', params.episodes);
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/parse/batch?${searchParams.toString()}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to parse batch episodes');
   }
@@ -148,11 +169,12 @@ export const getShortDramaBatchParse = async (params: {
 // 获取全集地址
 export const getShortDramaAllParse = async (params: {
   id: number;
-}): Promise<any> => {
-  const url = new URL('/api/shortdrama/parse/all', window.location.origin);
-  url.searchParams.append('id', params.id.toString());
+}): Promise<ShortDramaParseResponse> => {
+  const searchParams = new URLSearchParams();
+  searchParams.append('id', params.id.toString());
 
-  const response = await fetch(url.toString());
+  const url = `/api/shortdrama/parse/all?${searchParams.toString()}`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error('Failed to parse all episodes');
   }

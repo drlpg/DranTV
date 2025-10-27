@@ -17,7 +17,9 @@ interface UseWebSocketOptions {
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connecting' | 'connected' | 'disconnected'
+  >('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const keepAliveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,7 +33,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   if (!instanceIdRef.current) {
     globalConnectionCount++;
     instanceIdRef.current = `ws-${globalConnectionCount}-${Date.now()}`;
-    console.log(`🔌 创建 WebSocket 实例: ${instanceIdRef.current}`);
   }
 
   // 更新 options ref
@@ -55,7 +56,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
     // 生产环境，使用独立的WebSocket端口
     // 如果通过反向代理，可能需要特殊的路径
-    if (window.location.port && window.location.port !== '80' && window.location.port !== '443') {
+    if (
+      window.location.port &&
+      window.location.port !== '80' &&
+      window.location.port !== '443'
+    ) {
       // 本地测试环境
       return `${protocol}//${hostname}:${wsPort}/ws?_=${Date.now()}`;
     } else {
@@ -69,11 +74,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   // 连接WebSocket
   const connect = useCallback(() => {
     // 防止重复连接
-    if (wsRef.current?.readyState === WebSocket.OPEN || isConnectingRef.current) {
+    if (
+      wsRef.current?.readyState === WebSocket.OPEN ||
+      isConnectingRef.current
+    ) {
       console.log('🚫 防止重复连接 - 当前状态:', {
         readyState: wsRef.current?.readyState,
         isConnecting: isConnectingRef.current,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
@@ -99,7 +107,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     const wsUrl = getWebSocketUrl();
 
     try {
-      console.log(`🔄 [${instanceIdRef.current}] 正在连接 WebSocket:`, wsUrl);
       wsRef.current = new WebSocket(wsUrl);
 
       // 设置超时处理
@@ -114,7 +121,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         clearTimeout(connectionTimeout);
         isConnectingRef.current = false; // 重置连接标志
 
-        console.log(`✅ [${instanceIdRef.current}] WebSocket 连接成功:`, wsUrl);
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
@@ -127,7 +133,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             data: { userId: authInfo.username },
             timestamp: Date.now(),
           });
-          console.log(`📤 [${instanceIdRef.current}] 已发送用户连接消息:`, authInfo.username);
+          console.log(
+            `📤 [${instanceIdRef.current}] 已发送用户连接消息:`,
+            authInfo.username
+          );
         }
 
         // 清理之前的保持活动定时器（如果存在）
@@ -138,7 +147,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // 设置保持活动的定期消息
         keepAliveIntervalRef.current = setInterval(() => {
           if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+            wsRef.current.send(
+              JSON.stringify({ type: 'ping', timestamp: Date.now() })
+            );
             // console.log('已发送保持活动消息');
           } else {
             if (keepAliveIntervalRef.current) {
@@ -162,7 +173,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       wsRef.current.onclose = (event) => {
-        console.log(`❌ [${instanceIdRef.current}] WebSocket 断开连接:`, event.code, event.reason);
+        console.log(
+          `❌ [${instanceIdRef.current}] WebSocket 断开连接:`,
+          event.code,
+          event.reason
+        );
         isConnectingRef.current = false; // 重置连接标志
         setIsConnected(false);
         setConnectionStatus('disconnected');
@@ -226,11 +241,21 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         optionsRef.current.onDisconnect?.();
 
         // 自动重连（除非是正常关闭）
-        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        if (
+          event.code !== 1000 &&
+          reconnectAttemptsRef.current < maxReconnectAttempts
+        ) {
           // 增加最小延迟时间，避免太频繁的重连
           const baseDelay = 2000; // 最小2秒
-          const delay = Math.max(baseDelay, Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)); // 指数退避，最少2秒，最多30秒
-          console.log(`准备重新连接，等待 ${delay / 1000} 秒... (尝试 ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+          const delay = Math.max(
+            baseDelay,
+            Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)
+          ); // 指数退避，最少2秒，最多30秒
+          console.log(
+            `准备重新连接，等待 ${delay / 1000} 秒... (尝试 ${
+              reconnectAttemptsRef.current + 1
+            }/${maxReconnectAttempts})`
+          );
 
           // 清除之前的重连定时器
           if (reconnectTimeoutRef.current) {
@@ -239,7 +264,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
-            console.log(`正在尝试重新连接... (尝试 ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+            console.log(
+              `正在尝试重新连接... (尝试 ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`
+            );
             connect();
           }, delay);
         }
@@ -252,7 +279,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setConnectionStatus('disconnected');
       };
     } catch (error) {
-      console.error(`❌ [${instanceIdRef.current}] 创建 WebSocket 连接失败:`, error);
+      console.error(
+        `❌ [${instanceIdRef.current}] 创建 WebSocket 连接失败:`,
+        error
+      );
       isConnectingRef.current = false; // 重置连接标志
       setConnectionStatus('disconnected');
 
@@ -310,15 +340,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     const enabled = options.enabled ?? true; // 默认启用
 
     if (enabled) {
-      console.log(`🎯 [${instanceIdRef.current}] WebSocket 已启用，开始连接`);
       connect();
     } else {
-      console.log(`⏸️ [${instanceIdRef.current}] WebSocket 已禁用，断开现有连接`);
+      console.log(
+        `⏸️ [${instanceIdRef.current}] WebSocket 已禁用，断开现有连接`
+      );
       disconnect();
     }
 
     return () => {
-      console.log(`🧹 [${instanceIdRef.current}] WebSocket effect 清理，断开连接`);
+      console.log(
+        `🧹 [${instanceIdRef.current}] WebSocket effect 清理，断开连接`
+      );
       disconnect();
     };
   }, [options.enabled, connect]); // 监听 enabled 状态变化

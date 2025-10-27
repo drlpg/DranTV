@@ -294,6 +294,7 @@ function HomeClient() {
                     title: movie.title,
                     image: movie.backdrop || movie.poster,
                     rate: movie.rate,
+                    link: `/play?source=douban&id=${movie.id}`,
                   }))}
                 />
               </section>

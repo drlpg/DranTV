@@ -48,7 +48,8 @@ export default async function RootLayout({
     process.env.ANNOUNCEMENT ||
     '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
 
-  let doubanProxyType = process.env.NEXT_PUBLIC_DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent';
+  let doubanProxyType =
+    process.env.NEXT_PUBLIC_DOUBAN_PROXY_TYPE || 'cmliussss-cdn-tencent';
   let doubanProxy = process.env.NEXT_PUBLIC_DOUBAN_PROXY || '';
   let doubanImageProxyType =
     process.env.NEXT_PUBLIC_DOUBAN_IMAGE_PROXY_TYPE || 'cmliussss-cdn-tencent';
@@ -56,7 +57,8 @@ export default async function RootLayout({
   let disableYellowFilter =
     process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true';
   let fluidSearch = process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false';
-  let requireDeviceCode = process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false';
+  let requireDeviceCode =
+    process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false';
   let customCategories = [] as {
     name: string;
     type: 'movie' | 'tv';
@@ -126,7 +128,6 @@ export default async function RootLayout({
                   if (cachedTheme) {
                     try {
                       const themeConfig = JSON.parse(cachedTheme);
-                      console.log('应用缓存主题配置:', themeConfig);
                       
                       // 立即应用缓存的主题，避免闪烁
                       const html = document.documentElement;
@@ -149,14 +150,9 @@ export default async function RootLayout({
                         }
                         customStyleEl.textContent = themeConfig.customCSS;
                       }
-                      
-                      console.log('缓存主题已应用:', themeConfig.defaultTheme);
                     } catch (parseError) {
-                      console.warn('解析缓存主题配置失败:', parseError);
                       localStorage.removeItem('theme-cache'); // 清除无效缓存
                     }
-                  } else {
-                    console.log('未找到缓存主题，等待API获取');
                   }
                 } catch (error) {
                   console.error('应用缓存主题失败:', error);
@@ -165,7 +161,6 @@ export default async function RootLayout({
             `,
           }}
         />
-
       </head>
       <body
         className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}

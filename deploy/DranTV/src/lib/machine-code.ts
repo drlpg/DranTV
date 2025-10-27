@@ -23,6 +23,13 @@ export class MachineCode {
     hardwareConcurrency: number;
     maxTouchPoints: number;
   }> {
+    // 确保在浏览器环境中执行
+    if (typeof window === 'undefined') {
+      throw new Error(
+        'MachineCode can only be generated in browser environment'
+      );
+    }
+
     // 基础浏览器信息
     const userAgent = navigator.userAgent;
     const language = navigator.language;
@@ -53,7 +60,7 @@ export class MachineCode {
       cookieEnabled,
       doNotTrack,
       hardwareConcurrency,
-      maxTouchPoints
+      maxTouchPoints,
     };
   }
 
@@ -103,19 +110,24 @@ export class MachineCode {
   private static getWebGLFingerprint(): string {
     try {
       const canvas = document.createElement('canvas');
-      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext;
+      const gl = (canvas.getContext('webgl') ||
+        canvas.getContext('experimental-webgl')) as WebGLRenderingContext;
       if (!gl) return 'no-webgl';
 
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-      const vendor = debugInfo ? gl.getParameter((debugInfo as any).UNMASKED_VENDOR_WEBGL) : '';
-      const renderer = debugInfo ? gl.getParameter((debugInfo as any).UNMASKED_RENDERER_WEBGL) : '';
+      const vendor = debugInfo
+        ? gl.getParameter((debugInfo as any).UNMASKED_VENDOR_WEBGL)
+        : '';
+      const renderer = debugInfo
+        ? gl.getParameter((debugInfo as any).UNMASKED_RENDERER_WEBGL)
+        : '';
 
       const webglInfo = {
         vendor,
         renderer,
         version: gl.getParameter(gl.VERSION),
         shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
-        extensions: gl.getSupportedExtensions()?.join(',') || ''
+        extensions: gl.getSupportedExtensions()?.join(',') || '',
       };
 
       return JSON.stringify(webglInfo);
@@ -143,8 +155,13 @@ export class MachineCode {
     } catch (error) {
       console.error('生成机器码失败:', error);
       // 如果生成失败，使用时间戳和随机数作为后备方案
-      const fallback = `${Date.now()}-${Math.random().toString(36).substring(2)}`;
-      return CryptoJS.SHA256(fallback).toString(CryptoJS.enc.Hex).substring(0, 32).toUpperCase();
+      const fallback = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}`;
+      return CryptoJS.SHA256(fallback)
+        .toString(CryptoJS.enc.Hex)
+        .substring(0, 32)
+        .toUpperCase();
     }
   }
 

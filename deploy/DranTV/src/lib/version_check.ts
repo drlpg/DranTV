@@ -77,7 +77,7 @@ async function fetchVersionFromUrl(url: string): Promise<string | null> {
     const version = await response.text();
     return version.trim();
   } catch (error) {
-    console.warn(`从 ${url} 获取版本信息失败:`, error);
+    // 静默失败，不输出日志
     return null;
   }
 }

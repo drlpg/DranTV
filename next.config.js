@@ -11,6 +11,13 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: false,
 
+  // 禁用图片警告
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
+
   experimental: {
     instrumentationHook: process.env.NODE_ENV === 'production',
   },
@@ -35,6 +42,12 @@ const nextConfig = {
         hostname: '**',
       },
     ],
+  },
+
+  // 禁用开发环境的性能警告
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
 
   webpack(config) {
