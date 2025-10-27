@@ -16,5 +16,6 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "kiroAgent.trustedCommands": [
     "*"
-  ]
+  ],
+  "typescript.autoClosingTags": false
 }
