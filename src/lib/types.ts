@@ -107,6 +107,7 @@ export interface DoubanItem {
   id: string;
   title: string;
   poster: string;
+  backdrop?: string;
   rate: string;
   year: string;
 }
@@ -170,7 +171,16 @@ export interface FriendRequest {
 
 // WebSocket 消息类型
 export interface WebSocketMessage {
-  type: 'message' | 'friend_request' | 'friend_accepted' | 'user_status' | 'online_users' | 'connection_confirmed' | 'user_connect' | 'ping' | 'pong';
+  type:
+    | 'message'
+    | 'friend_request'
+    | 'friend_accepted'
+    | 'user_status'
+    | 'online_users'
+    | 'connection_confirmed'
+    | 'user_connect'
+    | 'ping'
+    | 'pong';
   data?: any;
   timestamp: number;
 }
