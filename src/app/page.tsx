@@ -113,17 +113,26 @@ function HomeClient() {
                   if (index < 5 && backdrops[index]) {
                     return { ...movie, backdrop: backdrops[index] };
                   }
-                  return movie;
+                  // 如果没有 backdrop，使用 poster 作为降级
+                  return { ...movie, backdrop: movie.poster };
                 }
               );
               setHotMovies(updatedMovies);
             } else {
-              // TMDB API失败，使用原始数据
-              setHotMovies(moviesData.list);
+              // TMDB API失败，使用 poster 作为 backdrop 的降级
+              const moviesWithBackdrop = moviesData.list.map((movie: any) => ({
+                ...movie,
+                backdrop: movie.poster,
+              }));
+              setHotMovies(moviesWithBackdrop);
             }
           } catch (error) {
-            // 异常时使用原始数据
-            setHotMovies(moviesData.list);
+            // 异常时使用 poster 作为 backdrop 的降级
+            const moviesWithBackdrop = moviesData.list.map((movie: any) => ({
+              ...movie,
+              backdrop: movie.poster,
+            }));
+            setHotMovies(moviesWithBackdrop);
           }
         }
 
