@@ -48,10 +48,10 @@ const MobileHeader = ({ showBackButton = false }: MobileHeaderProps) => {
       </div>
 
       {/* 中间：Logo（绝对居中） */}
-      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>
+      <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none'>
         <Link
           href='/'
-          className='text-2xl font-bold text-gray-600 dark:text-gray-300 tracking-tight hover:opacity-80 transition-opacity'
+          className='text-2xl font-bold text-gray-600 dark:text-gray-300 tracking-tight hover:opacity-80 transition-opacity pointer-events-auto'
         >
           {siteName}
         </Link>

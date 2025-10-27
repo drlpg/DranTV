@@ -1383,12 +1383,12 @@ export const UserMenu: React.FC = () => {
 
   return (
     <>
-      <div className='relative' ref={menuRef}>
+      <div className='relative z-[1002]' ref={menuRef}>
         <button
           onClick={handleMenuClick}
           className={`${
             isMobile ? 'w-9 h-9 p-2' : 'w-10 h-10 p-2'
-          } rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/20 transition-colors overflow-hidden`}
+          } rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/20 transition-colors overflow-hidden relative z-[1002]`}
           aria-label='User Menu'
         >
           {avatarUrl ? (
