@@ -300,17 +300,30 @@ export const UserMenu: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        isOpen
-      ) {
+      const target = event.target as Node;
+
+      // 检查点击是否在菜单按钮内
+      if (menuRef.current && menuRef.current.contains(target)) {
+        return;
+      }
+
+      // 检查点击是否在菜单面板内（通过检查是否点击了菜单面板或其子元素）
+      const menuPanel = document.querySelector('[data-menu-panel="user-menu"]');
+      if (menuPanel && menuPanel.contains(target)) {
+        return;
+      }
+
+      // 如果点击在外部，关闭菜单
+      if (isOpen) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // 使用 setTimeout 确保事件监听器在当前点击事件之后添加
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 0);
     }
 
     return () => {
@@ -339,10 +352,12 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleAdminPanel = () => {
+    setIsOpen(false);
     router.push('/admin');
   };
 
   const handleChangePassword = () => {
+    setIsOpen(false);
     setIsChangePasswordOpen(true);
     setNewPassword('');
     setConfirmPassword('');
@@ -374,6 +389,7 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleChangeAvatar = () => {
+    setIsOpen(false);
     setIsChangeAvatarOpen(true);
     setSelectedImage('');
     setShowCropper(false);
@@ -582,6 +598,7 @@ export const UserMenu: React.FC = () => {
   };
 
   const handleSettings = () => {
+    setIsOpen(false);
     setIsSettingsOpen(true);
   };
 
@@ -732,7 +749,10 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 菜单面板 */}
-      <div className='fixed top-14 right-4 md:top-20 md:right-10 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1001] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'>
+      <div
+        data-menu-panel='user-menu'
+        className='fixed top-14 right-4 md:top-20 md:right-10 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[1003] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden select-none'
+      >
         {/* 用户信息区域 */}
         <div className='px-3 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-800 dark:to-gray-800/50'>
           <div className='flex items-center gap-3'>
