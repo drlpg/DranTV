@@ -987,7 +987,6 @@ export function ChatModal({
       }`}
       style={{
         zIndex: '2147483647',
-        minHeight: '100vh',
         minHeight: '100dvh',
       }}
     >
