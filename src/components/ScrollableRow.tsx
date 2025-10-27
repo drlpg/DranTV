@@ -174,7 +174,7 @@ export default function ScrollableRow({ children }: ScrollableRowProps) {
     >
       <div
         ref={containerRef}
-        className='flex gap-3 sm:gap-6 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-6 sm:pb-10 snap-x snap-mandatory'
+        className='flex gap-3 sm:gap-5 overflow-x-auto scrollbar-hide py-1 sm:py-2 pb-6 sm:pb-10 snap-x snap-mandatory'
         onScroll={checkScroll}
         style={{
           scrollPaddingLeft: '0px',
