@@ -28,7 +28,11 @@ function generateManifest() {
 generateManifest();
 
 // 启动独立的WebSocket服务器
-const { createStandaloneWebSocketServer, getOnlineUsers, sendMessageToUsers } = require('./standalone-websocket');
+const {
+  createStandaloneWebSocketServer,
+  getOnlineUsers,
+  sendMessageToUsers,
+} = require('./standalone-websocket');
 const wsPort = process.env.WS_PORT || 3001;
 const wss = createStandaloneWebSocketServer(wsPort);
 
@@ -57,7 +61,7 @@ if (fs.existsSync(nextServerPath)) {
   const app = next({
     dev: false,
     hostname,
-    port
+    port,
   });
 
   const handle = app.getRequestHandler();
@@ -161,6 +165,30 @@ function executeCronJob() {
   });
 }
 
+// 优雅关闭处理
+const cleanup = () => {
+  console.log('\n🛑 正在关闭服务器...');
+
+  // 关闭 WebSocket 服务器
+  if (wss) {
+    console.log('🔌 关闭 WebSocket 服务器...');
+    wss.close(() => {
+      console.log('✅ WebSocket 服务器已关闭');
+    });
+  }
+
+  console.log('✅ 服务器关闭完成');
+
+  // 如果5秒后还没关闭，强制退出
+  setTimeout(() => {
+    console.log('⚠️  强制退出...');
+    process.exit(0);
+  }, 5000);
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
 // 如果直接运行此文件，设置任务
 if (require.main === module) {
   // 延迟启动任务，等待服务器完全启动
@@ -168,9 +196,3 @@ if (require.main === module) {
     setupServerTasks();
   }, 5000);
 }
-
-
-
-
-
-

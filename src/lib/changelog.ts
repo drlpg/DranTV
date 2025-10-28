@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.3",
+    date: "2025-10-29",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化服务器优雅关闭处理",
+    "改进 Upstash Redis 配置和连接"
+    ],
+    fixed: [
+    "修复服务器关闭时 WebSocket 端口未释放问题",
+    "修复环境变量优先级，确保配置正确加载",
+    "修复机器码绑定选项显示逻辑"
+    ]
+  },
+  {
     version: "1.0.2",
     date: "2025-10-28",
     added: [

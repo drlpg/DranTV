@@ -58,7 +58,7 @@ export default async function RootLayout({
     process.env.NEXT_PUBLIC_DISABLE_YELLOW_FILTER === 'true';
   let fluidSearch = process.env.NEXT_PUBLIC_FLUID_SEARCH !== 'false';
   let requireDeviceCode =
-    process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE !== 'false';
+    process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE === 'true';
   let customCategories = [] as {
     name: string;
     type: 'movie' | 'tv';
@@ -82,7 +82,13 @@ export default async function RootLayout({
       query: category.query,
     }));
     fluidSearch = config.SiteConfig.FluidSearch;
-    requireDeviceCode = config.SiteConfig.RequireDeviceCode;
+    // 优先使用环境变量，如果未设置则使用数据库配置
+    requireDeviceCode =
+      process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE === 'true'
+        ? true
+        : process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE === 'false'
+        ? false
+        : config.SiteConfig.RequireDeviceCode;
   }
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取

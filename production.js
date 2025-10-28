@@ -38,7 +38,7 @@ const port = process.env.PORT || 3000;
 const app = next({
   dev: false,
   hostname,
-  port
+  port,
 });
 
 const handle = app.getRequestHandler();
@@ -111,12 +111,42 @@ app.prepare().then(() => {
     // 设置服务器启动后的任务
     setupServerTasks();
   });
+
+  // 优雅关闭处理
+  const cleanup = () => {
+    console.log('\n🛑 正在关闭服务器...');
+
+    // 关闭 WebSocket 服务器
+    if (wss) {
+      console.log('🔌 关闭 WebSocket 服务器...');
+      wss.close(() => {
+        console.log('✅ WebSocket 服务器已关闭');
+      });
+    }
+
+    // 关闭 HTTP 服务器
+    server.close(() => {
+      console.log('✅ HTTP 服务器已关闭');
+      process.exit(0);
+    });
+
+    // 如果5秒后还没关闭，强制退出
+    setTimeout(() => {
+      console.log('⚠️  强制退出...');
+      process.exit(0);
+    }, 5000);
+  };
+
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
 });
 
 // 设置服务器启动后的任务
 function setupServerTasks() {
   // 每 1 秒轮询一次，直到请求成功
-  const TARGET_URL = `http://${process.env.HOSTNAME || 'localhost'}:${process.env.PORT || 3000}/login`;
+  const TARGET_URL = `http://${process.env.HOSTNAME || 'localhost'}:${
+    process.env.PORT || 3000
+  }/login`;
 
   const intervalId = setInterval(() => {
     console.log(`Fetching ${TARGET_URL} ...`);
@@ -147,7 +177,9 @@ function setupServerTasks() {
 
 // 执行 cron 任务的函数
 function executeCronJob() {
-  const cronUrl = `http://${process.env.HOSTNAME || 'localhost'}:${process.env.PORT || 3000}/api/cron`;
+  const cronUrl = `http://${process.env.HOSTNAME || 'localhost'}:${
+    process.env.PORT || 3000
+  }/api/cron`;
 
   console.log(`Executing cron job: ${cronUrl}`);
 
