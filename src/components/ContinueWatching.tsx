@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -21,7 +20,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   const [playRecords, setPlayRecords] = useState<
     (PlayRecord & { key: string })[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   // 处理播放记录数据更新的函数
   const updatePlayRecords = (allRecords: Record<string, PlayRecord>) => {
@@ -42,16 +41,14 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   useEffect(() => {
     const fetchPlayRecords = async () => {
       try {
-        setLoading(true);
-
         // 从缓存或API获取所有播放记录
         const allRecords = await getAllPlayRecords();
         updatePlayRecords(allRecords);
       } catch (error) {
-        console.error('获取播放记录失败:', error);
+        // 静默失败
         setPlayRecords([]);
       } finally {
-        setLoading(false);
+        setInitialized(true);
       }
     };
 
@@ -68,8 +65,8 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     return unsubscribe;
   }, []);
 
-  // 如果没有播放记录，则不渲染组件
-  if (!loading && playRecords.length === 0) {
+  // 如果未初始化或没有播放记录，则不渲染组件
+  if (!initialized || playRecords.length === 0) {
     return null;
   }
 
@@ -91,7 +88,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
         <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
           继续观看
         </h2>
-        {!loading && playRecords.length > 0 && (
+        {playRecords.length > 0 && (
           <button
             className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
             onClick={async () => {
@@ -104,50 +101,35 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
         )}
       </div>
       <ScrollableRow>
-        {loading
-          ? // 加载状态显示灰色占位数据
-            Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
-              >
-                <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-200 animate-pulse dark:bg-gray-800'>
-                  <div className='absolute inset-0 bg-gray-300 dark:bg-gray-700'></div>
-                </div>
-                <div className='mt-2 h-4 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
-                <div className='mt-1 h-3 bg-gray-200 rounded animate-pulse dark:bg-gray-800'></div>
-              </div>
-            ))
-          : // 显示真实数据
-            playRecords.map((record) => {
-              const { source, id } = parseKey(record.key);
-              return (
-                <div
-                  key={record.key}
-                  className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
-                >
-                  <VideoCard
-                    id={id}
-                    title={record.title}
-                    poster={record.cover}
-                    year={record.year}
-                    source={source}
-                    source_name={record.source_name}
-                    progress={getProgress(record)}
-                    episodes={record.total_episodes}
-                    currentEpisode={record.index}
-                    query={record.search_title}
-                    from='playrecord'
-                    onDelete={() =>
-                      setPlayRecords((prev) =>
-                        prev.filter((r) => r.key !== record.key)
-                      )
-                    }
-                    type={record.total_episodes > 1 ? 'tv' : ''}
-                  />
-                </div>
-              );
-            })}
+        {playRecords.map((record) => {
+          const { source, id } = parseKey(record.key);
+          return (
+            <div
+              key={record.key}
+              className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+            >
+              <VideoCard
+                id={id}
+                title={record.title}
+                poster={record.cover}
+                year={record.year}
+                source={source}
+                source_name={record.source_name}
+                progress={getProgress(record)}
+                episodes={record.total_episodes}
+                currentEpisode={record.index}
+                query={record.search_title}
+                from='playrecord'
+                onDelete={() =>
+                  setPlayRecords((prev) =>
+                    prev.filter((r) => r.key !== record.key)
+                  )
+                }
+                type={record.total_episodes > 1 ? 'tv' : ''}
+              />
+            </div>
+          );
+        })}
       </ScrollableRow>
     </section>
   );

@@ -11,10 +11,10 @@ import {
   PanelLeftOpen,
   PlayCircle,
   Radio,
+  Search,
   Star,
   Tv,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -26,7 +26,6 @@ import {
   useState,
 } from 'react';
 
-import { useSite } from './SiteProvider';
 import { ThemeToggleButton } from './ThemeToggleButton';
 
 interface SidebarContextType {
@@ -38,69 +37,6 @@ const SidebarContext = createContext<SidebarContextType>({
 });
 
 export const useSidebar = () => useContext(SidebarContext);
-
-// Logo 组件，仅用于首页跳转
-interface LogoProps {
-  isCollapsed: boolean;
-}
-
-const Logo = ({ isCollapsed }: LogoProps) => {
-  const { siteName } = useSite();
-
-  if (isCollapsed) {
-    return (
-      <Link
-        href='/'
-        className='flex items-center justify-center hover:opacity-80 transition-opacity duration-200'
-        title='返回首页'
-      >
-        <Image
-          src='/logo.png'
-          alt={siteName}
-          width={32}
-          height={32}
-          className='rounded-lg'
-          onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            if (!img.dataset.retried) {
-              img.dataset.retried = 'true';
-              setTimeout(() => {
-                img.src = '/logo.png';
-              }, 2000);
-            }
-          }}
-        />
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      href='/'
-      className='flex flex-col items-center justify-center select-none hover:opacity-80 transition-opacity duration-200'
-    >
-      <Image
-        src='/logo.png'
-        alt={siteName}
-        width={40}
-        height={40}
-        className='rounded-lg'
-        onError={(e) => {
-          const img = e.target as HTMLImageElement;
-          if (!img.dataset.retried) {
-            img.dataset.retried = 'true';
-            setTimeout(() => {
-              img.src = '/logo.png';
-            }, 2000);
-          }
-        }}
-      />
-      <span className='text-lg font-bold text-gray-700 dark:text-gray-300 tracking-tight mt-2'>
-        {siteName}
-      </span>
-    </Link>
-  );
-};
 
 interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
@@ -117,36 +53,33 @@ declare global {
 const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  // 若同一次 SPA 会话中已经读取过折叠状态，则直接复用，避免闪烁
+  const [mounted, setMounted] = useState(false);
+
+  // 使用 lazy initialization 从全局变量读取初始状态
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    // 这个函数只在客户端首次渲染时执行一次
     if (
       typeof window !== 'undefined' &&
-      typeof window.__sidebarCollapsed === 'boolean'
+      typeof window.__sidebarCollapsed !== 'undefined'
     ) {
       return window.__sidebarCollapsed;
     }
     return false; // 默认展开
   });
 
-  // 首次挂载时读取 localStorage，以便刷新后仍保持上次的折叠状态
+  // 客户端挂载后标记为已挂载
   useLayoutEffect(() => {
-    const saved = localStorage.getItem('sidebarCollapsed');
-    if (saved !== null) {
-      const val = JSON.parse(saved);
-      setIsCollapsed(val);
-      window.__sidebarCollapsed = val;
-    }
+    setMounted(true);
   }, []);
 
-  // 当折叠状态变化时，同步到 <html> data 属性，供首屏 CSS 使用
-  useLayoutEffect(() => {
-    if (typeof document !== 'undefined') {
-      if (isCollapsed) {
-        document.documentElement.dataset.sidebarCollapsed = 'true';
-      } else {
-        delete document.documentElement.dataset.sidebarCollapsed;
-      }
+  // 当折叠状态变化时，同步到 <html> data 属性和全局变量
+  useEffect(() => {
+    if (isCollapsed) {
+      document.documentElement.dataset.sidebarCollapsed = 'true';
+    } else {
+      delete document.documentElement.dataset.sidebarCollapsed;
     }
+    window.__sidebarCollapsed = isCollapsed;
   }, [isCollapsed]);
 
   const [active, setActive] = useState(activePath);
@@ -167,14 +100,20 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   }, [activePath, pathname, searchParams]);
 
   const handleToggle = useCallback(() => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
-    if (typeof window !== 'undefined') {
-      window.__sidebarCollapsed = newState;
-    }
-    onToggle?.(newState);
-  }, [isCollapsed, onToggle]);
+    setIsCollapsed((prev) => {
+      const newState = !prev;
+      // 立即保存到 localStorage 和全局变量
+      try {
+        localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+        window.__sidebarCollapsed = newState;
+      } catch (e) {
+        // 静默失败
+      }
+      // 通知父组件
+      onToggle?.(newState);
+      return newState;
+    });
+  }, [onToggle]);
 
   const contextValue = {
     isCollapsed,
@@ -233,53 +172,91 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       <div className='hidden md:flex'>
         <aside
           data-sidebar
+          suppressHydrationWarning
           className={`fixed top-0 left-0 h-screen bg-white/40 backdrop-blur-xl transition-all duration-300 border-r border-gray-200/50 z-10 shadow-lg dark:bg-gray-900/70 dark:border-gray-700/50 ${
-            isCollapsed ? 'w-16' : 'w-32'
+            isCollapsed ? 'w-[3.5rem]' : 'w-[6.25rem]'
           }`}
           style={{
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
           }}
         >
-          <div className='flex h-full flex-col'>
-            {/* 顶部 Logo 区域 */}
-            <div className='relative pt-4 pb-4'>
-              <div className='flex flex-col items-center justify-center transition-all duration-200'>
-                <Logo isCollapsed={isCollapsed} />
-              </div>
-            </div>
-
+          <div className='flex h-full flex-col overflow-hidden'>
             {/* 首页导航 */}
-            <nav className='px-2'>
+            <nav className='px-2 pt-4'>
               <Link
                 href='/'
                 onClick={() => setActive('/')}
                 data-active={active === '/'}
-                className={`group flex ${
-                  isCollapsed
-                    ? 'items-center justify-center'
-                    : 'flex-col items-center justify-center'
-                } rounded-lg px-2 py-2 text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-colors duration-200 min-h-[40px] dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 ${
-                  isCollapsed ? 'w-full' : ''
-                } gap-1`}
+                suppressHydrationWarning
+                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
+                style={{
+                  width: isCollapsed ? '40px' : '100%',
+                  height: '40px',
+                }}
                 title={isCollapsed ? '首页' : undefined}
               >
-                <Home className='h-4 w-4 text-gray-500 group-hover:text-blue-600 group-data-[active=true]:text-blue-700 dark:text-gray-400 dark:group-hover:text-blue-400 dark:group-data-[active=true]:text-blue-400' />
-                {!isCollapsed && (
-                  <span className='text-xs whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                    首页
-                  </span>
-                )}
+                <div
+                  className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                  }}
+                >
+                  <Home className='h-[0.9375rem] w-auto leading-none text-gray-500 group-hover:text-blue-600 group-data-[active=true]:text-blue-700 dark:text-gray-400 dark:group-hover:text-blue-400 dark:group-data-[active=true]:text-blue-400 flex-shrink-0 block' />
+                </div>
+                <span
+                  suppressHydrationWarning
+                  className='text-sm leading-none whitespace-nowrap transition-all duration-300 overflow-hidden flex items-center'
+                  style={{
+                    width: isCollapsed ? '0px' : 'auto',
+                    opacity: isCollapsed ? 0 : 1,
+                    maxWidth: isCollapsed ? '0px' : '60px',
+                    height: '40px',
+                  }}
+                >
+                  首页
+                </span>
+              </Link>
+              <Link
+                href='/search'
+                onClick={() => setActive('/search')}
+                data-active={active === '/search'}
+                suppressHydrationWarning
+                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden mt-2'
+                style={{
+                  width: isCollapsed ? '40px' : '100%',
+                  height: '40px',
+                }}
+                title={isCollapsed ? '搜索' : undefined}
+              >
+                <div
+                  className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                  }}
+                >
+                  <Search className='h-[0.9375rem] w-auto leading-none text-gray-500 group-hover:text-blue-600 group-data-[active=true]:text-blue-700 dark:text-gray-400 dark:group-hover:text-blue-400 dark:group-data-[active=true]:text-blue-400 flex-shrink-0 block' />
+                </div>
+                <span
+                  suppressHydrationWarning
+                  className='text-sm leading-none whitespace-nowrap transition-all duration-300 overflow-hidden flex items-center'
+                  style={{
+                    width: isCollapsed ? '0px' : 'auto',
+                    opacity: isCollapsed ? 0 : 1,
+                    maxWidth: isCollapsed ? '0px' : '60px',
+                    height: '40px',
+                  }}
+                >
+                  搜索
+                </span>
               </Link>
             </nav>
 
             {/* 菜单项 */}
             <div className='flex-1 overflow-y-auto p-2'>
-              <div
-                className={`${
-                  isCollapsed ? 'space-y-1' : 'grid grid-cols-2 gap-1'
-                }`}
-              >
+              <div className='space-y-2'>
                 {menuItems.map((item) => {
                   // 检查当前路径是否匹配这个菜单项
                   const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
@@ -301,21 +278,35 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                       href={item.href}
                       onClick={() => setActive(item.href)}
                       data-active={isActive}
-                      className={`group flex ${
-                        isCollapsed
-                          ? 'items-center justify-center'
-                          : 'flex-col items-center justify-center'
-                      } rounded-lg px-2 py-2 text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-colors duration-200 min-h-[40px] dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 ${
-                        isCollapsed ? 'w-full' : ''
-                      } gap-1`}
+                      suppressHydrationWarning
+                      className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
+                      style={{
+                        width: isCollapsed ? '40px' : '100%',
+                        height: '40px',
+                      }}
                       title={isCollapsed ? item.label : undefined}
                     >
-                      <Icon className='h-4 w-4 text-gray-500 group-hover:text-blue-600 group-data-[active=true]:text-blue-700 dark:text-gray-400 dark:group-hover:text-blue-400 dark:group-data-[active=true]:text-blue-400' />
-                      {!isCollapsed && (
-                        <span className='text-xs whitespace-nowrap transition-opacity duration-200 opacity-100'>
-                          {item.label}
-                        </span>
-                      )}
+                      <div
+                        className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                        }}
+                      >
+                        <Icon className='h-[0.9375rem] w-auto leading-none text-gray-500 group-hover:text-blue-600 group-data-[active=true]:text-blue-700 dark:text-gray-400 dark:group-hover:text-blue-400 dark:group-data-[active=true]:text-blue-400 flex-shrink-0 block' />
+                      </div>
+                      <span
+                        suppressHydrationWarning
+                        className='text-sm leading-none whitespace-nowrap transition-all duration-300 overflow-hidden flex items-center'
+                        style={{
+                          width: isCollapsed ? '0px' : 'auto',
+                          opacity: isCollapsed ? 0 : 1,
+                          maxWidth: isCollapsed ? '0px' : '60px',
+                          height: '40px',
+                        }}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   );
                 })}
@@ -325,29 +316,36 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             {/* 底部按钮区域 */}
             <div className='mt-auto px-2 pb-4'>
               <div
-                className={`flex items-center justify-center pt-3 ${
-                  isCollapsed ? 'flex-col gap-3' : 'flex-row gap-4'
+                suppressHydrationWarning
+                className={`sidebar-bottom-buttons flex items-center justify-center w-full ${
+                  isCollapsed ? 'flex-col' : 'flex-row'
                 }`}
+                style={{
+                  gap: '0.15625rem',
+                }}
               >
                 <ThemeToggleButton />
-                <button
-                  onClick={handleToggle}
-                  className='w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
-                  title={isCollapsed ? '展开侧边栏' : '收起侧边栏'}
-                >
-                  {isCollapsed ? (
-                    <PanelLeftOpen className='w-4 h-4' />
-                  ) : (
-                    <PanelLeftClose className='w-4 h-4' />
-                  )}
-                </button>
+                {mounted && (
+                  <button
+                    onClick={handleToggle}
+                    className='group w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
+                    title={isCollapsed ? '展开侧边栏' : '收起侧边栏'}
+                  >
+                    {isCollapsed ? (
+                      <PanelLeftOpen className='w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400' />
+                    ) : (
+                      <PanelLeftClose className='w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400' />
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </aside>
         <div
+          suppressHydrationWarning
           className={`transition-all duration-300 sidebar-offset ${
-            isCollapsed ? 'w-16' : 'w-32'
+            isCollapsed ? 'w-[3.5rem]' : 'w-[6.25rem]'
           }`}
         ></div>
       </div>

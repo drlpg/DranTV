@@ -359,29 +359,18 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
             {/* 远程更新信息 */}
             {hasUpdate && (
               <div className='bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4'>
-                <div className='flex flex-col gap-3'>
-                  <div className='flex items-center gap-2 sm:gap-3'>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dark:bg-yellow-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <Download className='w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-400' />
-                    </div>
-                    <div className='min-w-0 flex-1'>
-                      <h4 className='text-sm sm:text-base font-semibold text-yellow-800 dark:text-yellow-200'>
-                        发现新版本
-                      </h4>
-                      <p className='text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 break-all'>
-                        v{CURRENT_VERSION} → v{latestVersion}
-                      </p>
-                    </div>
+                <div className='flex items-center gap-2 sm:gap-3'>
+                  <div className='w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dark:bg-yellow-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
+                    <Download className='w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 dark:text-yellow-400' />
                   </div>
-                  <a
-                    href='https://github.com/drlpg/DranTV'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'
-                  >
-                    <Download className='w-3 h-3 sm:w-4 sm:h-4' />
-                    前往仓库
-                  </a>
+                  <div className='min-w-0 flex-1'>
+                    <h4 className='text-sm sm:text-base font-semibold text-yellow-800 dark:text-yellow-200'>
+                      发现新版本
+                    </h4>
+                    <p className='text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 break-all'>
+                      v{CURRENT_VERSION} → v{latestVersion}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -389,29 +378,18 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
             {/* 当前为最新版本信息 */}
             {!hasUpdate && (
               <div className='bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-blue-900/20 dark:to-emerald-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 sm:p-4'>
-                <div className='flex flex-col gap-3'>
-                  <div className='flex items-center gap-2 sm:gap-3'>
-                    <div className='w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <CheckCircle className='w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400' />
-                    </div>
-                    <div className='min-w-0 flex-1'>
-                      <h4 className='text-sm sm:text-base font-semibold text-blue-800 dark:text-blue-200'>
-                        当前为最新版本
-                      </h4>
-                      <p className='text-xs sm:text-sm text-blue-700 dark:text-blue-300 break-all'>
-                        已是最新版本 v{CURRENT_VERSION}
-                      </p>
-                    </div>
+                <div className='flex items-center gap-2 sm:gap-3'>
+                  <div className='w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-800/40 rounded-full flex items-center justify-center flex-shrink-0'>
+                    <CheckCircle className='w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400' />
                   </div>
-                  <a
-                    href='https://github.com/drlpg/DranTV'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm rounded-lg transition-colors shadow-sm w-full'
-                  >
-                    <CheckCircle className='w-3 h-3 sm:w-4 sm:h-4' />
-                    前往仓库
-                  </a>
+                  <div className='min-w-0 flex-1'>
+                    <h4 className='text-sm sm:text-base font-semibold text-blue-800 dark:text-blue-200'>
+                      当前为最新版本
+                    </h4>
+                    <p className='text-xs sm:text-sm text-blue-700 dark:text-blue-300 break-all'>
+                      已是最新版本 v{CURRENT_VERSION}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -549,10 +527,10 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
               </div>
             )}
 
-            {/* 变更日志标题 */}
+            {/* 更新日志标题 */}
             <div className='pb-4'>
               <h4 className='text-lg font-semibold text-gray-800 dark:text-gray-200 pb-3 sm:pb-4'>
-                变更日志
+                更新日志
               </h4>
 
               <div className='space-y-4'>

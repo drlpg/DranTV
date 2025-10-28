@@ -2,7 +2,8 @@
 
 'use client';
 
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
@@ -209,37 +210,40 @@ function HomeClient() {
     <PageLayout>
       <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
         {/* 顶部 Tab 切换 */}
-        <div className='mb-[22px] sm:mb-8 flex justify-center items-center relative'>
-          <CapsuleSwitch
-            options={[
-              { label: '首页', value: 'home' },
-              { label: '收藏夹', value: 'favorites' },
-            ]}
-            active={activeTab}
-            onChange={(value) => setActiveTab(value as 'home' | 'favorites')}
-          />
+        <div className='mb-[22px] sm:mb-8 flex justify-between items-center'>
+          {/* 桌面端左侧Logo和标题 - 仅在桌面端显示 */}
+          <div className='hidden md:flex items-center gap-2'>
+            <Link
+              href='/'
+              className='flex items-center gap-2 hover:opacity-80 transition-opacity'
+            >
+              <Image
+                src='/logo.png'
+                alt={useSite().siteName}
+                width={32}
+                height={32}
+                className='rounded-lg'
+              />
+              <span className='text-[1.25rem] font-bold text-gray-700 dark:text-gray-300 tracking-tight'>
+                {useSite().siteName}
+              </span>
+            </Link>
+          </div>
+
+          {/* 中间Tab切换 */}
+          <div className='flex-1 md:flex-none flex justify-center'>
+            <CapsuleSwitch
+              options={[
+                { label: '首页', value: 'home' },
+                { label: '收藏夹', value: 'favorites' },
+              ]}
+              active={activeTab}
+              onChange={(value) => setActiveTab(value as 'home' | 'favorites')}
+            />
+          </div>
 
           {/* 桌面端右侧功能按钮 */}
-          <div className='hidden md:flex items-center gap-2 absolute right-0'>
-            <Link
-              href='/search'
-              className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/10 transition-colors'
-            >
-              <svg
-                className='w-full h-full'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-                xmlns='http://www.w3.org/2000/svg'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                />
-              </svg>
-            </Link>
+          <div className='hidden md:flex items-center gap-2'>
             <ThemeToggle />
             <UserMenu />
           </div>
@@ -556,9 +560,11 @@ function HomeClient() {
               </h3>
               <button
                 onClick={() => handleCloseAnnouncement(announcement)}
-                className='text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-white transition-colors'
+                className='text-gray-400 hover:text-blue-600 dark:text-gray-500 dark:hover:text-blue-400 transition-colors'
                 aria-label='关闭'
-              ></button>
+              >
+                <X className='w-5 h-5' />
+              </button>
             </div>
             <div className='mb-6'>
               <div className='relative overflow-hidden rounded-lg mb-4 bg-blue-50 dark:bg-blue-900/20'>

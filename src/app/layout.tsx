@@ -115,7 +115,7 @@ export default async function RootLayout({
           }}
         />
 
-        {/* 立即从缓存应用主题，避免闪烁 */}
+        {/* 立即从缓存应用主题和侧边栏状态，避免闪烁 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
           dangerouslySetInnerHTML={{
@@ -154,8 +154,22 @@ export default async function RootLayout({
                       localStorage.removeItem('theme-cache'); // 清除无效缓存
                     }
                   }
+                  
+                  // 立即应用侧边栏折叠状态，避免闪烁
+                  const sidebarCollapsed = localStorage.getItem('sidebarCollapsed');
+                  if (sidebarCollapsed) {
+                    try {
+                      const isCollapsed = JSON.parse(sidebarCollapsed);
+                      window.__sidebarCollapsed = isCollapsed;
+                      if (isCollapsed) {
+                        document.documentElement.dataset.sidebarCollapsed = 'true';
+                      }
+                    } catch (parseError) {
+                      localStorage.removeItem('sidebarCollapsed');
+                    }
+                  }
                 } catch (error) {
-                  console.error('应用缓存主题失败:', error);
+                  // 静默失败
                 }
               })();
             `,

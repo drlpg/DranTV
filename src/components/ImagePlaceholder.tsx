@@ -20,6 +20,7 @@ const ImagePlaceholder = ({
             src='/img/loading.svg'
             alt='加载中'
             fill
+            sizes='(max-width: 768px) 40px, 80px'
             className='object-contain opacity-60'
             onError={(e) => {
               const img = e.target as HTMLImageElement;

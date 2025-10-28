@@ -8,6 +8,16 @@ const GlobalThemeLoader = () => {
     const syncThemeWithAPI = async () => {
       try {
         const response = await fetch('/api/admin/config');
+
+        // 如果是 400 错误（localstorage 模式），直接使用缓存或默认主题
+        if (response.status === 400) {
+          const cachedTheme = getCachedTheme();
+          if (!cachedTheme) {
+            applyAndCacheTheme('default', '');
+          }
+          return;
+        }
+
         const result = await response.json();
 
         if (result?.Config?.ThemeConfig) {

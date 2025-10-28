@@ -35,7 +35,15 @@ export function ThemeToggleButton() {
   }, [mounted, resolvedTheme, pathname]);
 
   if (!mounted) {
-    return <div className='w-4 h-4' />;
+    return (
+      <button
+        className='group w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
+        aria-label='Toggle theme'
+        disabled
+      >
+        <Moon className='w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400' />
+      </button>
+    );
   }
 
   const toggleTheme = () => {
@@ -54,14 +62,14 @@ export function ThemeToggleButton() {
   return (
     <button
       onClick={toggleTheme}
-      className='w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors'
+      className='group w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
       aria-label='Toggle theme'
       title={resolvedTheme === 'dark' ? '切换到浅色模式' : '切换到暗色模式'}
     >
       {resolvedTheme === 'dark' ? (
-        <Sun className='w-4 h-4' />
+        <Sun className='w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400' />
       ) : (
-        <Moon className='w-4 h-4' />
+        <Moon className='w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400' />
       )}
     </button>
   );

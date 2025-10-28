@@ -12,7 +12,7 @@ interface PageLayoutProps {
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
     <div className='w-full min-h-screen'>
-      {/* 移动端头部 */}
+      {/* 顶部头部 - 仅移动端显示 */}
       <MobileHeader showBackButton={['/play', '/live'].includes(activePath)} />
 
       {/* 主要布局容器 */}

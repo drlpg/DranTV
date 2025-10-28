@@ -74,6 +74,7 @@ export default function Carousel({
               src='/img/loading.svg'
               alt='加载中'
               fill
+              sizes='(max-width: 768px) 50px, 100px'
               className='object-contain opacity-80'
               priority
             />
@@ -119,6 +120,7 @@ export default function Carousel({
                         src='/img/loading.svg'
                         alt='加载中'
                         fill
+                        sizes='(max-width: 768px) 50px, 100px'
                         className='object-contain opacity-80'
                         priority
                       />
@@ -140,7 +142,7 @@ export default function Carousel({
             )}
             {/* 推荐徽章 */}
             {item.rate && (
-              <div className='absolute top-4 left-4 bg-blue-500/80 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-md shadow-lg transition-all duration-300 ease-out hover:scale-110'>
+              <div className='absolute top-4 left-4 bg-blue-500/80 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-md transition-all duration-300 ease-out hover:scale-110'>
                 推荐
               </div>
             )}

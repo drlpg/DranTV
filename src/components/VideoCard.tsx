@@ -930,7 +930,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-2 right-2 bg-blue-500/80 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-2 right-2 bg-blue-500/80 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',
@@ -949,7 +949,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
             {actualEpisodes && actualEpisodes > 1 && (
               <div
-                className='absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',
