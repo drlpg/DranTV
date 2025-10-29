@@ -953,7 +953,7 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 设置面板 */}
-      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[90dvh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
           className='flex-1 p-6 overflow-y-auto scrollbar-hide sm:scrollbar-thin sm:scrollbar-thumb-gray-300 dark:sm:scrollbar-thumb-gray-600 sm:scrollbar-track-transparent sm:hover:scrollbar-thumb-gray-400 dark:sm:hover:scrollbar-thumb-gray-500'

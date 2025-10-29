@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.7",
+    date: "2025-10-29",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "将所有视口高度单位从 vh 改为 dvh 以适配移动端动态视口"
+    ],
+    fixed: [
+    "修复移动端页面高度未适配浏览器地址栏和控制栏问题",
+    "修复移动端弹窗和页面内容显示不完整问题"
+    ]
+  },
+  {
     version: "1.0.6",
     date: "2025-10-29",
     added: [

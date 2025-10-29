@@ -993,8 +993,8 @@ export function ChatModal({
       <div
         className={`${
           isMobile
-            ? 'w-full max-w-md h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col relative'
-            : 'w-full max-w-4xl h-[80vh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
+            ? 'w-full max-w-md h-[80dvh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col relative'
+            : 'w-full max-w-4xl h-[80dvh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
         }`}
         style={{
           transform: !isMobile

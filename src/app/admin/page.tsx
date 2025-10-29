@@ -71,26 +71,19 @@ const buttonStyles = {
   // 次要操作按钮（灰色）- 用于取消、关闭等
   secondary:
     'px-3 py-1.5 text-sm font-medium bg-gray-600 hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-lg transition-colors',
-  // 警告操作按钮（黄色）- 用于批量禁用等
-  warning:
+  // 警告操作按钮（黄色）- 用于批量禁用�?  warning:
     'px-3 py-1.5 text-sm font-medium bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-lg transition-colors',
-  // 小尺寸主要按钮
-  primarySmall:
+  // 小尺寸主要按�?  primarySmall:
     'px-2 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md transition-colors',
-  // 小尺寸成功按钮
-  successSmall:
+  // 小尺寸成功按�?  successSmall:
     'px-2 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md transition-colors',
-  // 小尺寸危险按钮
-  dangerSmall:
+  // 小尺寸危险按�?  dangerSmall:
     'px-2 py-1 text-xs font-medium bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-md transition-colors',
-  // 小尺寸次要按钮
-  secondarySmall:
+  // 小尺寸次要按�?  secondarySmall:
     'px-2 py-1 text-xs font-medium bg-gray-600 hover:bg-gray-700 dark:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-md transition-colors',
-  // 小尺寸警告按钮
-  warningSmall:
+  // 小尺寸警告按�?  warningSmall:
     'px-2 py-1 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-md transition-colors',
-  // 圆角小按钮（用于表格操作）
-  roundedPrimary:
+  // 圆角小按钮（用于表格操作�?  roundedPrimary:
     'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 dark:text-blue-200 transition-colors',
   roundedSuccess:
     'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 dark:text-blue-200 transition-colors',
@@ -102,24 +95,20 @@ const buttonStyles = {
     'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900/40 dark:hover:bg-yellow-900/60 dark:text-yellow-200 transition-colors',
   roundedPurple:
     'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60 dark:text-purple-200 transition-colors',
-  // 禁用状态
-  disabled:
+  // 禁用状�?  disabled:
     'px-3 py-1.5 text-sm font-medium bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-lg transition-colors',
   disabledSmall:
     'px-2 py-1 text-xs font-medium bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-md transition-colors',
-  // 开关按钮样式
-  toggleOn: 'bg-blue-600 dark:bg-blue-600',
+  // 开关按钮样�?  toggleOn: 'bg-blue-600 dark:bg-blue-600',
   toggleOff: 'bg-gray-200 dark:bg-gray-700',
   toggleThumb: 'bg-white',
   toggleThumbOn: 'translate-x-6',
   toggleThumbOff: 'translate-x-1',
-  // 快速操作按钮样式
-  quickAction:
+  // 快速操作按钮样�?  quickAction:
     'px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors',
 };
 
-// 获取用户头像的函数
-const getUserAvatar = async (username: string): Promise<string | null> => {
+// 获取用户头像的函�?const getUserAvatar = async (username: string): Promise<string | null> => {
   try {
     const response = await fetch(
       `/api/avatar?user=${encodeURIComponent(username)}`
@@ -251,8 +240,7 @@ const MachineCodeCell = ({
         setTooltipPosition('top');
       }
     } else {
-      // 后备方案：根据视口位置决定
-      const viewportHeight = window.innerHeight;
+      // 后备方案：根据视口位置决�?      const viewportHeight = window.innerHeight;
       if (rect.top < viewportHeight / 2) {
         setTooltipPosition('bottom');
       } else {
@@ -261,8 +249,7 @@ const MachineCodeCell = ({
     }
   }, []);
 
-  // 解绑机器码
-  const handleUnbind = async () => {
+  // 解绑机器�?  const handleUnbind = async () => {
     if (!machineCodeInfo || !canManage) return;
 
     try {
@@ -279,14 +266,14 @@ const MachineCodeCell = ({
       });
 
       if (response.ok) {
-        showSuccess('机器码解绑成功', showAlert);
+        showSuccess('机器码解绑成�?, showAlert);
         onRefresh(); // 刷新数据
       } else {
         const error = await response.json();
         showError(`解绑失败: ${error.error || '未知错误'}`, showAlert);
       }
     } catch (error) {
-      console.error('解绑机器码失败:', error);
+      console.error('解绑机器码失�?', error);
       showError('解绑失败，请重试', showAlert);
     } finally {
       setUnbinding(false);
@@ -311,7 +298,7 @@ const MachineCodeCell = ({
   if (!machineCodeInfo) {
     return (
       <div className='flex items-center space-x-2'>
-        <span className='text-sm text-gray-500 dark:text-gray-400'>未绑定</span>
+        <span className='text-sm text-gray-500 dark:text-gray-400'>未绑�?/span>
       </div>
     );
   }
@@ -326,7 +313,7 @@ const MachineCodeCell = ({
           >
             {formatMachineCode(machineCodeInfo.machineCode).substring(0, 12)}...
           </code>
-          {/* 悬停显示完整机器码 - 智能定位 */}
+          {/* 悬停显示完整机器�?- 智能定位 */}
           <div
             ref={tooltipRef}
             className={`absolute left-0 px-3 py-2 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none z-50 ${
@@ -346,7 +333,7 @@ const MachineCodeCell = ({
             <div className='mt-1 text-gray-400'>
               绑定时间: {formatDate(machineCodeInfo.bindTime)}
             </div>
-            {/* 箭头 - 根据位置动态调整 */}
+            {/* 箭头 - 根据位置动态调�?*/}
             <div
               className={`absolute left-4 w-0 h-0 border-l-4 border-r-4 border-transparent ${
                 tooltipPosition === 'bottom'
@@ -363,16 +350,15 @@ const MachineCodeCell = ({
             className={`${buttonStyles.roundedDanger} ${
               unbinding ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            title='解绑机器码'
+            title='解绑机器�?
           >
-            {unbinding ? '解绑中...' : '解绑'}
+            {unbinding ? '解绑�?..' : '解绑'}
           </button>
         )}
       </div>
       <div className='flex items-center space-x-1'>
         <span className='inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'>
-          已绑定
-        </span>
+          已绑�?        </span>
       </div>
     </div>
   );
@@ -478,8 +464,7 @@ const AlertModal = ({
   );
 };
 
-// 弹窗状态管理
-const useAlertModal = () => {
+// 弹窗状态管�?const useAlertModal = () => {
   const [alertModal, setAlertModal] = useState<{
     isOpen: boolean;
     type: 'success' | 'error' | 'warning';
@@ -521,8 +506,7 @@ const showSuccess = (message: string, showAlert?: (config: any) => void) => {
   }
 };
 
-// 通用加载状态管理系统
-interface LoadingState {
+// 通用加载状态管理系�?interface LoadingState {
   [key: string]: boolean;
 }
 
@@ -566,8 +550,7 @@ interface SiteConfig {
   RequireDeviceCode: boolean;
 }
 
-// 视频源数据类型
-interface DataSource {
+// 视频源数据类�?interface DataSource {
   name: string;
   key: string;
   api: string;
@@ -576,8 +559,7 @@ interface DataSource {
   from: 'config' | 'custom';
 }
 
-// 直播源数据类型
-interface LiveDataSource {
+// 直播源数据类�?interface LiveDataSource {
   name: string;
   key: string;
   url: string;
@@ -588,8 +570,7 @@ interface LiveDataSource {
   from: 'config' | 'custom';
 }
 
-// 自定义分类数据类型
-interface CustomCategory {
+// 自定义分类数据类�?interface CustomCategory {
   name?: string;
   type: 'movie' | 'tv';
   query: string;
@@ -597,8 +578,7 @@ interface CustomCategory {
   from: 'config' | 'custom';
 }
 
-// 可折叠标签组件
-interface CollapsibleTabProps {
+// 可折叠标签组�?interface CollapsibleTabProps {
   title: string;
   icon?: React.ReactNode;
   isExpanded: boolean;
@@ -663,8 +643,7 @@ const UserConfig = ({
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
-    userGroup: '', // 新增用户组字段
-  });
+    userGroup: '', // 新增用户组字�?  });
   const [changePasswordUser, setChangePasswordUser] = useState({
     username: '',
     password: '',
@@ -708,11 +687,9 @@ const UserConfig = ({
   const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
   const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
-  // 当前登录用户名
-  const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
+  // 当前登录用户�?  const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
 
-  // 使用 useMemo 计算全选状态，避免每次渲染都重新计算
-  const selectAllUsers = useMemo(() => {
+  // 使用 useMemo 计算全选状态，避免每次渲染都重新计�?  const selectAllUsers = useMemo(() => {
     const selectableUserCount =
       config?.UserConfig?.Users?.filter(
         (user) =>
@@ -723,11 +700,9 @@ const UserConfig = ({
     return selectedUsers.size === selectableUserCount && selectedUsers.size > 0;
   }, [selectedUsers.size, config?.UserConfig?.Users, role, currentUsername]);
 
-  // 获取用户组列表
-  const userGroups = config?.UserConfig?.Tags || [];
+  // 获取用户组列�?  const userGroups = config?.UserConfig?.Tags || [];
 
-  // 处理用户组相关操作
-  const handleUserGroupAction = async (
+  // 处理用户组相关操�?  const handleUserGroupAction = async (
     action: 'add' | 'edit' | 'delete',
     groupName: string,
     enabledApis?: string[]
@@ -762,10 +737,10 @@ const UserConfig = ({
 
         showSuccess(
           action === 'add'
-            ? '用户组添加成功'
+            ? '用户组添加成�?
             : action === 'edit'
-            ? '用户组更新成功'
-            : '用户组删除成功',
+            ? '用户组更新成�?
+            : '用户组删除成�?,
           showAlert
         );
       } catch (err) {
@@ -790,8 +765,7 @@ const UserConfig = ({
   };
 
   const handleDeleteUserGroup = (groupName: string) => {
-    // 计算会受影响的用户数量
-    const affectedUsers =
+    // 计算会受影响的用户数�?    const affectedUsers =
       config?.UserConfig?.Users?.filter(
         (user) => user.tags && user.tags.includes(groupName)
       ) || [];
@@ -814,8 +788,7 @@ const UserConfig = ({
       setShowDeleteUserGroupModal(false);
       setDeletingUserGroup(null);
     } catch (err) {
-      // 错误处理已在 handleUserGroupAction 中处理
-    }
+      // 错误处理已在 handleUserGroupAction 中处�?    }
   };
 
   const handleStartEditUserGroup = (group: {
@@ -850,7 +823,7 @@ const UserConfig = ({
         }
 
         await refreshConfig();
-        showSuccess('用户组分配成功', showAlert);
+        showSuccess('用户组分配成�?, showAlert);
       } catch (err) {
         showError(err instanceof Error ? err.message : '操作失败', showAlert);
         throw err;
@@ -956,8 +929,7 @@ const UserConfig = ({
           setSelectedUserForGroup(null);
           setSelectedUserGroups([]);
         } catch (err) {
-          // 错误处理已在 handleAssignUserGroup 中处理
-        }
+          // 错误处理已在 handleAssignUserGroup 中处�?        }
       }
     );
   };
@@ -994,8 +966,7 @@ const UserConfig = ({
     [config?.UserConfig?.Users, role, currentUsername]
   );
 
-  // 批量设置用户组
-  const handleBatchSetUserGroup = async (userGroup: string) => {
+  // 批量设置用户�?  const handleBatchSetUserGroup = async (userGroup: string) => {
     if (selectedUsers.size === 0) return;
 
     await withLoading('batchSetUserGroup', async () => {
@@ -1027,14 +998,13 @@ const UserConfig = ({
         // 刷新配置
         await refreshConfig();
       } catch (err) {
-        showError('批量设置用户组失败', showAlert);
+        showError('批量设置用户组失�?, showAlert);
         throw err;
       }
     });
   };
 
-  // 提取URL域名的辅助函数
-  const extractDomain = (url: string): string => {
+  // 提取URL域名的辅助函�?  const extractDomain = (url: string): string => {
     try {
       const urlObj = new URL(url);
       return urlObj.hostname;
@@ -1064,8 +1034,7 @@ const UserConfig = ({
           throw new Error(data.error || `操作失败: ${res.status}`);
         }
 
-        // 成功后刷新配置
-        await refreshConfig();
+        // 成功后刷新配�?        await refreshConfig();
         setShowConfigureApisModal(false);
         setSelectedUser(null);
         setSelectedApis([]);
@@ -1107,8 +1076,7 @@ const UserConfig = ({
         throw new Error(data.error || `操作失败: ${res.status}`);
       }
 
-      // 成功后刷新配置（无需整页刷新）
-      await refreshConfig();
+      // 成功后刷新配置（无需整页刷新�?      await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
     }
@@ -1123,15 +1091,14 @@ const UserConfig = ({
         setShowDeleteUserModal(false);
         setDeletingUser(null);
       } catch (err) {
-        // 错误处理已在 handleUserAction 中处理
-      }
+        // 错误处理已在 handleUserAction 中处�?      }
     });
   };
 
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
@@ -1153,12 +1120,11 @@ const UserConfig = ({
         </div>
       </div>
 
-      {/* 用户组管理 */}
+      {/* 用户组管�?*/}
       <div>
         <div className='flex items-center justify-between mb-3'>
           <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-            用户组管理
-          </h4>
+            用户组管�?          </h4>
           <button
             onClick={() => {
               setShowAddUserGroupForm(!showAddUserGroupForm);
@@ -1173,21 +1139,19 @@ const UserConfig = ({
                 : buttonStyles.primary
             }
           >
-            {showAddUserGroupForm ? '取消' : '添加用户组'}
+            {showAddUserGroupForm ? '取消' : '添加用户�?}
           </button>
         </div>
 
-        {/* 用户组列表 */}
+        {/* 用户组列�?*/}
         <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[20rem] overflow-y-auto overflow-x-auto relative'>
           <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
             <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
               <tr>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  用户组名称
-                </th>
+                  用户组名�?                </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  可用视频源
-                </th>
+                  可用视频�?                </th>
                 <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                   操作
                 </th>
@@ -1207,7 +1171,7 @@ const UserConfig = ({
                       <span className='text-sm text-gray-900 dark:text-gray-100'>
                         {group.enabledApis && group.enabledApis.length > 0
                           ? `${group.enabledApis.length} 个源`
-                          : '无限制'}
+                          : '无限�?}
                       </span>
                     </div>
                   </td>
@@ -1238,8 +1202,7 @@ const UserConfig = ({
                     colSpan={3}
                     className='px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400'
                   >
-                    暂无用户组，请添加用户组来管理用户权限
-                  </td>
+                    暂无用户组，请添加用户组来管理用户权�?                  </td>
                 </tr>
               )}
             </tbody>
@@ -1259,14 +1222,12 @@ const UserConfig = ({
               <>
                 <div className='flex items-center space-x-3'>
                   <span className='text-sm text-gray-600 dark:text-gray-400'>
-                    已选择 {selectedUsers.size} 个用户
-                  </span>
+                    已选择 {selectedUsers.size} 个用�?                  </span>
                   <button
                     onClick={() => setShowBatchUserGroupModal(true)}
                     className={buttonStyles.primary}
                   >
-                    批量设置用户组
-                  </button>
+                    批量设置用户�?                  </button>
                 </div>
                 <div className='w-px h-6 bg-gray-300 dark:bg-gray-600'></div>
               </>
@@ -1295,7 +1256,7 @@ const UserConfig = ({
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <input
                   type='text'
-                  placeholder='用户名'
+                  placeholder='用户�?
                   value={newUser.username}
                   onChange={(e) =>
                     setNewUser((prev) => ({
@@ -1332,13 +1293,13 @@ const UserConfig = ({
                   }
                   className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                 >
-                  <option value=''>无用户组（无限制）</option>
+                  <option value=''>无用户组（无限制�?/option>
                   {userGroups.map((group) => (
                     <option key={group.name} value={group.name}>
                       {group.name} (
                       {group.enabledApis && group.enabledApis.length > 0
                         ? `${group.enabledApis.length} 个源`
-                        : '无限制'}
+                        : '无限�?}
                       )
                     </option>
                   ))}
@@ -1360,7 +1321,7 @@ const UserConfig = ({
                       : buttonStyles.success
                   }
                 >
-                  {isLoading('addUser') ? '添加中...' : '添加'}
+                  {isLoading('addUser') ? '添加�?..' : '添加'}
                 </button>
               </div>
             </div>
@@ -1376,14 +1337,14 @@ const UserConfig = ({
             <div className='flex flex-col sm:flex-row gap-4 sm:gap-3'>
               <input
                 type='text'
-                placeholder='用户名'
+                placeholder='用户�?
                 value={changePasswordUser.username}
                 disabled
                 className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-not-allowed'
               />
               <input
                 type='password'
-                placeholder='新密码'
+                placeholder='新密�?
                 value={changePasswordUser.password}
                 onChange={(e) =>
                   setChangePasswordUser((prev) => ({
@@ -1407,7 +1368,7 @@ const UserConfig = ({
                 }`}
               >
                 {isLoading(`changePassword_${changePasswordUser.username}`)
-                  ? '修改中...'
+                  ? '修改�?..'
                   : '修改密码'}
               </button>
               <button
@@ -1471,8 +1432,7 @@ const UserConfig = ({
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  用户名
-                </th>
+                  用户�?                </th>
                 <th
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
@@ -1483,26 +1443,22 @@ const UserConfig = ({
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  状态
-                </th>
+                  状�?                </th>
                 <th
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  用户组
-                </th>
+                  用户�?                </th>
                 <th
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  采集源权限
-                </th>
+                  采集源权�?                </th>
                 <th
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  机器码
-                </th>
+                  机器�?                </th>
                 <th
                   scope='col'
                   className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
@@ -1511,7 +1467,7 @@ const UserConfig = ({
                 </th>
               </tr>
             </thead>
-            {/* 按规则排序用户：自己 -> 站长(若非自己) -> 管理员 -> 其他 */}
+            {/* 按规则排序用户：自己 -> 站长(若非自己) -> 管理�?-> 其他 */}
             {(() => {
               const sortedUsers = [...config.UserConfig.Users].sort((a, b) => {
                 type UserInfo = (typeof config.UserConfig.Users)[number];
@@ -1526,22 +1482,15 @@ const UserConfig = ({
               return (
                 <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
                   {sortedUsers.map((user) => {
-                    // 修改密码权限：站长可修改管理员和普通用户密码，管理员可修改普通用户和自己的密码，但任何人都不能修改站长密码
-                    const canChangePassword =
+                    // 修改密码权限：站长可修改管理员和普通用户密码，管理员可修改普通用户和自己的密码，但任何人都不能修改站长密�?                    const canChangePassword =
                       user.role !== 'owner' && // 不能修改站长密码
-                      (role === 'owner' || // 站长可以修改管理员和普通用户密码
-                        (role === 'admin' &&
+                      (role === 'owner' || // 站长可以修改管理员和普通用户密�?                        (role === 'admin' &&
                           (user.role === 'user' ||
-                            user.username === currentUsername))); // 管理员可以修改普通用户和自己的密码
-
-                    // 删除用户权限：站长可删除除自己外的所有用户，管理员仅可删除普通用户
-                    const canDeleteUser =
+                            user.username === currentUsername))); // 管理员可以修改普通用户和自己的密�?
+                    // 删除用户权限：站长可删除除自己外的所有用户，管理员仅可删除普通用�?                    const canDeleteUser =
                       user.username !== currentUsername &&
-                      (role === 'owner' || // 站长可以删除除自己外的所有用户
-                        (role === 'admin' && user.role === 'user')); // 管理员仅可删除普通用户
-
-                    // 其他操作权限：不能操作自己，站长可操作所有用户，管理员可操作普通用户
-                    const canOperate =
+                      (role === 'owner' || // 站长可以删除除自己外的所有用�?                        (role === 'admin' && user.role === 'user')); // 管理员仅可删除普通用�?
+                    // 其他操作权限：不能操作自己，站长可操作所有用户，管理员可操作普通用�?                    const canOperate =
                       user.username !== currentUsername &&
                       (role === 'owner' ||
                         (role === 'admin' && user.role === 'user'));
@@ -1590,8 +1539,8 @@ const UserConfig = ({
                             {user.role === 'owner'
                               ? '站长'
                               : user.role === 'admin'
-                              ? '管理员'
-                              : '普通用户'}
+                              ? '管理�?
+                              : '普通用�?}
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
@@ -1602,7 +1551,7 @@ const UserConfig = ({
                                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                             }`}
                           >
-                            {!user.banned ? '正常' : '已封禁'}
+                            {!user.banned ? '正常' : '已封�?}
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
@@ -1612,7 +1561,7 @@ const UserConfig = ({
                                 ? user.tags.join(', ')
                                 : '无用户组'}
                             </span>
-                            {/* 配置用户组按钮 */}
+                            {/* 配置用户组按�?*/}
                             {(role === 'owner' ||
                               (role === 'admin' &&
                                 (user.role === 'user' ||
@@ -1631,9 +1580,9 @@ const UserConfig = ({
                             <span className='text-sm text-gray-900 dark:text-gray-100'>
                               {user.enabledApis && user.enabledApis.length > 0
                                 ? `${user.enabledApis.length} 个源`
-                                : '无限制'}
+                                : '无限�?}
                             </span>
-                            {/* 配置采集源权限按钮 */}
+                            {/* 配置采集源权限按�?*/}
                             {(role === 'owner' ||
                               (role === 'admin' &&
                                 (user.role === 'user' ||
@@ -1761,7 +1710,7 @@ const UserConfig = ({
         </div>
       </div>
 
-      {/* 配置用户采集源权限弹窗 */}
+      {/* 配置用户采集源权限弹�?*/}
       {showConfigureApisModal &&
         selectedUser &&
         createPortal(
@@ -1774,13 +1723,13 @@ const UserConfig = ({
             }}
           >
             <div
-              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto'
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80dvh] overflow-y-auto'
               onClick={(e) => e.stopPropagation()}
             >
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
                   <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-                    配置用户采集源权限 - {selectedUser.username}
+                    配置用户采集源权�?- {selectedUser.username}
                   </h3>
                   <button
                     onClick={() => {
@@ -1835,8 +1784,7 @@ const UserConfig = ({
                 {/* 采集源选择 - 多列布局 */}
                 <div className='mb-6'>
                   <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-4'>
-                    选择可用的采集源：
-                  </h4>
+                    选择可用的采集源�?                  </h4>
                   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
                     {config?.SourceConfig?.map((source) => (
                       <label
@@ -1872,7 +1820,7 @@ const UserConfig = ({
                   </div>
                 </div>
 
-                {/* 快速操作按钮 */}
+                {/* 快速操作按�?*/}
                 <div className='flex flex-wrap items-center justify-between mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'>
                   <div className='flex space-x-2'>
                     <button
@@ -1891,15 +1839,13 @@ const UserConfig = ({
                       }}
                       className={buttonStyles.quickAction}
                     >
-                      全选
-                    </button>
+                      全�?                    </button>
                   </div>
                   <div className='text-sm text-gray-600 dark:text-gray-400'>
-                    已选择：
-                    <span className='font-medium text-blue-600 dark:text-blue-400'>
+                    已选择�?                    <span className='font-medium text-blue-600 dark:text-blue-400'>
                       {selectedApis.length > 0
                         ? `${selectedApis.length} 个源`
-                        : '无限制'}
+                        : '无限�?}
                     </span>
                   </div>
                 </div>
@@ -1928,7 +1874,7 @@ const UserConfig = ({
                     }`}
                   >
                     {isLoading(`saveUserApis_${selectedUser?.username}`)
-                      ? '配置中...'
+                      ? '配置�?..'
                       : '确认配置'}
                   </button>
                 </div>
@@ -1938,7 +1884,7 @@ const UserConfig = ({
           document.body
         )}
 
-      {/* 添加用户组弹窗 */}
+      {/* 添加用户组弹�?*/}
       {showAddUserGroupForm &&
         createPortal(
           <div
@@ -1949,7 +1895,7 @@ const UserConfig = ({
             }}
           >
             <div
-              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto'
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80dvh] overflow-y-auto'
               onClick={(e) => e.stopPropagation()}
             >
               <div className='p-6'>
@@ -1981,11 +1927,10 @@ const UserConfig = ({
                 </div>
 
                 <div className='space-y-6'>
-                  {/* 用户组名称 */}
+                  {/* 用户组名�?*/}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-                      用户组名称
-                    </label>
+                      用户组名�?                    </label>
                     <input
                       type='text'
                       placeholder='请输入用户组名称'
@@ -2000,11 +1945,10 @@ const UserConfig = ({
                     />
                   </div>
 
-                  {/* 可用视频源 */}
+                  {/* 可用视频�?*/}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4'>
-                      可用视频源
-                    </label>
+                      可用视频�?                    </label>
                     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
                       {config?.SourceConfig?.map((source) => (
                         <label
@@ -2050,7 +1994,7 @@ const UserConfig = ({
                       ))}
                     </div>
 
-                    {/* 快速操作按钮 */}
+                    {/* 快速操作按�?*/}
                     <div className='mt-4 flex space-x-2'>
                       <button
                         onClick={() =>
@@ -2076,8 +2020,7 @@ const UserConfig = ({
                         }}
                         className={buttonStyles.quickAction}
                       >
-                        全选
-                      </button>
+                        全�?                      </button>
                     </div>
                   </div>
 
@@ -2106,8 +2049,8 @@ const UserConfig = ({
                       }`}
                     >
                       {isLoading('userGroup_add_new')
-                        ? '添加中...'
-                        : '添加用户组'}
+                        ? '添加�?..'
+                        : '添加用户�?}
                     </button>
                   </div>
                 </div>
@@ -2117,7 +2060,7 @@ const UserConfig = ({
           document.body
         )}
 
-      {/* 编辑用户组弹窗 */}
+      {/* 编辑用户组弹�?*/}
       {showEditUserGroupForm &&
         editingUserGroup &&
         createPortal(
@@ -2129,13 +2072,13 @@ const UserConfig = ({
             }}
           >
             <div
-              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto'
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80dvh] overflow-y-auto'
               onClick={(e) => e.stopPropagation()}
             >
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
                   <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-                    编辑用户组 - {editingUserGroup.name}
+                    编辑用户�?- {editingUserGroup.name}
                   </h3>
                   <button
                     onClick={() => {
@@ -2161,11 +2104,10 @@ const UserConfig = ({
                 </div>
 
                 <div className='space-y-6'>
-                  {/* 可用视频源 */}
+                  {/* 可用视频�?*/}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4'>
-                      可用视频源
-                    </label>
+                      可用视频�?                    </label>
                     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3'>
                       {config?.SourceConfig?.map((source) => (
                         <label
@@ -2219,7 +2161,7 @@ const UserConfig = ({
                       ))}
                     </div>
 
-                    {/* 快速操作按钮 */}
+                    {/* 快速操作按�?*/}
                     <div className='mt-4 flex space-x-2'>
                       <button
                         onClick={() =>
@@ -2243,8 +2185,7 @@ const UserConfig = ({
                         }}
                         className={buttonStyles.quickAction}
                       >
-                        全选
-                      </button>
+                        全�?                      </button>
                     </div>
                   </div>
 
@@ -2271,7 +2212,7 @@ const UserConfig = ({
                       }`}
                     >
                       {isLoading(`userGroup_edit_${editingUserGroup?.name}`)
-                        ? '保存中...'
+                        ? '保存�?..'
                         : '保存修改'}
                     </button>
                   </div>
@@ -2282,7 +2223,7 @@ const UserConfig = ({
           document.body
         )}
 
-      {/* 配置用户组弹窗 */}
+      {/* 配置用户组弹�?*/}
       {showConfigureUserGroupModal &&
         selectedUserForGroup &&
         createPortal(
@@ -2295,13 +2236,13 @@ const UserConfig = ({
             }}
           >
             <div
-              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto'
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[80dvh] overflow-y-auto'
               onClick={(e) => e.stopPropagation()}
             >
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
                   <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-                    配置用户组 - {selectedUserForGroup.username}
+                    配置用户�?- {selectedUserForGroup.username}
                   </h3>
                   <button
                     onClick={() => {
@@ -2353,7 +2294,7 @@ const UserConfig = ({
                   </div>
                 </div>
 
-                {/* 用户组选择 - 下拉选择器 */}
+                {/* 用户组选择 - 下拉选择�?*/}
                 <div className='mb-6'>
                   <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                     选择用户组：
@@ -2368,7 +2309,7 @@ const UserConfig = ({
                     }}
                     className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
                   >
-                    <option value=''>无用户组（无限制）</option>
+                    <option value=''>无用户组（无限制�?/option>
                     {userGroups.map((group) => (
                       <option key={group.name} value={group.name}>
                         {group.name}{' '}
@@ -2411,7 +2352,7 @@ const UserConfig = ({
                     {isLoading(
                       `saveUserGroups_${selectedUserForGroup?.username}`
                     )
-                      ? '配置中...'
+                      ? '配置�?..'
                       : '确认配置'}
                   </button>
                 </div>
@@ -2421,7 +2362,7 @@ const UserConfig = ({
           document.body
         )}
 
-      {/* 删除用户组确认弹窗 */}
+      {/* 删除用户组确认弹�?*/}
       {showDeleteUserGroupModal &&
         deletingUserGroup &&
         createPortal(
@@ -2439,8 +2380,7 @@ const UserConfig = ({
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
                   <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-                    确认删除用户组
-                  </h3>
+                    确认删除用户�?                  </h3>
                   <button
                     onClick={() => {
                       setShowDeleteUserGroupModal(false);
@@ -2485,9 +2425,8 @@ const UserConfig = ({
                       </span>
                     </div>
                     <p className='text-sm text-red-700 dark:text-red-400'>
-                      删除用户组 <strong>{deletingUserGroup.name}</strong>{' '}
-                      将影响所有使用该组的用户，此操作不可恢复！
-                    </p>
+                      删除用户�?<strong>{deletingUserGroup.name}</strong>{' '}
+                      将影响所有使用该组的用户，此操作不可恢复�?                    </p>
                   </div>
 
                   {deletingUserGroup.affectedUsers.length > 0 ? (
@@ -2507,7 +2446,7 @@ const UserConfig = ({
                           />
                         </svg>
                         <span className='text-sm font-medium text-yellow-800 dark:text-yellow-300'>
-                          ⚠️ 将影响 {deletingUserGroup.affectedUsers.length}{' '}
+                          ⚠️ 将影�?{deletingUserGroup.affectedUsers.length}{' '}
                           个用户：
                         </span>
                       </div>
@@ -2517,7 +2456,7 @@ const UserConfig = ({
                             key={index}
                             className='text-sm text-yellow-700 dark:text-yellow-300'
                           >
-                            • {user.username} ({user.role})
+                            �?{user.username} ({user.role})
                           </div>
                         ))}
                       </div>
@@ -2542,7 +2481,7 @@ const UserConfig = ({
                           />
                         </svg>
                         <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
-                          ✅ 当前没有用户使用此用户组
+                          �?当前没有用户使用此用户组
                         </span>
                       </div>
                     </div>
@@ -2572,7 +2511,7 @@ const UserConfig = ({
                     }`}
                   >
                     {isLoading(`userGroup_delete_${deletingUserGroup?.name}`)
-                      ? '删除中...'
+                      ? '删除�?..'
                       : '确认删除'}
                   </button>
                 </div>
@@ -2676,7 +2615,7 @@ const UserConfig = ({
           document.body
         )}
 
-      {/* 批量设置用户组弹窗 */}
+      {/* 批量设置用户组弹�?*/}
       {showBatchUserGroupModal &&
         createPortal(
           <div
@@ -2693,8 +2632,7 @@ const UserConfig = ({
               <div className='p-6'>
                 <div className='flex items-center justify-between mb-6'>
                   <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-                    批量设置用户组
-                  </h3>
+                    批量设置用户�?                  </h3>
                   <button
                     onClick={() => {
                       setShowBatchUserGroupModal(false);
@@ -2739,7 +2677,7 @@ const UserConfig = ({
                       </span>
                     </div>
                     <p className='text-sm text-blue-700 dark:text-blue-400'>
-                      将为选中的 <strong>{selectedUsers.size} 个用户</strong>{' '}
+                      将为选中�?<strong>{selectedUsers.size} 个用�?/strong>{' '}
                       设置用户组，选择"无用户组"为无限制
                     </p>
                   </div>
@@ -2753,7 +2691,7 @@ const UserConfig = ({
                       className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors'
                       value={selectedUserGroup}
                     >
-                      <option value=''>无用户组（无限制）</option>
+                      <option value=''>无用户组（无限制�?/option>
                       {userGroups.map((group) => (
                         <option key={group.name} value={group.name}>
                           {group.name}{' '}
@@ -2789,7 +2727,7 @@ const UserConfig = ({
                         : buttonStyles.primary
                     }`}
                   >
-                    {isLoading('batchSetUserGroup') ? '设置中...' : '确认设置'}
+                    {isLoading('batchSetUserGroup') ? '设置�?..' : '确认设置'}
                   </button>
                 </div>
               </div>
@@ -2812,8 +2750,7 @@ const UserConfig = ({
   );
 };
 
-// 视频源配置组件
-const VideoSourceConfig = ({
+// 视频源配置组�?const VideoSourceConfig = ({
   config,
   refreshConfig,
 }: {
@@ -2835,18 +2772,15 @@ const VideoSourceConfig = ({
     from: 'config',
   });
 
-  // 批量操作相关状态
-  const [selectedSources, setSelectedSources] = useState<Set<string>>(
+  // 批量操作相关状�?  const [selectedSources, setSelectedSources] = useState<Set<string>>(
     new Set()
   );
 
-  // 使用 useMemo 计算全选状态，避免每次渲染都重新计算
-  const selectAll = useMemo(() => {
+  // 使用 useMemo 计算全选状态，避免每次渲染都重新计�?  const selectAll = useMemo(() => {
     return selectedSources.size === sources.length && selectedSources.size > 0;
   }, [selectedSources.size, sources.length]);
 
-  // 确认弹窗状态
-  const [confirmModal, setConfirmModal] = useState<{
+  // 确认弹窗状�?  const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
     message: string;
@@ -2860,8 +2794,7 @@ const VideoSourceConfig = ({
     onCancel: () => {},
   });
 
-  // 有效性检测相关状态
-  const [showValidationModal, setShowValidationModal] = useState(false);
+  // 有效性检测相关状�?  const [showValidationModal, setShowValidationModal] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<
@@ -2874,8 +2807,7 @@ const VideoSourceConfig = ({
     }>
   >([]);
 
-  // 单个视频源验证状态
-  const [singleValidationResult, setSingleValidationResult] = useState<{
+  // 单个视频源验证状�?  const [singleValidationResult, setSingleValidationResult] = useState<{
     status: 'valid' | 'invalid' | 'no_results' | 'validating' | null;
     message: string;
     details?: {
@@ -2887,8 +2819,7 @@ const VideoSourceConfig = ({
   }>({ status: null, message: '' });
   const [isSingleValidating, setIsSingleValidating] = useState(false);
 
-  // 新增视频源验证状态
-  const [newSourceValidationResult, setNewSourceValidationResult] = useState<{
+  // 新增视频源验证状�?  const [newSourceValidationResult, setNewSourceValidationResult] = useState<{
     status: 'valid' | 'invalid' | 'no_results' | 'validating' | null;
     message: string;
     details?: {
@@ -2900,8 +2831,7 @@ const VideoSourceConfig = ({
   }>({ status: null, message: '' });
   const [isNewSourceValidating, setIsNewSourceValidating] = useState(false);
 
-  // dnd-kit 传感器
-  const sensors = useSensors(
+  // dnd-kit 传感�?  const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5, // 轻微位移即可触发
@@ -2909,20 +2839,17 @@ const VideoSourceConfig = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150, // 长按 150ms 后触发，避免与滚动冲突
-        tolerance: 5,
+        delay: 150, // 长按 150ms 后触发，避免与滚动冲�?        tolerance: 5,
       },
     })
   );
 
-  // 初始化
-  useEffect(() => {
+  // 初始�?  useEffect(() => {
     if (config?.SourceConfig) {
       setSources(config.SourceConfig);
-      // 进入时重置 orderChanged
+      // 进入时重�?orderChanged
       setOrderChanged(false);
-      // 重置选择状态
-      setSelectedSources(new Set());
+      // 重置选择状�?      setSelectedSources(new Set());
     }
   }, [config]);
 
@@ -2940,12 +2867,10 @@ const VideoSourceConfig = ({
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
-      // 成功后刷新配置
-      await refreshConfig();
+      // 成功后刷新配�?      await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
-      throw err; // 向上抛出方便调用处判断
-    }
+      throw err; // 向上抛出方便调用处判�?    }
   };
 
   const handleToggleEnable = (key: string) => {
@@ -2986,8 +2911,7 @@ const VideoSourceConfig = ({
         from: 'custom',
       });
       setShowAddForm(false);
-      // 清除检测结果
-      clearNewSourceValidation();
+      // 清除检测结�?      clearNewSourceValidation();
     }).catch(() => {
       console.error('操作失败', 'add', newSource);
     });
@@ -3011,13 +2935,11 @@ const VideoSourceConfig = ({
 
   const handleCancelEdit = () => {
     setEditingSource(null);
-    // 清除单个源的检测结果
-    setSingleValidationResult({ status: null, message: '' });
+    // 清除单个源的检测结�?    setSingleValidationResult({ status: null, message: '' });
     setIsSingleValidating(false);
   };
 
-  // 清除新增视频源检测结果
-  const clearNewSourceValidation = () => {
+  // 清除新增视频源检测结�?  const clearNewSourceValidation = () => {
     setNewSourceValidationResult({ status: null, message: '' });
     setIsNewSourceValidating(false);
   };
@@ -3044,13 +2966,12 @@ const VideoSourceConfig = ({
       });
   };
 
-  // 有效性检测函数
-  const handleValidateSources = async () => {
+  // 有效性检测函�?  const handleValidateSources = async () => {
     if (!searchKeyword.trim()) {
       showAlert({
         type: 'warning',
         title: '请输入搜索关键词',
-        message: '搜索关键词不能为空',
+        message: '搜索关键词不能为�?,
         showConfirm: true,
       });
       return;
@@ -3058,11 +2979,9 @@ const VideoSourceConfig = ({
 
     await withLoading('validateSources', async () => {
       setIsValidating(true);
-      setValidationResults([]); // 清空之前的结果
-      setShowValidationModal(false); // 立即关闭弹窗
+      setValidationResults([]); // 清空之前的结�?      setShowValidationModal(false); // 立即关闭弹窗
 
-      // 初始化所有视频源为检测中状态
-      const initialResults = sources.map((source) => ({
+      // 初始化所有视频源为检测中状�?      const initialResults = sources.map((source) => ({
         key: source.key,
         name: source.name,
         status: 'validating' as const,
@@ -3085,7 +3004,7 @@ const VideoSourceConfig = ({
 
             switch (data.type) {
               case 'start':
-                console.log(`开始检测 ${data.totalSources} 个视频源`);
+                console.log(`开始检�?${data.totalSources} 个视频源`);
                 break;
 
               case 'source_result':
@@ -3106,7 +3025,7 @@ const VideoSourceConfig = ({
                               data.status === 'valid'
                                 ? '搜索正常'
                                 : data.status === 'no_results'
-                                ? '无法搜索到结果'
+                                ? '无法搜索到结�?
                                 : '连接失败',
                             resultCount: data.status === 'valid' ? 1 : 0,
                           }
@@ -3125,7 +3044,7 @@ const VideoSourceConfig = ({
                           data.status === 'valid'
                             ? '搜索正常'
                             : data.status === 'no_results'
-                            ? '无法搜索到结果'
+                            ? '无法搜索到结�?
                             : '连接失败',
                         resultCount: data.status === 'valid' ? 1 : 0,
                       },
@@ -3136,7 +3055,7 @@ const VideoSourceConfig = ({
 
               case 'complete':
                 console.log(
-                  `检测完成，共检测 ${data.completedSources} 个视频源`
+                  `检测完成，共检�?${data.completedSources} 个视频源`
                 );
                 eventSource.close();
                 setIsValidating(false);
@@ -3167,12 +3086,11 @@ const VideoSourceConfig = ({
             showAlert({
               type: 'warning',
               title: '验证超时',
-              message: '检测超时，请重试',
+              message: '检测超时，请重�?,
               showConfirm: true,
             });
           }
-        }, 60000); // 60秒超时
-      } catch (error) {
+        }, 60000); // 60秒超�?      } catch (error) {
         setIsValidating(false);
         showAlert({
           type: 'error',
@@ -3185,8 +3103,7 @@ const VideoSourceConfig = ({
     });
   };
 
-  // 通用视频源有效性检测函数
-  const handleValidateSource = async (
+  // 通用视频源有效性检测函�?  const handleValidateSource = async (
     api: string,
     name: string,
     isNewSource: boolean = false
@@ -3219,7 +3136,7 @@ const VideoSourceConfig = ({
       const testKeyword = '灵笼';
 
       try {
-        // 构建检测 URL，使用临时 API 地址
+        // 构建检�?URL，使用临�?API 地址
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
             testKeyword
@@ -3251,7 +3168,7 @@ const VideoSourceConfig = ({
                     message = '搜索正常';
                     details.resultCount = data.resultCount || 0;
                   } else if (data.status === 'no_results') {
-                    message = '无法搜索到结果';
+                    message = '无法搜索到结�?;
                     details.resultCount = 0;
                   } else {
                     message = '连接失败';
@@ -3267,7 +3184,7 @@ const VideoSourceConfig = ({
                 break;
 
               case 'complete':
-                console.log(`检测完成: ${name}`);
+                console.log(`检测完�? ${name}`);
                 eventSource.close();
                 setValidating(false);
                 break;
@@ -3301,16 +3218,15 @@ const VideoSourceConfig = ({
             const responseTime = Date.now() - startTime;
             setResult({
               status: 'invalid',
-              message: '检测超时，请重试',
+              message: '检测超时，请重�?,
               details: {
                 responseTime,
-                error: '请求超时（30秒）',
+                error: '请求超时�?0秒）',
                 searchKeyword: testKeyword,
               },
             });
           }
-        }, 30000); // 30秒超时
-      } catch (error) {
+        }, 30000); // 30秒超�?      } catch (error) {
         setValidating(false);
         const responseTime = Date.now() - startTime;
         setResult({
@@ -3326,12 +3242,11 @@ const VideoSourceConfig = ({
     });
   };
 
-  // 单个视频源有效性检测函数
-  const handleValidateSingleSource = async () => {
+  // 单个视频源有效性检测函�?  const handleValidateSingleSource = async () => {
     if (!editingSource) {
       showAlert({
         type: 'warning',
-        title: '没有可检测的视频源',
+        title: '没有可检测的视频�?,
         message: '请确保正在编辑视频源',
         showConfirm: true,
       });
@@ -3340,12 +3255,11 @@ const VideoSourceConfig = ({
     await handleValidateSource(editingSource.api, editingSource.name, false);
   };
 
-  // 新增视频源有效性检测函数
-  const handleValidateNewSource = async () => {
+  // 新增视频源有效性检测函�?  const handleValidateNewSource = async () => {
     if (!newSource.name.trim()) {
       showAlert({
         type: 'warning',
-        title: '视频源名称不能为空',
+        title: '视频源名称不能为�?,
         message: '请输入视频源名称',
         showConfirm: true,
       });
@@ -3354,8 +3268,7 @@ const VideoSourceConfig = ({
     await handleValidateSource(newSource.api, newSource.name, true);
   };
 
-  // 获取有效性状态显示
-  const getValidationStatus = (sourceKey: string) => {
+  // 获取有效性状态显�?  const getValidationStatus = (sourceKey: string) => {
     const result = validationResults.find((r) => r.key === sourceKey);
     if (!result) return null;
 
@@ -3365,7 +3278,7 @@ const VideoSourceConfig = ({
           text: '检测中',
           className:
             'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
-          icon: '⟳',
+          icon: '�?,
           message: result.message,
         };
       case 'valid':
@@ -3373,7 +3286,7 @@ const VideoSourceConfig = ({
           text: '有效',
           className:
             'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
-          icon: '✓',
+          icon: '�?,
           message: result.message,
         };
       case 'no_results':
@@ -3381,7 +3294,7 @@ const VideoSourceConfig = ({
           text: '无法搜索',
           className:
             'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300',
-          icon: '⚠',
+          icon: '�?,
           message: result.message,
         };
       case 'invalid':
@@ -3389,7 +3302,7 @@ const VideoSourceConfig = ({
           text: '无效',
           className:
             'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
-          icon: '✗',
+          icon: '�?,
           message: result.message,
         };
       default:
@@ -3455,7 +3368,7 @@ const VideoSourceConfig = ({
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
-            {!source.disabled ? '启用中' : '已禁用'}
+            {!source.disabled ? '启用�? : '已禁�?}
           </span>
         </td>
         <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
@@ -3464,8 +3377,7 @@ const VideoSourceConfig = ({
             if (!status) {
               return (
                 <span className='px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400'>
-                  未检测
-                </span>
+                  未检�?                </span>
               );
             }
             return (
@@ -3497,8 +3409,7 @@ const VideoSourceConfig = ({
           <button
             onClick={() => {
               setEditingSource(source);
-              // 清除之前的检测结果
-              setSingleValidationResult({ status: null, message: '' });
+              // 清除之前的检测结�?              setSingleValidationResult({ status: null, message: '' });
               setIsSingleValidating(false);
             }}
             disabled={isLoading(`editSource_${source.key}`)}
@@ -3528,8 +3439,7 @@ const VideoSourceConfig = ({
     );
   };
 
-  // 全选/取消全选
-  const handleSelectAll = useCallback(
+  // 全�?取消全�?  const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
         const allKeys = sources.map((s) => s.key);
@@ -3561,7 +3471,7 @@ const VideoSourceConfig = ({
     if (selectedSources.size === 0) {
       showAlert({
         type: 'warning',
-        title: '请先选择要操作的视频源',
+        title: '请先选择要操作的视频�?,
         message: '请选择至少一个视频源',
         showConfirm: true,
       });
@@ -3574,15 +3484,15 @@ const VideoSourceConfig = ({
 
     switch (action) {
       case 'batch_enable':
-        confirmMessage = `确定要启用选中的 ${keys.length} 个视频源吗？`;
+        confirmMessage = `确定要启用选中�?${keys.length} 个视频源吗？`;
         actionName = '批量启用';
         break;
       case 'batch_disable':
-        confirmMessage = `确定要禁用选中的 ${keys.length} 个视频源吗？`;
+        confirmMessage = `确定要禁用选中�?${keys.length} 个视频源吗？`;
         actionName = '批量禁用';
         break;
       case 'batch_delete':
-        confirmMessage = `确定要删除选中的 ${keys.length} 个视频源吗？此操作不可恢复！`;
+        confirmMessage = `确定要删除选中�?${keys.length} 个视频源吗？此操作不可恢复！`;
         actionName = '批量删除';
         break;
     }
@@ -3600,11 +3510,10 @@ const VideoSourceConfig = ({
           showAlert({
             type: 'success',
             title: `${actionName}成功`,
-            message: `${actionName}了 ${keys.length} 个视频源`,
+            message: `${actionName}�?${keys.length} 个视频源`,
             timer: 2000,
           });
-          // 重置选择状态
-          setSelectedSources(new Set());
+          // 重置选择状�?          setSelectedSources(new Set());
         } catch (err) {
           showAlert({
             type: 'error',
@@ -3636,25 +3545,24 @@ const VideoSourceConfig = ({
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
 
   return (
     <div className='space-y-6'>
-      {/* 添加视频源表单 */}
+      {/* 添加视频源表�?*/}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          视频源列表
-        </h4>
+          视频源列�?        </h4>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
           {/* 批量操作按钮 - 移动端显示在下一行，PC端显示在左侧 */}
           {selectedSources.size > 0 && (
             <>
               <div className='flex flex-wrap items-center gap-3 order-2 sm:order-1'>
                 <span className='text-sm text-gray-600 dark:text-gray-400'>
-                  <span className='sm:hidden'>已选 {selectedSources.size}</span>
+                  <span className='sm:hidden'>已�?{selectedSources.size}</span>
                   <span className='hidden sm:inline'>
                     已选择 {selectedSources.size} 个视频源
                   </span>
@@ -3669,7 +3577,7 @@ const VideoSourceConfig = ({
                   }`}
                 >
                   {isLoading('batchSource_batch_enable')
-                    ? '启用中...'
+                    ? '启用�?..'
                     : '批量启用'}
                 </button>
                 <button
@@ -3682,7 +3590,7 @@ const VideoSourceConfig = ({
                   }`}
                 >
                   {isLoading('batchSource_batch_disable')
-                    ? '禁用中...'
+                    ? '禁用�?..'
                     : '批量禁用'}
                 </button>
                 <button
@@ -3695,7 +3603,7 @@ const VideoSourceConfig = ({
                   }`}
                 >
                   {isLoading('batchSource_batch_delete')
-                    ? '删除中...'
+                    ? '删除�?..'
                     : '批量删除'}
                 </button>
               </div>
@@ -3716,14 +3624,13 @@ const VideoSourceConfig = ({
                   <span>检测中...</span>
                 </>
               ) : (
-                '有效性检测'
+                '有效性检�?
               )}
             </button>
             <button
               onClick={() => {
                 setShowAddForm(!showAddForm);
-                // 切换表单时清除检测结果
-                if (!showAddForm) {
+                // 切换表单时清除检测结�?                if (!showAddForm) {
                   clearNewSourceValidation();
                 }
               }}
@@ -3731,7 +3638,7 @@ const VideoSourceConfig = ({
                 showAddForm ? buttonStyles.secondary : buttonStyles.success
               }
             >
-              {showAddForm ? '取消' : '添加视频源'}
+              {showAddForm ? '取消' : '添加视频�?}
             </button>
           </div>
         </div>
@@ -3769,7 +3676,7 @@ const VideoSourceConfig = ({
             />
             <input
               type='text'
-              placeholder='Detail 地址（选填）'
+              placeholder='Detail 地址（选填�?
               value={newSource.detail}
               onChange={(e) =>
                 setNewSource((prev) => ({ ...prev, detail: e.target.value }))
@@ -3778,13 +3685,13 @@ const VideoSourceConfig = ({
             />
           </div>
 
-          {/* 新增视频源有效性检测结果显示 */}
+          {/* 新增视频源有效性检测结果显�?*/}
           {newSourceValidationResult.status && (
             <div className='p-3 rounded-lg border'>
               <div className='space-y-2'>
                 <div className='flex items-center space-x-2'>
                   <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                    检测结果:
+                    检测结�?
                   </span>
                   <span
                     className={`px-2 py-1 text-xs rounded-full ${
@@ -3797,10 +3704,10 @@ const VideoSourceConfig = ({
                         : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                     }`}
                   >
-                    {newSourceValidationResult.status === 'valid' && '✓ '}
-                    {newSourceValidationResult.status === 'validating' && '⏳ '}
+                    {newSourceValidationResult.status === 'valid' && '�?'}
+                    {newSourceValidationResult.status === 'validating' && '�?'}
                     {newSourceValidationResult.status === 'no_results' && '⚠️ '}
-                    {newSourceValidationResult.status === 'invalid' && '✗ '}
+                    {newSourceValidationResult.status === 'invalid' && '�?'}
                     {newSourceValidationResult.message}
                   </span>
                 </div>
@@ -3808,7 +3715,7 @@ const VideoSourceConfig = ({
                   <div className='text-xs text-gray-600 dark:text-gray-400 space-y-1'>
                     {newSourceValidationResult.details.searchKeyword && (
                       <div>
-                        测试关键词:{' '}
+                        测试关键�?{' '}
                         {newSourceValidationResult.details.searchKeyword}
                       </div>
                     )}
@@ -3821,7 +3728,7 @@ const VideoSourceConfig = ({
                     {newSourceValidationResult.details.resultCount !==
                       undefined && (
                       <div>
-                        搜索结果数:{' '}
+                        搜索结果�?{' '}
                         {newSourceValidationResult.details.resultCount}
                       </div>
                     )}
@@ -3854,7 +3761,7 @@ const VideoSourceConfig = ({
             >
               {isNewSourceValidating || isLoading('validateNewSource')
                 ? '检测中...'
-                : '有效性检测'}
+                : '有效性检�?}
             </button>
             <button
               onClick={handleAddSource}
@@ -3873,25 +3780,24 @@ const VideoSourceConfig = ({
                   : buttonStyles.success
               }`}
             >
-              {isLoading('addSource') ? '添加中...' : '添加'}
+              {isLoading('addSource') ? '添加�?..' : '添加'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 编辑视频源表单 */}
+      {/* 编辑视频源表�?*/}
       {editingSource && (
         <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4'>
           <div className='flex items-center justify-between'>
             <h5 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-              编辑视频源: {editingSource.name}
+              编辑视频�? {editingSource.name}
             </h5>
             <button
               onClick={handleCancelEdit}
               className='text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             >
-              ✕
-            </button>
+              �?            </button>
           </div>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <div>
@@ -3937,8 +3843,7 @@ const VideoSourceConfig = ({
             </div>
             <div>
               <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
-                Detail 地址（选填）
-              </label>
+                Detail 地址（选填�?              </label>
               <input
                 type='text'
                 value={editingSource.detail || ''}
@@ -3951,13 +3856,13 @@ const VideoSourceConfig = ({
               />
             </div>
 
-            {/* 有效性检测结果显示 */}
+            {/* 有效性检测结果显�?*/}
             {singleValidationResult.status && (
               <div className='col-span-full mt-4 p-3 rounded-lg border'>
                 <div className='space-y-2'>
                   <div className='flex items-center space-x-2'>
                     <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                      检测结果:
+                      检测结�?
                     </span>
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
@@ -3970,10 +3875,10 @@ const VideoSourceConfig = ({
                           : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                       }`}
                     >
-                      {singleValidationResult.status === 'valid' && '✓ '}
-                      {singleValidationResult.status === 'validating' && '⏳ '}
+                      {singleValidationResult.status === 'valid' && '�?'}
+                      {singleValidationResult.status === 'validating' && '�?'}
                       {singleValidationResult.status === 'no_results' && '⚠️ '}
-                      {singleValidationResult.status === 'invalid' && '✗ '}
+                      {singleValidationResult.status === 'invalid' && '�?'}
                       {singleValidationResult.message}
                     </span>
                   </div>
@@ -3981,7 +3886,7 @@ const VideoSourceConfig = ({
                     <div className='text-xs text-gray-600 dark:text-gray-400 space-y-1'>
                       {singleValidationResult.details.searchKeyword && (
                         <div>
-                          测试关键词:{' '}
+                          测试关键�?{' '}
                           {singleValidationResult.details.searchKeyword}
                         </div>
                       )}
@@ -3994,7 +3899,7 @@ const VideoSourceConfig = ({
                       {singleValidationResult.details.resultCount !==
                         undefined && (
                         <div>
-                          搜索结果数:{' '}
+                          搜索结果�?{' '}
                           {singleValidationResult.details.resultCount}
                         </div>
                       )}
@@ -4033,7 +3938,7 @@ const VideoSourceConfig = ({
             >
               {isSingleValidating || isLoading('validateSingleSource')
                 ? '检测中...'
-                : '有效性检测'}
+                : '有效性检�?}
             </button>
             <button
               onClick={handleEditSource}
@@ -4050,13 +3955,13 @@ const VideoSourceConfig = ({
                   : buttonStyles.success
               }`}
             >
-              {isLoading('editSource') ? '保存中...' : '保存'}
+              {isLoading('editSource') ? '保存�?..' : '保存'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 视频源表格 */}
+      {/* 视频源表�?*/}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -4093,11 +3998,9 @@ const VideoSourceConfig = ({
                   Detail 地址
                 </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  状态
-                </th>
+                  状�?                </th>
                 <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  有效性
-                </th>
+                  有效�?                </th>
                 <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                   操作
                 </th>
@@ -4129,12 +4032,12 @@ const VideoSourceConfig = ({
                 : buttonStyles.primary
             }`}
           >
-            {isLoading('saveSourceOrder') ? '保存中...' : '保存排序'}
+            {isLoading('saveSourceOrder') ? '保存�?..' : '保存排序'}
           </button>
         </div>
       )}
 
-      {/* 有效性检测弹窗 */}
+      {/* 有效性检测弹�?*/}
       {showValidationModal &&
         createPortal(
           <div
@@ -4146,8 +4049,7 @@ const VideoSourceConfig = ({
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-4'>
-                视频源有效性检测
-              </h3>
+                视频源有效性检�?              </h3>
               <p className='text-sm text-gray-600 dark:text-gray-400 mb-4'>
                 请输入检测用的搜索关键词
               </p>
@@ -4178,8 +4080,7 @@ const VideoSourceConfig = ({
                         : buttonStyles.primary
                     }`}
                   >
-                    开始检测
-                  </button>
+                    开始检�?                  </button>
                 </div>
               </div>
             </div>
@@ -4266,7 +4167,7 @@ const VideoSourceConfig = ({
                     {isLoading('batchSource_batch_enable') ||
                     isLoading('batchSource_batch_disable') ||
                     isLoading('batchSource_batch_delete')
-                      ? '操作中...'
+                      ? '操作�?..'
                       : '确认'}
                   </button>
                 </div>
@@ -4300,8 +4201,7 @@ const CategoryConfig = ({
     from: 'config',
   });
 
-  // dnd-kit 传感器
-  const sensors = useSensors(
+  // dnd-kit 传感�?  const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5, // 轻微位移即可触发
@@ -4309,17 +4209,15 @@ const CategoryConfig = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150, // 长按 150ms 后触发，避免与滚动冲突
-        tolerance: 5,
+        delay: 150, // 长按 150ms 后触发，避免与滚动冲�?        tolerance: 5,
       },
     })
   );
 
-  // 初始化
-  useEffect(() => {
+  // 初始�?  useEffect(() => {
     if (config?.CustomCategories) {
       setCategories(config.CustomCategories);
-      // 进入时重置 orderChanged
+      // 进入时重�?orderChanged
       setOrderChanged(false);
     }
   }, [config]);
@@ -4338,12 +4236,10 @@ const CategoryConfig = ({
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
-      // 成功后刷新配置
-      await refreshConfig();
+      // 成功后刷新配�?      await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
-      throw err; // 向上抛出方便调用处判断
-    }
+      throw err; // 向上抛出方便调用处判�?    }
   };
 
   const handleToggleEnable = (query: string, type: 'movie' | 'tv') => {
@@ -4447,7 +4343,7 @@ const CategoryConfig = ({
                 : 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300'
             }`}
           >
-            {category.type === 'movie' ? '电影' : '电视剧'}
+            {category.type === 'movie' ? '电影' : '电视�?}
           </span>
         </td>
         <td
@@ -4464,7 +4360,7 @@ const CategoryConfig = ({
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
-            {!category.disabled ? '启用中' : '已禁用'}
+            {!category.disabled ? '启用�? : '已禁�?}
           </span>
         </td>
         <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
@@ -4508,7 +4404,7 @@ const CategoryConfig = ({
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
@@ -4518,8 +4414,7 @@ const CategoryConfig = ({
       {/* 添加分类表单 */}
       <div className='flex items-center justify-between'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          自定义分类列表
-        </h4>
+          自定义分类列�?        </h4>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           className={`px-3 py-1 text-sm rounded-lg transition-colors ${
@@ -4553,11 +4448,11 @@ const CategoryConfig = ({
               className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             >
               <option value='movie'>电影</option>
-              <option value='tv'>电视剧</option>
+              <option value='tv'>电视�?/option>
             </select>
             <input
               type='text'
-              placeholder='搜索关键词'
+              placeholder='搜索关键�?
               value={newCategory.query}
               onChange={(e) =>
                 setNewCategory((prev) => ({ ...prev, query: e.target.value }))
@@ -4581,7 +4476,7 @@ const CategoryConfig = ({
                   : buttonStyles.success
               }`}
             >
-              {isLoading('addCategory') ? '添加中...' : '添加'}
+              {isLoading('addCategory') ? '添加�?..' : '添加'}
             </button>
           </div>
         </div>
@@ -4600,11 +4495,9 @@ const CategoryConfig = ({
                 类型
               </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                搜索关键词
-              </th>
+                搜索关键�?              </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                状态
-              </th>
+                状�?              </th>
               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                 操作
               </th>
@@ -4646,7 +4539,7 @@ const CategoryConfig = ({
                 : buttonStyles.primary
             }`}
           >
-            {isLoading('saveCategoryOrder') ? '保存中...' : '保存排序'}
+            {isLoading('saveCategoryOrder') ? '保存�?..' : '保存排序'}
           </button>
         </div>
       )}
@@ -4714,12 +4607,11 @@ const ConfigFileComponent = ({
         const data = await resp.json();
         if (data.configContent) {
           setConfigContent(data.configContent);
-          // 更新本地配置的最后检查时间
-          const currentTime = new Date().toISOString();
+          // 更新本地配置的最后检查时�?          const currentTime = new Date().toISOString();
           setLastCheckTime(currentTime);
           showSuccess('配置拉取成功', showAlert);
         } else {
-          showError('拉取失败：未获取到配置内容', showAlert);
+          showError('拉取失败：未获取到配置内�?, showAlert);
         }
       } catch (err) {
         showError(err instanceof Error ? err.message : '拉取失败', showAlert);
@@ -4760,7 +4652,7 @@ const ConfigFileComponent = ({
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
@@ -4774,7 +4666,7 @@ const ConfigFileComponent = ({
             配置订阅
           </h3>
           <div className='text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-full'>
-            最后更新:{' '}
+            最后更�?{' '}
             {lastCheckTime
               ? new Date(lastCheckTime).toLocaleString('zh-CN')
               : '从未更新'}
@@ -4796,7 +4688,7 @@ const ConfigFileComponent = ({
               className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
             />
             <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
-              输入配置文件的订阅地址，要求 JSON 格式，且使用 Base58 编码
+              输入配置文件的订阅地址，要�?JSON 格式，且使用 Base58 编码
             </p>
           </div>
 
@@ -4814,23 +4706,21 @@ const ConfigFileComponent = ({
               {isLoading('fetchConfig') ? (
                 <div className='flex items-center justify-center gap-2'>
                   <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  拉取中…
-                </div>
+                  拉取中�?                </div>
               ) : (
                 '拉取配置'
               )}
             </button>
           </div>
 
-          {/* 自动更新开关 */}
+          {/* 自动更新开�?*/}
           <div className='flex items-center justify-between'>
             <div>
               <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
                 自动更新
               </label>
               <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                启用后系统将定期自动拉取最新配置
-              </p>
+                启用后系统将定期自动拉取最新配�?              </p>
             </div>
             <button
               type='button'
@@ -4861,7 +4751,7 @@ const ConfigFileComponent = ({
             value={configContent}
             onChange={(e) => setConfigContent(e.target.value)}
             rows={20}
-            placeholder='请输入配置文件内容（JSON 格式）...'
+            placeholder='请输入配置文件内容（JSON 格式�?..'
             disabled={false}
             className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm leading-relaxed resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500'
             style={{
@@ -4886,7 +4776,7 @@ const ConfigFileComponent = ({
                 : buttonStyles.success
             }`}
           >
-            {isLoading('saveConfig') ? '保存中…' : '保存'}
+            {isLoading('saveConfig') ? '保存中�? : '保存'}
           </button>
         </div>
       </div>
@@ -4929,34 +4819,33 @@ const SiteConfigComponent = ({
     RequireDeviceCode: true,
   });
 
-  // 豆瓣数据源相关状态
-  const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
+  // 豆瓣数据源相关状�?  const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
     useState(false);
 
   // 豆瓣数据源选项
   const doubanDataSourceOptions = [
-    { value: 'direct', label: '直连（服务器直接请求豆瓣）' },
+    { value: 'direct', label: '直连（服务器直接请求豆瓣�? },
     { value: 'cors-proxy-zwei', label: 'Cors Proxy By Zwei' },
     {
       value: 'cmliussss-cdn-tencent',
-      label: '豆瓣 CDN By CMLiussss（腾讯云）',
+      label: '豆瓣 CDN By CMLiussss（腾讯云�?,
     },
-    { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
-    { value: 'custom', label: '自定义代理' },
+    { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云�? },
+    { value: 'custom', label: '自定义代�? },
   ];
 
   // 豆瓣图片代理选项
   const doubanImageProxyTypeOptions = [
-    { value: 'direct', label: '直连（浏览器直接请求豆瓣）' },
-    { value: 'server', label: '服务器代理（由服务器代理请求豆瓣）' },
-    { value: 'img3', label: '豆瓣官方精品 CDN（阿里云）' },
+    { value: 'direct', label: '直连（浏览器直接请求豆瓣�? },
+    { value: 'server', label: '服务器代理（由服务器代理请求豆瓣�? },
+    { value: 'img3', label: '豆瓣官方精品 CDN（阿里云�? },
     {
       value: 'cmliussss-cdn-tencent',
-      label: '豆瓣 CDN By CMLiussss（腾讯云）',
+      label: '豆瓣 CDN By CMLiussss（腾讯云�?,
     },
-    { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云）' },
-    { value: 'custom', label: '自定义代理' },
+    { value: 'cmliussss-cdn-ali', label: '豆瓣 CDN By CMLiussss（阿里云�? },
+    { value: 'custom', label: '自定义代�? },
   ];
 
   // 获取感谢信息
@@ -4998,8 +4887,7 @@ const SiteConfigComponent = ({
     }
   }, [config]);
 
-  // 点击外部区域关闭下拉框
-  useEffect(() => {
+  // 点击外部区域关闭下拉�?  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isDoubanDropdownOpen) {
         const target = event.target as Element;
@@ -5033,8 +4921,7 @@ const SiteConfigComponent = ({
     }
   }, [isDoubanImageProxyDropdownOpen]);
 
-  // 处理豆瓣数据源变化
-  const handleDoubanDataSourceChange = (value: string) => {
+  // 处理豆瓣数据源变�?  const handleDoubanDataSourceChange = (value: string) => {
     setSiteSettings((prev) => ({
       ...prev,
       DoubanProxyType: value,
@@ -5064,7 +4951,7 @@ const SiteConfigComponent = ({
           throw new Error(data.error || `保存失败: ${resp.status}`);
         }
 
-        showSuccess('保存成功, 请刷新页面', showAlert);
+        showSuccess('保存成功, 请刷新页�?, showAlert);
         await refreshConfig();
       } catch (err) {
         showError(err instanceof Error ? err.message : '保存失败', showAlert);
@@ -5076,7 +4963,7 @@ const SiteConfigComponent = ({
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
@@ -5116,14 +5003,14 @@ const SiteConfigComponent = ({
         />
       </div>
 
-      {/* 豆瓣数据源设置 */}
+      {/* 豆瓣数据源设�?*/}
       <div className='space-y-3'>
         <div>
           <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
             豆瓣数据代理
           </label>
           <div className='relative' data-dropdown='douban-datasource'>
-            {/* 自定义下拉选择框 */}
+            {/* 自定义下拉选择�?*/}
             <button
               type='button'
               onClick={() => setIsDoubanDropdownOpen(!isDoubanDropdownOpen)}
@@ -5172,8 +5059,7 @@ const SiteConfigComponent = ({
             )}
           </div>
           <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-            选择获取豆瓣数据的方式
-          </p>
+            选择获取豆瓣数据的方�?          </p>
 
           {/* 感谢信息 */}
           {getThanksInfo(siteSettings.DoubanProxyType) && (
@@ -5229,7 +5115,7 @@ const SiteConfigComponent = ({
             豆瓣图片代理
           </label>
           <div className='relative' data-dropdown='douban-image-proxy'>
-            {/* 自定义下拉选择框 */}
+            {/* 自定义下拉选择�?*/}
             <button
               type='button'
               onClick={() =>
@@ -5282,8 +5168,7 @@ const SiteConfigComponent = ({
             )}
           </div>
           <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-            选择获取豆瓣图片的方式
-          </p>
+            选择获取豆瓣图片的方�?          </p>
 
           {/* 感谢信息 */}
           {getThanksInfo(siteSettings.DoubanImageProxyType) && (
@@ -5332,11 +5217,10 @@ const SiteConfigComponent = ({
         )}
       </div>
 
-      {/* 搜索接口可拉取最大页数 */}
+      {/* 搜索接口可拉取最大页�?*/}
       <div>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-          搜索接口可拉取最大页数
-        </label>
+          搜索接口可拉取最大页�?        </label>
         <input
           type='number'
           min={1}
@@ -5354,8 +5238,7 @@ const SiteConfigComponent = ({
       {/* 站点接口缓存时间 */}
       <div>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-          站点接口缓存时间（秒）
-        </label>
+          站点接口缓存时间（秒�?        </label>
         <input
           type='number'
           min={1}
@@ -5370,12 +5253,11 @@ const SiteConfigComponent = ({
         />
       </div>
 
-      {/* 启用设备码验证 */}
+      {/* 启用设备码验�?*/}
       <div>
         <div className='flex items-center justify-between'>
           <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-            启用设备码验证
-          </label>
+            启用设备码验�?          </label>
           <button
             type='button'
             onClick={() =>
@@ -5402,16 +5284,14 @@ const SiteConfigComponent = ({
           </button>
         </div>
         <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-          启用后用户登录时需要绑定设备码，提升账户安全性。禁用后用户可以直接登录而无需绑定设备码。
-        </p>
+          启用后用户登录时需要绑定设备码，提升账户安全性。禁用后用户可以直接登录而无需绑定设备码�?        </p>
       </div>
 
-      {/* 禁用黄色过滤器 */}
+      {/* 禁用黄色过滤�?*/}
       <div>
         <div className='flex items-center justify-between'>
           <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-            禁用黄色过滤器
-          </label>
+            禁用黄色过滤�?          </label>
           <button
             type='button'
             onClick={() =>
@@ -5438,8 +5318,7 @@ const SiteConfigComponent = ({
           </button>
         </div>
         <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-          禁用黄色内容的过滤功能，允许显示所有内容。
-        </p>
+          禁用黄色内容的过滤功能，允许显示所有内容�?        </p>
       </div>
 
       {/* 流式搜索 */}
@@ -5474,8 +5353,7 @@ const SiteConfigComponent = ({
           </button>
         </div>
         <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-          启用后搜索结果将实时流式返回，提升用户体验。
-        </p>
+          启用后搜索结果将实时流式返回，提升用户体验�?        </p>
       </div>
 
       {/* 操作按钮 */}
@@ -5489,7 +5367,7 @@ const SiteConfigComponent = ({
               : buttonStyles.success
           } rounded-lg transition-colors`}
         >
-          {isLoading('saveSiteConfig') ? '保存中…' : '保存'}
+          {isLoading('saveSiteConfig') ? '保存中�? : '保存'}
         </button>
       </div>
 
@@ -5507,8 +5385,7 @@ const SiteConfigComponent = ({
   );
 };
 
-// 直播源配置组件
-const LiveSourceConfig = ({
+// 直播源配置组�?const LiveSourceConfig = ({
   config,
   refreshConfig,
 }: {
@@ -5533,8 +5410,7 @@ const LiveSourceConfig = ({
     from: 'custom',
   });
 
-  // dnd-kit 传感器
-  const sensors = useSensors(
+  // dnd-kit 传感�?  const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 5, // 轻微位移即可触发
@@ -5542,17 +5418,15 @@ const LiveSourceConfig = ({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 150, // 长按 150ms 后触发，避免与滚动冲突
-        tolerance: 5,
+        delay: 150, // 长按 150ms 后触发，避免与滚动冲�?        tolerance: 5,
       },
     })
   );
 
-  // 初始化
-  useEffect(() => {
+  // 初始�?  useEffect(() => {
     if (config?.LiveConfig) {
       setLiveSources(config.LiveConfig);
-      // 进入时重置 orderChanged
+      // 进入时重�?orderChanged
       setOrderChanged(false);
     }
   }, [config]);
@@ -5571,12 +5445,10 @@ const LiveSourceConfig = ({
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
-      // 成功后刷新配置
-      await refreshConfig();
+      // 成功后刷新配�?      await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
-      throw err; // 向上抛出方便调用处判断
-    }
+      throw err; // 向上抛出方便调用处判�?    }
   };
 
   const handleToggleEnable = (key: string) => {
@@ -5598,8 +5470,7 @@ const LiveSourceConfig = ({
     });
   };
 
-  // 刷新直播源
-  const handleRefreshLiveSources = async () => {
+  // 刷新直播�?  const handleRefreshLiveSources = async () => {
     if (isRefreshing) return;
 
     await withLoading('refreshLiveSources', async () => {
@@ -5615,8 +5486,7 @@ const LiveSourceConfig = ({
           throw new Error(data.error || `刷新失败: ${response.status}`);
         }
 
-        // 刷新成功后重新获取配置
-        await refreshConfig();
+        // 刷新成功后重新获取配�?        await refreshConfig();
         showAlert({
           type: 'success',
           title: '刷新成功',
@@ -5763,7 +5633,7 @@ const LiveSourceConfig = ({
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
             }`}
           >
-            {!liveSource.disabled ? '启用中' : '已禁用'}
+            {!liveSource.disabled ? '启用�? : '已禁�?}
           </span>
         </td>
         <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
@@ -5816,18 +5686,17 @@ const LiveSourceConfig = ({
   if (!config) {
     return (
       <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
+        加载�?..
       </div>
     );
   }
 
   return (
     <div className='space-y-6'>
-      {/* 添加直播源表单 */}
+      {/* 添加直播源表�?*/}
       <div className='flex items-center justify-between'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          直播源列表
-        </h4>
+          直播源列�?        </h4>
         <div className='flex items-center space-x-2'>
           <button
             onClick={handleRefreshLiveSources}
@@ -5840,8 +5709,8 @@ const LiveSourceConfig = ({
           >
             <span>
               {isRefreshing || isLoading('refreshLiveSources')
-                ? '刷新中...'
-                : '刷新直播源'}
+                ? '刷新�?..'
+                : '刷新直播�?}
             </span>
           </button>
           <button
@@ -5850,7 +5719,7 @@ const LiveSourceConfig = ({
               showAddForm ? buttonStyles.secondary : buttonStyles.success
             }
           >
-            {showAddForm ? '取消' : '添加直播源'}
+            {showAddForm ? '取消' : '添加直播�?}
           </button>
         </div>
       </div>
@@ -5887,7 +5756,7 @@ const LiveSourceConfig = ({
             />
             <input
               type='text'
-              placeholder='节目单地址（选填）'
+              placeholder='节目单地址（选填�?
               value={newLiveSource.epg}
               onChange={(e) =>
                 setNewLiveSource((prev) => ({ ...prev, epg: e.target.value }))
@@ -5896,7 +5765,7 @@ const LiveSourceConfig = ({
             />
             <input
               type='text'
-              placeholder='自定义 UA（选填）'
+              placeholder='自定�?UA（选填�?
               value={newLiveSource.ua}
               onChange={(e) =>
                 setNewLiveSource((prev) => ({ ...prev, ua: e.target.value }))
@@ -5922,25 +5791,24 @@ const LiveSourceConfig = ({
                   : buttonStyles.success
               }`}
             >
-              {isLoading('addLiveSource') ? '添加中...' : '添加'}
+              {isLoading('addLiveSource') ? '添加�?..' : '添加'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 编辑直播源表单 */}
+      {/* 编辑直播源表�?*/}
       {editingLiveSource && (
         <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4'>
           <div className='flex items-center justify-between'>
             <h5 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-              编辑直播源: {editingLiveSource.name}
+              编辑直播�? {editingLiveSource.name}
             </h5>
             <button
               onClick={handleCancelEdit}
               className='text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
             >
-              ✕
-            </button>
+              �?            </button>
           </div>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <div>
@@ -5986,8 +5854,7 @@ const LiveSourceConfig = ({
             </div>
             <div>
               <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
-                节目单地址（选填）
-              </label>
+                节目单地址（选填�?              </label>
               <input
                 type='text'
                 value={editingLiveSource.epg}
@@ -6001,8 +5868,7 @@ const LiveSourceConfig = ({
             </div>
             <div>
               <label className='block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1'>
-                自定义 UA（选填）
-              </label>
+                自定�?UA（选填�?              </label>
               <input
                 type='text'
                 value={editingLiveSource.ua}
@@ -6037,13 +5903,13 @@ const LiveSourceConfig = ({
                   : buttonStyles.success
               }`}
             >
-              {isLoading('editLiveSource') ? '保存中...' : '保存'}
+              {isLoading('editLiveSource') ? '保存�?..' : '保存'}
             </button>
           </div>
         </div>
       )}
 
-      {/* 直播源表格 */}
+      {/* 直播源表�?*/}
       <div
         className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
         data-table='live-source-list'
@@ -6065,14 +5931,12 @@ const LiveSourceConfig = ({
                 节目单地址
               </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                自定义 UA
+                自定�?UA
               </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                频道数
-              </th>
+                频道�?              </th>
               <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                状态
-              </th>
+                状�?              </th>
               <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
                 操作
               </th>
@@ -6111,7 +5975,7 @@ const LiveSourceConfig = ({
                 : buttonStyles.primary
             }`}
           >
-            {isLoading('saveLiveSourceOrder') ? '保存中...' : '保存排序'}
+            {isLoading('saveLiveSourceOrder') ? '保存�?..' : '保存排序'}
           </button>
         </div>
       )}
@@ -6149,16 +6013,14 @@ function AdminPageClient() {
     themeManager: false,
   });
 
-  // 机器码管理状态
-  const [machineCodeUsers, setMachineCodeUsers] = useState<
+  // 机器码管理状�?  const [machineCodeUsers, setMachineCodeUsers] = useState<
     Record<
       string,
       { machineCode: string; deviceInfo?: string; bindTime: number }
     >
   >({});
 
-  // 获取机器码用户列表
-  const fetchMachineCodeUsers = useCallback(async () => {
+  // 获取机器码用户列�?  const fetchMachineCodeUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/machine-code?action=list');
       if (response.ok) {
@@ -6166,13 +6028,11 @@ function AdminPageClient() {
         setMachineCodeUsers(data.users || {});
       }
     } catch (error) {
-      console.error('获取机器码用户列表失败:', error);
+      console.error('获取机器码用户列表失�?', error);
     }
   }, []);
 
-  // 获取管理员配置
-  // showLoading 用于控制是否在请求期间显示整体加载骨架。
-  const fetchConfig = useCallback(async (showLoading = false) => {
+  // 获取管理员配�?  // showLoading 用于控制是否在请求期间显示整体加载骨架�?  const fetchConfig = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) {
         setLoading(true);
@@ -6200,14 +6060,11 @@ function AdminPageClient() {
   }, []);
 
   useEffect(() => {
-    // 首次加载时显示骨架
-    fetchConfig(true);
-    // 获取机器码用户列表
-    fetchMachineCodeUsers();
+    // 首次加载时显示骨�?    fetchConfig(true);
+    // 获取机器码用户列�?    fetchMachineCodeUsers();
   }, [fetchConfig, fetchMachineCodeUsers]);
 
-  // 切换标签展开状态
-  const toggleTab = (tabKey: string) => {
+  // 切换标签展开状�?  const toggleTab = (tabKey: string) => {
     setExpandedTabs((prev) => ({
       ...prev,
       [tabKey]: !prev[tabKey],
@@ -6226,10 +6083,9 @@ function AdminPageClient() {
         if (!response.ok) {
           throw new Error(`重置失败: ${response.status}`);
         }
-        showSuccess('重置成功，请刷新页面！', showAlert);
+        showSuccess('重置成功，请刷新页面�?, showAlert);
         await fetchConfig();
-        await fetchMachineCodeUsers(); // 重新获取机器码数据
-        setShowResetConfigModal(false);
+        await fetchMachineCodeUsers(); // 重新获取机器码数�?        setShowResetConfigModal(false);
       } catch (err) {
         showError(err instanceof Error ? err.message : '重置失败', showAlert);
         throw err;
@@ -6243,8 +6099,7 @@ function AdminPageClient() {
         <div className='px-2 sm:px-10 py-4 sm:py-8'>
           <div className='max-w-[95%] mx-auto'>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8'>
-              管理员设置
-            </h1>
+              管理员设�?            </h1>
             <div className='space-y-4'>
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
@@ -6271,8 +6126,7 @@ function AdminPageClient() {
           {/* 标题 + 重置配置按钮 */}
           <div className='flex items-center gap-2 mb-8'>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
-              管理员设置
-            </h1>
+              管理员设�?            </h1>
             {config && role === 'owner' && (
               <button
                 onClick={handleResetConfig}
@@ -6283,7 +6137,7 @@ function AdminPageClient() {
             )}
           </div>
 
-          {/* 配置文件标签 - 仅站长可见 */}
+          {/* 配置文件标签 - 仅站长可�?*/}
           {role === 'owner' && (
             <CollapsibleTab
               title='配置文件'
@@ -6337,9 +6191,9 @@ function AdminPageClient() {
               />
             </CollapsibleTab>
 
-            {/* 视频源配置标签 */}
+            {/* 视频源配置标�?*/}
             <CollapsibleTab
-              title='视频源配置'
+              title='视频源配�?
               icon={
                 <Video size={20} className='text-gray-600 dark:text-gray-400' />
               }
@@ -6349,9 +6203,9 @@ function AdminPageClient() {
               <VideoSourceConfig config={config} refreshConfig={fetchConfig} />
             </CollapsibleTab>
 
-            {/* 直播源配置标签 */}
+            {/* 直播源配置标�?*/}
             <CollapsibleTab
-              title='直播源配置'
+              title='直播源配�?
               icon={
                 <Tv size={20} className='text-gray-600 dark:text-gray-400' />
               }
@@ -6376,7 +6230,7 @@ function AdminPageClient() {
               <CategoryConfig config={config} refreshConfig={fetchConfig} />
             </CollapsibleTab>
 
-            {/* 数据迁移标签 - 仅站长可见 */}
+            {/* 数据迁移标签 - 仅站长可�?*/}
             {role === 'owner' && (
               <CollapsibleTab
                 title='数据迁移'
@@ -6479,8 +6333,7 @@ function AdminPageClient() {
                       </span>
                     </div>
                     <p className='text-sm text-yellow-700 dark:text-yellow-400'>
-                      此操作将重置用户封禁和管理员设置、自定义视频源，站点配置将重置为默认值，是否继续？
-                    </p>
+                      此操作将重置用户封禁和管理员设置、自定义视频源，站点配置将重置为默认值，是否继续�?                    </p>
                   </div>
                 </div>
 
@@ -6501,7 +6354,7 @@ function AdminPageClient() {
                         : buttonStyles.danger
                     }`}
                   >
-                    {isLoading('resetConfig') ? '重置中...' : '确认重置'}
+                    {isLoading('resetConfig') ? '重置�?..' : '确认重置'}
                   </button>
                 </div>
               </div>

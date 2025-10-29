@@ -316,7 +316,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
 
       {/* 版本面板 */}
       <div
-        className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'
+        className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[90dvh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'
         onTouchMove={(e) => {
           // 允许版本面板内部滚动，阻止事件冒泡到外层
           e.stopPropagation();
@@ -354,7 +354,7 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
         </div>
 
         {/* 内容区域 */}
-        <div className='p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-140px)] sm:max-h-[calc(90vh-120px)] scrollbar-hide sm:scrollbar-thin sm:scrollbar-thumb-gray-300 dark:sm:scrollbar-thumb-gray-600 sm:scrollbar-track-transparent sm:hover:scrollbar-thumb-gray-400 dark:sm:hover:scrollbar-thumb-gray-500'>
+        <div className='p-3 sm:p-6 overflow-y-auto max-h-[calc(95dvh-140px)] sm:max-h-[calc(90dvh-120px)] scrollbar-hide sm:scrollbar-thin sm:scrollbar-thumb-gray-300 dark:sm:scrollbar-thumb-gray-600 sm:scrollbar-track-transparent sm:hover:scrollbar-thumb-gray-400 dark:sm:hover:scrollbar-thumb-gray-500'>
           <div className='space-y-3 sm:space-y-6'>
             {/* 远程更新信息 */}
             {hasUpdate && (

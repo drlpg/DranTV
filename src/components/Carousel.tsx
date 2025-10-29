@@ -67,7 +67,7 @@ export default function Carousel({
   // 如果没有数据，显示骨架屏
   if (items.length === 0) {
     return (
-      <div className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60vh] bg-gray-100 dark:bg-gray-800'>
+      <div className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
         <div className='absolute inset-0 flex items-center justify-center'>
           <div className='relative w-[20%] h-[20%] min-w-[50px] min-h-[50px] max-w-[100px] max-h-[100px]'>
             <Image
@@ -86,7 +86,7 @@ export default function Carousel({
 
   return (
     <div
-      className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60vh]'
+      className='relative w-full overflow-hidden rounded-lg aspect-[4/3] md:aspect-auto md:h-[60dvh]'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
