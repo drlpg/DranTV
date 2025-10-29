@@ -155,7 +155,9 @@ const ShortDramaSelector = ({
         <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
           分类
         </span>
-        <div className='overflow-x-auto'>{renderCapsuleSelector()}</div>
+        <div className='overflow-x-auto scrollbar-hide'>
+          {renderCapsuleSelector()}
+        </div>
       </div>
     </div>
   );

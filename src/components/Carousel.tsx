@@ -107,6 +107,7 @@ export default function Carousel({
                   src='/img/placeholder-minimal.svg'
                   alt='图片加载失败'
                   fill
+                  sizes='100vw'
                   className='object-cover opacity-40'
                 />
               </div>
@@ -132,6 +133,7 @@ export default function Carousel({
                   src={item.image}
                   alt={item.title}
                   fill
+                  sizes='100vw'
                   className='object-cover'
                   priority={index === 0}
                   unoptimized
@@ -142,7 +144,7 @@ export default function Carousel({
             )}
             {/* 推荐徽章 */}
             {item.rate && (
-              <div className='absolute top-4 left-4 bg-blue-500/80 backdrop-blur-md text-white text-sm font-bold px-3 py-1.5 rounded-md transition-all duration-300 ease-out hover:scale-110'>
+              <div className='absolute top-2 left-2 md:top-4 md:left-4 bg-blue-500/80 backdrop-blur-md text-white text-xs md:text-sm font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-md transition-all duration-300 ease-out hover:scale-110'>
                 推荐
               </div>
             )}

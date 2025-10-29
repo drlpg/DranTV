@@ -416,7 +416,7 @@ function HomeClient() {
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <DoubanCardSkeleton />
                         </div>
@@ -445,7 +445,7 @@ function HomeClient() {
                         return todayAnimes.map((anime, index) => (
                           <div
                             key={`${anime.id || 0}-${index}`}
-                            className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                            className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                           >
                             <VideoCard
                               from='douban'
@@ -489,7 +489,7 @@ function HomeClient() {
                       Array.from({ length: 8 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <DoubanCardSkeleton />
                         </div>
@@ -498,7 +498,7 @@ function HomeClient() {
                       hotVarietyShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+                          className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard
                             from='douban'

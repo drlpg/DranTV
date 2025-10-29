@@ -5,9 +5,11 @@ import Image from 'next/image';
 const ImagePlaceholder = ({
   aspectRatio,
   type = 'loading',
+  priority = false,
 }: {
   aspectRatio: string;
   type?: 'loading' | 'error';
+  priority?: boolean;
 }) => (
   <div
     className={`w-full ${aspectRatio} rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden relative`}
@@ -22,6 +24,7 @@ const ImagePlaceholder = ({
             fill
             sizes='(max-width: 768px) 40px, 80px'
             className='object-contain opacity-60'
+            priority={priority}
             onError={(e) => {
               const img = e.target as HTMLImageElement;
               if (!img.dataset.retried) {
@@ -40,6 +43,7 @@ const ImagePlaceholder = ({
         src='/img/placeholder-minimal.svg'
         alt='加载失败'
         fill
+        sizes='(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'
         className='object-cover opacity-60'
         onError={(e) => {
           const img = e.target as HTMLImageElement;

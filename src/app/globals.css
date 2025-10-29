@@ -1624,3 +1624,53 @@ div[data-media-provider] video {
     display: none !important;
   }
 }
+
+/* 滚动条自动隐藏 - 仅在悬停时显示 */
+.scrollbar-auto-hide {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.scrollbar-auto-hide:hover {
+  scrollbar-color: rgb(156, 163, 175) transparent;
+}
+
+.dark .scrollbar-auto-hide:hover {
+  scrollbar-color: rgb(75, 85, 99) transparent;
+}
+
+.scrollbar-auto-hide::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-auto-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-auto-hide::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(156, 163, 175);
+}
+
+.dark .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(75, 85, 99);
+}
+
+/* 视频简介文本对齐样式 - 单行左对齐，多行两端对齐，末行左对齐 */
+.text-justify-multiline {
+  text-align: justify;
+  text-align-last: left;
+}
+
+/* 当显示自定义加载蒙层时，隐藏Artplayer内置的加载动画 */
+.art-video-player .art-loading {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

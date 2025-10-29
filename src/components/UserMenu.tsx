@@ -505,21 +505,39 @@ export const UserMenu: React.FC = () => {
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
 
-    // 计算一个居中的正方形裁剪区域
-    const minDimension = Math.min(width, height);
-    const cropSize = minDimension * 0.8; // 使用80%的最小维度
-    const cropX = (width - cropSize) / 2;
-    const cropY = (height - cropSize) / 2;
+    // 移动端使用全尺寸裁剪，桌面端使用80%居中裁剪
+    if (isMobile) {
+      // 移动端：全尺寸裁剪
+      const minDimension = Math.min(width, height);
+      const cropX = (width - minDimension) / 2;
+      const cropY = (height - minDimension) / 2;
 
-    const newCrop = {
-      unit: 'px' as const,
-      x: cropX,
-      y: cropY,
-      width: cropSize,
-      height: cropSize,
-    };
+      const newCrop = {
+        unit: 'px' as const,
+        x: cropX,
+        y: cropY,
+        width: minDimension,
+        height: minDimension,
+      };
 
-    setCrop(newCrop);
+      setCrop(newCrop);
+    } else {
+      // 桌面端：80%居中裁剪
+      const minDimension = Math.min(width, height);
+      const cropSize = minDimension * 0.8;
+      const cropX = (width - cropSize) / 2;
+      const cropY = (height - cropSize) / 2;
+
+      const newCrop = {
+        unit: 'px' as const,
+        x: cropX,
+        y: cropY,
+        width: cropSize,
+        height: cropSize,
+      };
+
+      setCrop(newCrop);
+    }
   };
 
   const handleConfirmCrop = async () => {
@@ -935,10 +953,10 @@ export const UserMenu: React.FC = () => {
       />
 
       {/* 设置面板 */}
-      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
+      <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] flex flex-col'>
         {/* 内容容器 - 独立的滚动区域 */}
         <div
-          className='flex-1 p-6 overflow-y-auto'
+          className='flex-1 p-6 overflow-y-auto scrollbar-hide sm:scrollbar-thin sm:scrollbar-thumb-gray-300 dark:sm:scrollbar-thumb-gray-600 sm:scrollbar-track-transparent sm:hover:scrollbar-thumb-gray-400 dark:sm:hover:scrollbar-thumb-gray-500'
           data-panel-content
           style={{
             touchAction: 'pan-y', // 只允许垂直滚动
@@ -1074,7 +1092,7 @@ export const UserMenu: React.FC = () => {
             )}
 
             {/* 分割线 */}
-            <div className='border-t border-gray-200 dark:border-gray-700'></div>
+            <div className='border-t border-dashed border-gray-200 dark:border-gray-700'></div>
 
             {/* 豆瓣图片代理设置 */}
             <div className='space-y-3'>
@@ -1186,7 +1204,7 @@ export const UserMenu: React.FC = () => {
             )}
 
             {/* 分割线 */}
-            <div className='border-t border-gray-200 dark:border-gray-700'></div>
+            <div className='border-t border-dashed border-gray-200 dark:border-gray-700'></div>
 
             {/* 默认聚合搜索结果 */}
             <div className='flex items-center justify-between'>
@@ -1288,7 +1306,7 @@ export const UserMenu: React.FC = () => {
           </div>
 
           {/* 底部说明 */}
-          <div className='mt-6 pt-4 border-t border-gray-200 dark:border-gray-700'>
+          <div className='mt-6 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700'>
             <p className='text-xs text-gray-500 dark:text-gray-400 text-center'>
               这些设置保存在本地浏览器中
             </p>
@@ -1387,7 +1405,7 @@ export const UserMenu: React.FC = () => {
           </div>
 
           {/* 操作按钮 */}
-          <div className='flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700'>
+          <div className='flex gap-3 mt-6 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700'>
             <button
               onClick={handleCloseChangePassword}
               className='flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors'
@@ -1405,7 +1423,7 @@ export const UserMenu: React.FC = () => {
           </div>
 
           {/* 底部说明 */}
-          <div className='mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'>
+          <div className='mt-4 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700'>
             <p className='text-xs text-gray-500 dark:text-gray-400 text-center'>
               修改密码后需要重新登录
             </p>
@@ -1481,7 +1499,7 @@ export const UserMenu: React.FC = () => {
             />
 
             {/* 修改头像面板 */}
-            <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'>
+            <div className='fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[1001] overflow-hidden'>
               <div className='p-6'>
                 {/* 标题栏 */}
                 <div className='flex items-center justify-between mb-6'>
@@ -1564,6 +1582,8 @@ export const UserMenu: React.FC = () => {
                           }
                           aspect={1}
                           circularCrop
+                          disabled={isMobile}
+                          locked={isMobile}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -1612,7 +1632,7 @@ export const UserMenu: React.FC = () => {
                 )}
 
                 {/* 底部提示 */}
-                <p className='text-xs text-gray-500 dark:text-gray-400 text-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-700'>
+                <p className='text-xs text-gray-500 dark:text-gray-400 text-center mt-4 pt-4 border-t border-dashed border-gray-200 dark:border-gray-700'>
                   支持 JPG、PNG、GIF 等格式，文件大小不超过 2MB
                 </p>
               </div>

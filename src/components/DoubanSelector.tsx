@@ -361,7 +361,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               分类
             </span>
-            <div className='overflow-x-auto'>
+            <div className='overflow-x-auto scrollbar-hide'>
               {renderCapsuleSelector(
                 moviePrimaryOptions,
                 primarySelection || moviePrimaryOptions[0].value,
@@ -377,7 +377,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 地区
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 {renderCapsuleSelector(
                   movieSecondaryOptions,
                   secondarySelection || movieSecondaryOptions[0].value,
@@ -392,7 +392,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 筛选
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 <MultiLevelSelector
                   key={`${type}-${primarySelection}`}
                   onChange={handleMultiLevelChange}
@@ -412,7 +412,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               分类
             </span>
-            <div className='overflow-x-auto'>
+            <div className='overflow-x-auto scrollbar-hide'>
               {renderCapsuleSelector(
                 tvPrimaryOptions,
                 primarySelection || tvPrimaryOptions[1].value,
@@ -428,7 +428,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 类型
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 {renderCapsuleSelector(
                   tvSecondaryOptions,
                   secondarySelection || tvSecondaryOptions[0].value,
@@ -443,7 +443,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 筛选
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 <MultiLevelSelector
                   key={`${type}-${primarySelection}`}
                   onChange={handleMultiLevelChange}
@@ -462,7 +462,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               分类
             </span>
-            <div className='overflow-x-auto'>
+            <div className='overflow-x-auto scrollbar-hide'>
               {renderCapsuleSelector(
                 animePrimaryOptions,
                 primarySelection || animePrimaryOptions[0].value,
@@ -479,7 +479,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 星期
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 <WeekdaySelector onWeekdayChange={onWeekdayChange} />
               </div>
             </div>
@@ -489,7 +489,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 筛选
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 {(primarySelection || animePrimaryOptions[0].value) ===
                 '番剧' ? (
                   <MultiLevelSelector
@@ -518,7 +518,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
             <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
               分类
             </span>
-            <div className='overflow-x-auto'>
+            <div className='overflow-x-auto scrollbar-hide'>
               {renderCapsuleSelector(
                 showPrimaryOptions,
                 primarySelection || showPrimaryOptions[1].value,
@@ -534,7 +534,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 类型
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 {renderCapsuleSelector(
                   showSecondaryOptions,
                   secondarySelection || showSecondaryOptions[0].value,
@@ -549,7 +549,7 @@ const DoubanSelector: React.FC<DoubanSelectorProps> = ({
               <span className='text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[48px]'>
                 筛选
               </span>
-              <div className='overflow-x-auto'>
+              <div className='overflow-x-auto scrollbar-hide'>
                 <MultiLevelSelector
                   key={`${type}-${primarySelection}`}
                   onChange={handleMultiLevelChange}

@@ -732,7 +732,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           >
             {/* 加载中动画 */}
             {!isLoading && !imageError && (
-              <ImagePlaceholder aspectRatio='aspect-[2/3]' type='loading' />
+              <ImagePlaceholder
+                aspectRatio='aspect-[2/3]'
+                type='loading'
+                priority={priority}
+              />
             )}
             {/* 错误占位符 */}
             {imageError && (
@@ -744,6 +748,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 src={processImageUrl(actualPoster)}
                 alt={actualTitle}
                 fill
+                sizes='(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw'
                 className={
                   origin === 'live' ? 'object-contain' : 'object-cover'
                 }
@@ -930,7 +935,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-2 right-2 bg-blue-500/80 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500/80 backdrop-blur-md text-white text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
                 style={
                   {
                     WebkitUserSelect: 'none',

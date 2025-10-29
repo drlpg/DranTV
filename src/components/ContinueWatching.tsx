@@ -106,7 +106,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
           return (
             <div
               key={record.key}
-              className='min-w-[112px] w-28 sm:min-w-[180px] sm:w-44 snap-start'
+              className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
             >
               <VideoCard
                 id={id}

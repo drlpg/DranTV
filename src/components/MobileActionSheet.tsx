@@ -220,6 +220,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                   src={poster}
                   alt={title}
                   fill
+                  sizes='48px'
                   className={
                     origin === 'live' ? 'object-contain' : 'object-cover'
                   }
