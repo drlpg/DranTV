@@ -27,6 +27,8 @@ import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/version';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 
+import { useSettings } from '@/hooks/useSettings';
+
 import { useToast } from './Toast';
 import { VersionPanel } from './VersionPanel';
 
@@ -88,19 +90,27 @@ export const UserMenu: React.FC = () => {
     }
   }, [isSettingsOpen, isChangePasswordOpen, isChangeAvatarOpen]);
 
-  // 设置相关状态
-  const [defaultAggregateSearch, setDefaultAggregateSearch] = useState(true);
-  const [doubanProxyUrl, setDoubanProxyUrl] = useState('');
-  const [enableOptimization, setEnableOptimization] = useState(true);
-  const [fluidSearch, setFluidSearch] = useState(true);
-  const [liveDirectConnect, setLiveDirectConnect] = useState(false);
-  const [doubanDataSource, setDoubanDataSource] = useState(
-    'cmliussss-cdn-tencent'
-  );
-  const [doubanImageProxyType, setDoubanImageProxyType] = useState(
-    'cmliussss-cdn-tencent'
-  );
-  const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
+  // 使用自定义Hook管理设置状态
+  const {
+    defaultAggregateSearch,
+    doubanProxyUrl,
+    enableOptimization,
+    fluidSearch,
+    liveDirectConnect,
+    doubanDataSource,
+    doubanImageProxyType,
+    doubanImageProxyUrl,
+    handleAggregateToggle,
+    handleDoubanProxyUrlChange,
+    handleOptimizationToggle,
+    handleFluidSearchToggle,
+    handleLiveDirectConnectToggle,
+    handleDoubanDataSourceChange,
+    handleDoubanImageProxyTypeChange,
+    handleDoubanImageProxyUrlChange,
+    handleResetSettings,
+  } = useSettings();
+
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
     useState(false);
@@ -181,79 +191,7 @@ export const UserMenu: React.FC = () => {
     }
   }, []);
 
-  // 从 localStorage 读取设置
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedAggregateSearch = localStorage.getItem(
-        'defaultAggregateSearch'
-      );
-      if (savedAggregateSearch !== null) {
-        setDefaultAggregateSearch(JSON.parse(savedAggregateSearch));
-      }
-
-      const savedDoubanDataSource = localStorage.getItem('doubanDataSource');
-      const defaultDoubanProxyType =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
-        'cmliussss-cdn-tencent';
-      if (savedDoubanDataSource !== null) {
-        setDoubanDataSource(savedDoubanDataSource);
-      } else if (defaultDoubanProxyType) {
-        setDoubanDataSource(defaultDoubanProxyType);
-      }
-
-      const savedDoubanProxyUrl = localStorage.getItem('doubanProxyUrl');
-      const defaultDoubanProxy =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
-      if (savedDoubanProxyUrl !== null) {
-        setDoubanProxyUrl(savedDoubanProxyUrl);
-      } else if (defaultDoubanProxy) {
-        setDoubanProxyUrl(defaultDoubanProxy);
-      }
-
-      const savedDoubanImageProxyType = localStorage.getItem(
-        'doubanImageProxyType'
-      );
-      const defaultDoubanImageProxyType =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
-        'cmliussss-cdn-tencent';
-      if (savedDoubanImageProxyType !== null) {
-        setDoubanImageProxyType(savedDoubanImageProxyType);
-      } else if (defaultDoubanImageProxyType) {
-        setDoubanImageProxyType(defaultDoubanImageProxyType);
-      }
-
-      const savedDoubanImageProxyUrl = localStorage.getItem(
-        'doubanImageProxyUrl'
-      );
-      const defaultDoubanImageProxyUrl =
-        (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
-      if (savedDoubanImageProxyUrl !== null) {
-        setDoubanImageProxyUrl(savedDoubanImageProxyUrl);
-      } else if (defaultDoubanImageProxyUrl) {
-        setDoubanImageProxyUrl(defaultDoubanImageProxyUrl);
-      }
-
-      const savedEnableOptimization =
-        localStorage.getItem('enableOptimization');
-      if (savedEnableOptimization !== null) {
-        setEnableOptimization(JSON.parse(savedEnableOptimization));
-      }
-
-      const savedFluidSearch = localStorage.getItem('fluidSearch');
-      const defaultFluidSearch =
-        (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
-      if (savedFluidSearch !== null) {
-        setFluidSearch(JSON.parse(savedFluidSearch));
-      } else if (defaultFluidSearch !== undefined) {
-        setFluidSearch(defaultFluidSearch);
-      }
-
-      const savedLiveDirectConnect = localStorage.getItem('liveDirectConnect');
-      if (savedLiveDirectConnect !== null) {
-        setLiveDirectConnect(JSON.parse(savedLiveDirectConnect));
-      }
-    }
-  }, []);
+  // 设置读取逻辑已移至 useSettings Hook
 
   // 版本检查
   useEffect(() => {
@@ -361,7 +299,10 @@ export const UserMenu: React.FC = () => {
 
   const handleAdminPanel = () => {
     setIsOpen(false);
-    router.push('/admin');
+    // 使用 requestAnimationFrame 确保菜单关闭动画完成后再跳转
+    requestAnimationFrame(() => {
+      router.push('/admin');
+    });
   };
 
   const handleChangePassword = () => {
@@ -632,62 +573,7 @@ export const UserMenu: React.FC = () => {
     setIsSettingsOpen(false);
   };
 
-  // 设置相关的处理函数
-  const handleAggregateToggle = (value: boolean) => {
-    setDefaultAggregateSearch(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('defaultAggregateSearch', JSON.stringify(value));
-    }
-  };
-
-  const handleDoubanProxyUrlChange = (value: string) => {
-    setDoubanProxyUrl(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('doubanProxyUrl', value);
-    }
-  };
-
-  const handleOptimizationToggle = (value: boolean) => {
-    setEnableOptimization(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('enableOptimization', JSON.stringify(value));
-    }
-  };
-
-  const handleFluidSearchToggle = (value: boolean) => {
-    setFluidSearch(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('fluidSearch', JSON.stringify(value));
-    }
-  };
-
-  const handleLiveDirectConnectToggle = (value: boolean) => {
-    setLiveDirectConnect(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('liveDirectConnect', JSON.stringify(value));
-    }
-  };
-
-  const handleDoubanDataSourceChange = (value: string) => {
-    setDoubanDataSource(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('doubanDataSource', value);
-    }
-  };
-
-  const handleDoubanImageProxyTypeChange = (value: string) => {
-    setDoubanImageProxyType(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('doubanImageProxyType', value);
-    }
-  };
-
-  const handleDoubanImageProxyUrlChange = (value: string) => {
-    setDoubanImageProxyUrl(value);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('doubanImageProxyUrl', value);
-    }
-  };
+  // 设置相关的处理函数已移至 useSettings Hook
 
   // 获取感谢信息
   const getThanksInfo = (dataSource: string) => {
@@ -708,40 +594,7 @@ export const UserMenu: React.FC = () => {
     }
   };
 
-  const handleResetSettings = () => {
-    const defaultDoubanProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
-      'cmliussss-cdn-tencent';
-    const defaultDoubanProxy =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
-    const defaultDoubanImageProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
-      'cmliussss-cdn-tencent';
-    const defaultDoubanImageProxyUrl =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
-    const defaultFluidSearch =
-      (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
-
-    setDefaultAggregateSearch(true);
-    setEnableOptimization(true);
-    setFluidSearch(defaultFluidSearch);
-    setLiveDirectConnect(false);
-    setDoubanProxyUrl(defaultDoubanProxy);
-    setDoubanDataSource(defaultDoubanProxyType);
-    setDoubanImageProxyType(defaultDoubanImageProxyType);
-    setDoubanImageProxyUrl(defaultDoubanImageProxyUrl);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('defaultAggregateSearch', JSON.stringify(true));
-      localStorage.setItem('enableOptimization', JSON.stringify(true));
-      localStorage.setItem('fluidSearch', JSON.stringify(defaultFluidSearch));
-      localStorage.setItem('liveDirectConnect', JSON.stringify(false));
-      localStorage.setItem('doubanProxyUrl', defaultDoubanProxy);
-      localStorage.setItem('doubanDataSource', defaultDoubanProxyType);
-      localStorage.setItem('doubanImageProxyType', defaultDoubanImageProxyType);
-      localStorage.setItem('doubanImageProxyUrl', defaultDoubanImageProxyUrl);
-    }
-  };
+  // handleResetSettings 已移至 useSettings Hook
 
   // 检查是否显示管理面板按钮
   const showAdminPanel =

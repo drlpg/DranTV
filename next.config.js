@@ -9,7 +9,7 @@ const nextConfig = {
   },
 
   reactStrictMode: false,
-  swcMinify: false,
+  swcMinify: true,
 
   // 禁用图片警告
   logging: {
@@ -20,6 +20,23 @@ const nextConfig = {
 
   experimental: {
     instrumentationHook: process.env.NODE_ENV === 'production',
+    optimizePackageImports: [
+      'lucide-react',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      'framer-motion',
+      'react-icons',
+    ],
+    optimizeCss: true,
+    // 启用并发特性
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+
+  // 启用编译器优化
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 
   // 图片优化配置
@@ -44,13 +61,30 @@ const nextConfig = {
     ],
   },
 
-  // 禁用开发环境的性能警告
+  // 优化开发环境性能
   onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
   },
 
-  webpack(config) {
+  // 优化生产构建
+  productionBrowserSourceMaps: false,
+  poweredByHeader: false,
+
+  // 优化字体加载
+  optimizeFonts: true,
+
+  webpack(config, { dev, isServer }) {
+    // 启用持久化缓存以加快构建速度
+    if (!isServer) {
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+      };
+    }
+
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg')

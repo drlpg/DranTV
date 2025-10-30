@@ -14,11 +14,14 @@ import {
 } from '@/lib/douban.client';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
+import dynamic from 'next/dynamic';
+
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
-import DoubanCustomSelector from '@/components/DoubanCustomSelector';
-import DoubanSelector from '@/components/DoubanSelector';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
+
+import DoubanCustomSelector from '@/components/DoubanCustomSelector';
+import DoubanSelector from '@/components/DoubanSelector';
 
 function DoubanPageClient() {
   const searchParams = useSearchParams();
@@ -78,15 +81,23 @@ function DoubanPageClient() {
   // 星期选择器状态
   const [selectedWeekday, setSelectedWeekday] = useState<string>('');
 
-  // 获取自定义分类数据
+  // 合并初始化逻辑 - 只执行一次
   useEffect(() => {
+    // 获取自定义分类数据
     const runtimeConfig = (window as any).RUNTIME_CONFIG;
     if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
       setCustomCategories(runtimeConfig.CUSTOM_CATEGORIES);
     }
+
+    // 延迟标记选择器准备好
+    const timer = setTimeout(() => {
+      setSelectorsReady(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // 同步最新参数值到 ref
+  // 同步最新参数值到 ref - 使用 useLayoutEffect 避免闪烁
   useEffect(() => {
     currentParamsRef.current = {
       type,
@@ -105,40 +116,21 @@ function DoubanPageClient() {
     currentPage,
   ]);
 
-  // 初始化时标记选择器为准备好状态
+  // 合并type变化的处理逻辑
   useEffect(() => {
-    // 短暂延迟确保初始状态设置完成
-    const timer = setTimeout(() => {
-      setSelectorsReady(true);
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, []); // 只在组件挂载时执行一次
-
-  // type变化时立即重置selectorsReady（最高优先级）
-  useEffect(() => {
+    // 立即重置状态
     setSelectorsReady(false);
-    setLoading(true); // 立即显示loading状态
-  }, [type]);
+    setLoading(true);
 
-  // 当type变化时重置选择器状态
-  useEffect(() => {
+    // 重置选择器状态
     if (type === 'custom' && customCategories.length > 0) {
-      // 自定义分类模式：优先选择 movie，如果没有 movie 则选择 tv
       const types = Array.from(
         new Set(customCategories.map((cat) => cat.type))
       );
       if (types.length > 0) {
-        // 优先选择 movie，如果没有 movie 则选择 tv
-        let selectedType = types[0]; // 默认选择第一个
-        if (types.includes('movie')) {
-          selectedType = 'movie';
-        } else {
-          selectedType = 'tv';
-        }
+        let selectedType = types.includes('movie') ? 'movie' : types[0];
         setPrimarySelection(selectedType);
 
-        // 设置选中类型的第一个分类的 query 作为二级选择
         const firstCategory = customCategories.find(
           (cat) => cat.type === selectedType
         );
@@ -147,26 +139,21 @@ function DoubanPageClient() {
         }
       }
     } else {
-      // 原有逻辑
-      if (type === 'movie') {
-        setPrimarySelection('热门');
-        setSecondarySelection('全部');
-      } else if (type === 'tv') {
-        setPrimarySelection('最近热门');
-        setSecondarySelection('tv');
-      } else if (type === 'show') {
-        setPrimarySelection('最近热门');
-        setSecondarySelection('show');
-      } else if (type === 'anime') {
-        setPrimarySelection('每日放送');
-        setSecondarySelection('全部');
-      } else {
-        setPrimarySelection('');
-        setSecondarySelection('全部');
-      }
+      // 使用对象映射简化逻辑
+      const typeConfig: Record<string, { primary: string; secondary: string }> =
+        {
+          movie: { primary: '热门', secondary: '全部' },
+          tv: { primary: '最近热门', secondary: 'tv' },
+          show: { primary: '最近热门', secondary: 'show' },
+          anime: { primary: '每日放送', secondary: '全部' },
+        };
+
+      const config = typeConfig[type] || { primary: '', secondary: '全部' };
+      setPrimarySelection(config.primary);
+      setSecondarySelection(config.secondary);
     }
 
-    // 清空 MultiLevelSelector 状态
+    // 重置 MultiLevelSelector
     setMultiLevelValues({
       type: 'all',
       region: 'all',
@@ -176,11 +163,8 @@ function DoubanPageClient() {
       sort: 'T',
     });
 
-    // 使用短暂延迟确保状态更新完成后标记选择器准备好
-    const timer = setTimeout(() => {
-      setSelectorsReady(true);
-    }, 50);
-
+    // 延迟标记准备好
+    const timer = setTimeout(() => setSelectorsReady(true), 50);
     return () => clearTimeout(timer);
   }, [type, customCategories]);
 

@@ -223,6 +223,7 @@ function HomeClient() {
                 width={32}
                 height={32}
                 className='rounded-lg'
+                priority
               />
               <span className='text-[1.25rem] font-bold text-gray-700 dark:text-gray-300 tracking-tight'>
                 {useSite().siteName}

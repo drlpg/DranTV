@@ -1132,77 +1132,61 @@ function LivePageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/live'>
-        <div className='flex items-center justify-center min-h-screen bg-transparent'>
+        <div className='fixed inset-0 flex items-center justify-center bg-transparent overflow-hidden mt-12 mb-14 md:mt-0 md:mb-0'>
           <div className='text-center max-w-md mx-auto px-6'>
-            {/* 动画直播图标 */}
-            <div className='relative mb-8'>
-              <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-blue-300 to-blue-700 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
-                <div className='text-white text-4xl'>📺</div>
-                {/* 旋转光环 */}
-                <div className='absolute -inset-2 bg-gradient-to-r from-blue-300 to-blue-700 rounded-2xl opacity-20 animate-spin'></div>
-              </div>
-
-              {/* 浮动粒子效果 */}
-              <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
-                <div className='absolute top-2 left-2 w-2 h-2 bg-blue-400 rounded-full animate-bounce'></div>
-                <div
-                  className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
-                  style={{ animationDelay: '0.5s' }}
-                ></div>
-                <div
-                  className='absolute bottom-3 left-6 w-1 h-1 bg-lime-400 rounded-full animate-bounce'
-                  style={{ animationDelay: '1s' }}
-                ></div>
-              </div>
-            </div>
-
-            {/* 进度指示器 */}
-            <div className='mb-6 w-80 mx-auto'>
-              <div className='flex justify-center space-x-2 mb-4'>
-                <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'loading'
-                      ? 'bg-blue-500 scale-125'
-                      : 'bg-blue-500'
-                  }`}
-                ></div>
-                <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'fetching'
-                      ? 'bg-blue-500 scale-125'
-                      : 'bg-blue-500'
-                  }`}
-                ></div>
-                <div
-                  className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                    loadingStage === 'ready'
-                      ? 'bg-blue-500 scale-125'
-                      : 'bg-gray-300'
-                  }`}
-                ></div>
-              </div>
-
-              {/* 进度条 */}
-              <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden'>
-                <div
-                  className='h-full bg-gradient-to-r from-blue-300 to-blue-700 rounded-full transition-all duration-1000 ease-out'
-                  style={{
-                    width:
-                      loadingStage === 'loading'
-                        ? '33%'
-                        : loadingStage === 'fetching'
-                        ? '66%'
-                        : '100%',
-                  }}
-                ></div>
+            {/* 动画加载图标 - 缩小30% */}
+            <div className='relative mb-4'>
+              <div
+                className='relative mx-auto flex items-center justify-center'
+                style={{ width: '44.8px', height: '44.8px' }}
+              >
+                <img
+                  src='/img/spinning-circles.svg'
+                  alt='Loading'
+                  className='w-full h-full'
+                />
               </div>
             </div>
 
             {/* 加载消息 */}
-            <div className='space-y-2'>
-              <p className='text-xl font-semibold text-gray-800 dark:text-gray-200 animate-pulse'>
+            <div className='mb-2'>
+              <p className='text-base font-medium text-gray-800 dark:text-gray-200 animate-pulse'>
                 {loadingMessage}
               </p>
+            </div>
+
+            {/* 进度指示器 - 移到文字下方，缩小30% */}
+            <div>
+              <div className='flex justify-center space-x-1.5'>
+                <div
+                  className={`rounded-full transition-all duration-500 ${
+                    loadingStage === 'loading' || loadingStage === 'fetching'
+                      ? 'bg-blue-500 scale-125'
+                      : loadingStage === 'ready'
+                      ? 'bg-blue-500'
+                      : 'bg-gray-300'
+                  }`}
+                  style={{ width: '5.6px', height: '5.6px' }}
+                ></div>
+                <div
+                  className={`rounded-full transition-all duration-500 ${
+                    loadingStage === 'fetching'
+                      ? 'bg-blue-500 scale-125'
+                      : loadingStage === 'ready'
+                      ? 'bg-blue-500'
+                      : 'bg-gray-300'
+                  }`}
+                  style={{ width: '5.6px', height: '5.6px' }}
+                ></div>
+                <div
+                  className={`rounded-full transition-all duration-500 ${
+                    loadingStage === 'ready'
+                      ? 'bg-blue-500 scale-125'
+                      : 'bg-gray-300'
+                  }`}
+                  style={{ width: '5.6px', height: '5.6px' }}
+                ></div>
+              </div>
             </div>
           </div>
         </div>

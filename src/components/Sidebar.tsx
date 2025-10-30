@@ -23,6 +23,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -119,51 +120,53 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     isCollapsed,
   };
 
-  const [menuItems, setMenuItems] = useState([
-    {
-      icon: Film,
-      label: '电影',
-      href: '/douban?type=movie',
-    },
-    {
-      icon: PlayCircle,
-      label: '短剧',
-      href: '/shortdrama',
-    },
-    {
-      icon: Tv,
-      label: '剧集',
-      href: '/douban?type=tv',
-    },
-    {
-      icon: Cat,
-      label: '动漫',
-      href: '/douban?type=anime',
-    },
-    {
-      icon: Clover,
-      label: '综艺',
-      href: '/douban?type=show',
-    },
-    {
-      icon: Radio,
-      label: '直播',
-      href: '/live',
-    },
-  ]);
+  // 使用 useMemo 缓存菜单项，避免不必要的重渲染
+  const menuItems = useMemo(() => {
+    const baseItems = [
+      {
+        icon: Film,
+        label: '电影',
+        href: '/douban?type=movie',
+      },
+      {
+        icon: PlayCircle,
+        label: '短剧',
+        href: '/shortdrama',
+      },
+      {
+        icon: Tv,
+        label: '剧集',
+        href: '/douban?type=tv',
+      },
+      {
+        icon: Cat,
+        label: '动漫',
+        href: '/douban?type=anime',
+      },
+      {
+        icon: Clover,
+        label: '综艺',
+        href: '/douban?type=show',
+      },
+      {
+        icon: Radio,
+        label: '直播',
+        href: '/live',
+      },
+    ];
 
-  useEffect(() => {
-    const runtimeConfig = (window as any).RUNTIME_CONFIG;
-    if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
-      setMenuItems((prevItems) => [
-        ...prevItems,
-        {
+    if (typeof window !== 'undefined') {
+      const runtimeConfig = (window as any).RUNTIME_CONFIG;
+      if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
+        baseItems.push({
           icon: Star,
           label: '自定义',
           href: '/douban?type=custom',
-        },
-      ]);
+        });
+      }
     }
+
+    return baseItems;
   }, []);
 
   return (
@@ -186,7 +189,6 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             <nav className='px-2 pt-4'>
               <Link
                 href='/'
-                onClick={() => setActive('/')}
                 data-active={active === '/'}
                 suppressHydrationWarning
                 className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
@@ -220,7 +222,6 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
               </Link>
               <Link
                 href='/search'
-                onClick={() => setActive('/search')}
                 data-active={active === '/search'}
                 suppressHydrationWarning
                 className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden mt-2'
@@ -276,7 +277,6 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                     <Link
                       key={item.label}
                       href={item.href}
-                      onClick={() => setActive(item.href)}
                       data-active={isActive}
                       suppressHydrationWarning
                       className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'

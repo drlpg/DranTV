@@ -11,6 +11,25 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.9",
+    date: "2025-10-30",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化直播页面加载动画，统一视频加载样式",
+    "优化路由跳转性能，使用 requestAnimationFrame 延迟跳转",
+    "优化组件性能，添加 React.memo 避免不必要重渲染",
+    "优化 douban 页面，合并 useEffect 减少重复执行",
+    "优化 UserMenu 组件，提取设置逻辑到独立 Hook",
+    "简化登录页面版本显示，移除版本提示和链接"
+    ],
+    fixed: [
+    "修复页面切换响应延迟问题",
+    "清理未使用的工具文件和冗余代码"
+    ]
+  },
+  {
     version: "1.0.8",
     date: "2025-10-30",
     added: [

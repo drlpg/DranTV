@@ -2,6 +2,17 @@
 
 'use client';
 
+import Image from 'next/image';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { createPortal } from 'react-dom';
+
 import {
   closestCenter,
   DndContext,
@@ -32,30 +43,20 @@ import {
   ExternalLink,
   FileText,
   FolderOpen,
+  GripVertical,
+  Palette,
   Settings,
   Tv,
   User,
   Users,
   Video,
 } from 'lucide-react';
-import { GripVertical, Palette } from 'lucide-react';
-import Image from 'next/image';
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { createPortal } from 'react-dom';
 
 import { AdminConfig, AdminConfigResult } from '../../lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
-
 import DataMigration from '@/components/DataMigration';
-import ThemeManager from '@/components/ThemeManager';
 import PageLayout from '@/components/PageLayout';
+import ThemeManager from '@/components/ThemeManager';
 
 // 统一按钮样式系统
 const buttonStyles = {
@@ -3190,7 +3191,7 @@ const VideoSourceConfig = ({
   const handleValidateSource = async (
     api: string,
     name: string,
-    isNewSource: boolean = false
+    isNewSource = false
   ) => {
     if (!api.trim()) {
       showAlert({

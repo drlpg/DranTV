@@ -5,7 +5,7 @@
 import { Cat, Clover, Film, Home, Play, Radio, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 interface MobileBottomNavProps {
   /**
@@ -14,7 +14,7 @@ interface MobileBottomNavProps {
   activePath?: string;
 }
 
-const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
+const MobileBottomNav = memo(({ activePath }: MobileBottomNavProps) => {
   const pathname = usePathname();
 
   // 当前激活路径：优先使用传入的 activePath，否则回退到浏览器地址
@@ -86,8 +86,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     }
 
     // 豆瓣页面的类型匹配
-    if (decodedActive.startsWith('/douban') && typeMatch &&
-      decodedActive.includes(`type=${typeMatch}`)) {
+    if (
+      decodedActive.startsWith('/douban') &&
+      typeMatch &&
+      decodedActive.includes(`type=${typeMatch}`)
+    ) {
       return true;
     }
 
@@ -118,10 +121,11 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
                 className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs'
               >
                 <item.icon
-                  className={`h-6 w-6 ${active
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                    }`}
+                  className={`h-6 w-6 ${
+                    active
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
                 />
                 <span
                   className={
@@ -139,6 +143,8 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
       </ul>
     </nav>
   );
-};
+});
+
+MobileBottomNav.displayName = 'MobileBottomNav';
 
 export default MobileBottomNav;

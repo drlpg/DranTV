@@ -305,13 +305,13 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         sessionStorage.setItem('fromPlayPage', 'true');
       }
 
+      let url = '';
       if (origin === 'live' && actualSource && actualId) {
         // 直播内容跳转到直播页面
-        const url = `/live?source=${actualSource.replace(
+        url = `/live?source=${actualSource.replace(
           'live_',
           ''
         )}&id=${actualId.replace('live_', '')}`;
-        router.push(url);
       } else if (from === 'shortdrama' && actualId) {
         // 短剧内容跳转到播放页面，传递剧集ID用于调用获取全集地址的接口
         const urlParams = new URLSearchParams();
@@ -321,29 +321,33 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         if (vod_class) urlParams.set('vod_class', vod_class);
         if (vod_tag) urlParams.set('vod_tag', vod_tag);
 
-        const url = `/play?${urlParams.toString()}`;
-        router.push(url);
+        url = `/play?${urlParams.toString()}`;
       } else if (
         from === 'douban' ||
         (isAggregate && !actualSource && !actualId)
       ) {
-        const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
+        url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
           actualYear ? `&year=${actualYear}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }`;
-        router.push(url);
       } else if (actualSource && actualId) {
-        const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
+        url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
           actualTitle
         )}${actualYear ? `&year=${actualYear}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
-        router.push(url);
+      }
+
+      // 使用 startTransition 优化路由跳转
+      if (url) {
+        requestAnimationFrame(() => {
+          router.push(url);
+        });
       }
     }, [
       origin,
@@ -356,6 +360,8 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       isAggregate,
       actualQuery,
       actualSearchType,
+      vod_class,
+      vod_tag,
     ]);
 
     // 新标签页播放处理函数
@@ -365,33 +371,35 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         sessionStorage.setItem('fromPlayPage', 'true');
       }
 
+      let url = '';
       if (origin === 'live' && actualSource && actualId) {
         // 直播内容跳转到直播页面
-        const url = `/live?source=${actualSource.replace(
+        url = `/live?source=${actualSource.replace(
           'live_',
           ''
         )}&id=${actualId.replace('live_', '')}`;
-        window.open(url, '_blank');
       } else if (
         from === 'douban' ||
         (isAggregate && !actualSource && !actualId)
       ) {
-        const url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
+        url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
           actualYear ? `&year=${actualYear}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }`;
-        window.open(url, '_blank');
       } else if (actualSource && actualId) {
-        const url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
+        url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
           actualTitle
         )}${actualYear ? `&year=${actualYear}` : ''}${
           isAggregate ? '&prefer=true' : ''
         }${
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
+      }
+
+      if (url) {
         window.open(url, '_blank');
       }
     }, [

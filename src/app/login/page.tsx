@@ -2,12 +2,11 @@
 
 'use client';
 
-import { AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { CURRENT_VERSION } from '@/lib/version';
-import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
 import MachineCode from '@/lib/machine-code';
 
 import { useSite } from '@/components/SiteProvider';
@@ -16,56 +15,10 @@ import GlobalThemeLoader from '@/components/GlobalThemeLoader';
 
 // 版本显示组件
 function VersionDisplay() {
-  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
-  const [isChecking, setIsChecking] = useState(true);
-
-  useEffect(() => {
-    const checkUpdate = async () => {
-      try {
-        const status = await checkForUpdates();
-        setUpdateStatus(status);
-      } catch (_) {
-        // do nothing
-      } finally {
-        setIsChecking(false);
-      }
-    };
-
-    checkUpdate();
-  }, []);
-
   return (
-    <button
-      onClick={() =>
-        window.open('https://github.com/drlpg/DranTV', '_blank')
-      }
-      className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
-    >
+    <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400'>
       <span className='font-mono'>v{CURRENT_VERSION}</span>
-      {!isChecking && updateStatus !== UpdateStatus.FETCH_FAILED && (
-        <div
-          className={`flex items-center gap-1.5 ${updateStatus === UpdateStatus.HAS_UPDATE
-            ? 'text-yellow-600 dark:text-yellow-400'
-            : updateStatus === UpdateStatus.NO_UPDATE
-              ? 'text-blue-600 dark:text-blue-400'
-              : ''
-            }`}
-        >
-          {updateStatus === UpdateStatus.HAS_UPDATE && (
-            <>
-              <AlertCircle className='w-3.5 h-3.5' />
-              <span className='font-semibold text-xs'>有新版本</span>
-            </>
-          )}
-          {updateStatus === UpdateStatus.NO_UPDATE && (
-            <>
-              <CheckCircle className='w-3.5 h-3.5' />
-              <span className='font-semibold text-xs'>已是最新</span>
-            </>
-          )}
-        </div>
-      )}
-    </button>
+    </div>
   );
 }
 
@@ -135,7 +88,11 @@ function LoginPageClient() {
       };
 
       // 只有在启用设备码功能时才处理机器码逻辑
-      if (deviceCodeEnabled && (requireMachineCode || bindMachineCode) && machineCode) {
+      if (
+        deviceCodeEnabled &&
+        (requireMachineCode || bindMachineCode) &&
+        machineCode
+      ) {
         requestData.machineCode = machineCode;
       }
 
@@ -149,7 +106,12 @@ function LoginPageClient() {
 
       if (res.ok) {
         // 登录成功，如果启用设备码功能且用户选择绑定机器码，则绑定
-        if (deviceCodeEnabled && bindMachineCode && machineCode && shouldAskUsername) {
+        if (
+          deviceCodeEnabled &&
+          bindMachineCode &&
+          machineCode &&
+          shouldAskUsername
+        ) {
           try {
             await fetch('/api/machine-code', {
               method: 'POST',
@@ -192,8 +154,6 @@ function LoginPageClient() {
     }
   };
 
-
-
   return (
     <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
       <GlobalThemeLoader />
@@ -218,10 +178,11 @@ function LoginPageClient() {
               />
               <label
                 htmlFor='username'
-                className={`absolute left-4 transition-all duration-200 pointer-events-none ${username
-                  ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
-                  : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
-                  }`}
+                className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+                  username
+                    ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
+                    : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
+                }`}
               >
                 用户名
               </label>
@@ -240,10 +201,11 @@ function LoginPageClient() {
             />
             <label
               htmlFor='password'
-              className={`absolute left-4 transition-all duration-200 pointer-events-none ${password
-                ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
-                : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
-                }`}
+              className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+                password
+                  ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
+                  : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
+              }`}
             >
               密码
             </label>
@@ -255,7 +217,9 @@ function LoginPageClient() {
               <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
                 <div className='flex items-center space-x-2 mb-2'>
                   <Shield className='w-4 h-4 text-blue-600 dark:text-blue-400' />
-                  <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>设备识别码</span>
+                  <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
+                    设备识别码
+                  </span>
                 </div>
                 <div className='space-y-2'>
                   <div className='text-xs font-mono text-gray-700 dark:text-gray-300 break-all'>
@@ -278,7 +242,10 @@ function LoginPageClient() {
                       onChange={(e) => setBindMachineCode(e.target.checked)}
                       className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
                     />
-                    <label htmlFor='bindMachineCode' className='text-sm text-gray-700 dark:text-gray-300'>
+                    <label
+                      htmlFor='bindMachineCode'
+                      className='text-sm text-gray-700 dark:text-gray-300'
+                    >
                       绑定此设备（提升账户安全性）
                     </label>
                   </div>
@@ -301,7 +268,11 @@ function LoginPageClient() {
               !password ||
               loading ||
               (shouldAskUsername && !username) ||
-              (deviceCodeEnabled && machineCodeGenerated && shouldAskUsername && !requireMachineCode && !bindMachineCode)
+              (deviceCodeEnabled &&
+                machineCodeGenerated &&
+                shouldAskUsername &&
+                !requireMachineCode &&
+                !bindMachineCode)
             }
             className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
           >
