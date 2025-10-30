@@ -1857,6 +1857,7 @@ export function ChatModal({
                           outline: 'none !important',
                           boxShadow: 'none !important',
                           border: 'none !important',
+                          height: 'auto',
                         }}
                         onFocus={(e) => {
                           e.currentTarget.style.outline = 'none';
@@ -1864,7 +1865,6 @@ export function ChatModal({
                         }}
                         rows={1}
                         maxLength={1000}
-                        style={{ height: 'auto' }}
                         onInput={(e) => {
                           // 自动调整高度
                           const target = e.target as HTMLTextAreaElement;
