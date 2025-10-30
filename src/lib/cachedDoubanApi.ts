@@ -27,7 +27,7 @@ function generateCacheKey(prefix: string, params: Record<string, any>): string {
  * 带缓存的getDoubanCategories
  */
 export async function getCachedDoubanCategories(params: {
-  kind: string;
+  kind: 'tv' | 'movie';
   category: string;
   type: string;
 }): Promise<DoubanResult> {
