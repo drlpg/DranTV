@@ -1198,7 +1198,7 @@ function LivePageClient() {
     return (
       <PageLayout activePath='/live'>
         <div className='flex items-center justify-center min-h-screen bg-transparent'>
-          <div className='text-center max-w-md mx-auto px-6'>
+          <div className='text-center w-full md:w-[30vw] mx-auto px-6'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
               <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
@@ -1213,7 +1213,7 @@ function LivePageClient() {
               <h2 className='text-2xl font-bold text-gray-800 dark:text-gray-200'>
                 哎呀，出现了一些问题
               </h2>
-              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4'>
+              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-6 py-3'>
                 <p className='text-red-600 dark:text-red-400 font-medium'>
                   {error}
                 </p>
@@ -1227,7 +1227,7 @@ function LivePageClient() {
             <div className='space-y-3'>
               <button
                 onClick={() => window.location.reload()}
-                className='w-full px-6 py-3 bg-gradient-to-r from-blue-300 to-blue-700 text-white rounded-xl font-medium hover:from-blue-400 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl'
+                className='w-full px-6 py-3 bg-gradient-to-r from-blue-300 to-blue-700 text-white rounded-xl font-medium hover:from-blue-400 hover:to-blue-800 transform hover:scale-105 transition-all duration-200'
               >
                 🔄 重新尝试
               </button>
@@ -1273,7 +1273,7 @@ function LivePageClient() {
                 title={isChannelListCollapsed ? '显示频道列表' : '隐藏频道列表'}
               >
                 <svg
-                  className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all duration-200 ${
                     isChannelListCollapsed ? 'rotate-180' : 'rotate-0'
                   }`}
                   fill='none'
@@ -1287,7 +1287,7 @@ function LivePageClient() {
                     d='M9 5l7 7-7 7'
                   />
                 </svg>
-                <span className='text-xs font-medium text-gray-600 dark:text-gray-300'>
+                <span className='text-xs font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200'>
                   {isChannelListCollapsed ? '显示' : '隐藏'}
                 </span>
               </button>

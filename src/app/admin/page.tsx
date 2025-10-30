@@ -6204,8 +6204,12 @@ function AdminPageClient() {
   useEffect(() => {
     // 首次加载时显示骨架
     fetchConfig(true);
-    // 获取机器码用户列表
-    fetchMachineCodeUsers();
+    // 延迟获取机器码用户列表，避免阻塞主要配置加载
+    const timer = setTimeout(() => {
+      fetchMachineCodeUsers();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [fetchConfig, fetchMachineCodeUsers]);
 
   // 切换标签展开状态

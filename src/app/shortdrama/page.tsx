@@ -109,8 +109,8 @@ function ShortDramaPageClient() {
         setHasMore(data.length !== 0 && currentPage < totalPages);
         setLoading(false);
       } else {
-        // 没有更多数据时设置hasMore为false
         setHasMore(false);
+        setLoading(false);
       }
     } catch (err) {
       console.error('加载短剧数据失败:', err);
@@ -285,10 +285,19 @@ function ShortDramaPageClient() {
                         rate={item.score ? item.score.toString() : ''}
                         year={
                           item.update_time
-                            ? new Date(item.update_time)
-                                .getFullYear()
-                                .toString()
-                            : ''
+                            ? (() => {
+                                try {
+                                  const year = new Date(
+                                    item.update_time
+                                  ).getFullYear();
+                                  return !isNaN(year)
+                                    ? year.toString()
+                                    : new Date().getFullYear().toString();
+                                } catch {
+                                  return new Date().getFullYear().toString();
+                                }
+                              })()
+                            : new Date().getFullYear().toString()
                         }
                         type='tv'
                         source='shortdrama'

@@ -402,9 +402,9 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {activeTab === 'episodes' && (
         <>
           {/* 分类标签 */}
-          <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-600 -ml-4 pl-4 pr-4 flex-shrink-0'>
+          <div className='grid grid-cols-2 border-b border-dashed border-gray-300 dark:border-gray-600 -ml-4 flex-shrink-0'>
             <div
-              className='flex-1 overflow-x-auto'
+              className='overflow-x-auto flex justify-center'
               ref={categoryContainerRef}
               onMouseEnter={() => setIsCategoryHovered(true)}
               onMouseLeave={() => setIsCategoryHovered(false)}
@@ -437,31 +437,33 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               </div>
             </div>
             {/* 向上/向下按钮 */}
-            <button
-              className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-blue-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]'
-              onClick={() => {
-                // 切换集数排序（正序/倒序）
-                setDescending((prev) => !prev);
-              }}
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
+            <div className='flex items-center justify-center'>
+              <button
+                className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors'
+                onClick={() => {
+                  // 切换集数排序（正序/倒序）
+                  setDescending((prev) => !prev);
+                }}
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4'
-                />
-              </svg>
-            </button>
+                <svg
+                  className='w-4 h-4 rotate-90'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4'
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* 集数网格 */}
-          <div className='flex flex-wrap gap-3 overflow-y-auto flex-1 content-start pb-4'>
+          <div className='grid grid-cols-3 gap-3 overflow-y-auto flex-1 content-start pt-4 pb-4 pr-4 auto-rows-min'>
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
@@ -474,22 +476,28 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                 <button
                   key={episodeNumber}
                   onClick={() => handleEpisodeClick(episodeNumber - 1)}
-                  className={`h-10 min-w-10 px-3 py-2 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap font-mono
+                  className={`h-8 px-2 py-1 flex items-center justify-center text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap
                     ${
                       isActive
-                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25 dark:bg-blue-600'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+                        ? 'bg-blue-500 text-white dark:bg-blue-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 border border-gray-300 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:border-white/20'
                     }`.trim()}
                 >
                   {(() => {
                     const title = episodes_titles?.[episodeNumber - 1];
+                    // 格式化为"第01集"、"第02集"等
+                    const episodeNum = episodeNumber
+                      .toString()
+                      .padStart(2, '0');
+
                     if (!title) {
-                      return episodeNumber;
+                      return `第${episodeNum}集`;
                     }
-                    // 如果匹配"第X集"、"第X话"、"X集"、"X话"格式，提取中间的数字
+                    // 如果匹配"第X集"、"第X话"、"X集"、"X话"格式，提取中间的数字并格式化
                     const match = title.match(/(?:第)?(\d+)(?:集|话)/);
                     if (match) {
-                      return match[1];
+                      const num = match[1].padStart(2, '0');
+                      return `第${num}集`;
                     }
                     return title;
                   })()}

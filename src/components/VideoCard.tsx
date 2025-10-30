@@ -1292,7 +1292,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 ></div>
               </div>
             </div>
-            {config.showSourceName && source_name && (
+            {config.showSourceName && source_name && from !== 'shortdrama' && (
               <span
                 className='block text-xs text-gray-500 dark:text-gray-400 mt-1'
                 style={

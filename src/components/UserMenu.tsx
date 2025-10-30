@@ -193,7 +193,7 @@ export const UserMenu: React.FC = () => {
 
   // 设置读取逻辑已移至 useSettings Hook
 
-  // 版本检查
+  // 版本检查 - 延迟执行，避免阻塞初始渲染
   useEffect(() => {
     const checkUpdate = async () => {
       try {
@@ -206,7 +206,12 @@ export const UserMenu: React.FC = () => {
       }
     };
 
-    checkUpdate();
+    // 延迟2秒执行版本检查，避免阻塞初始加载
+    const timer = setTimeout(() => {
+      checkUpdate();
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // 点击外部区域关闭下拉框
@@ -299,10 +304,8 @@ export const UserMenu: React.FC = () => {
 
   const handleAdminPanel = () => {
     setIsOpen(false);
-    // 使用 requestAnimationFrame 确保菜单关闭动画完成后再跳转
-    requestAnimationFrame(() => {
-      router.push('/admin');
-    });
+    // 立即跳转，不等待动画
+    router.push('/admin');
   };
 
   const handleChangePassword = () => {

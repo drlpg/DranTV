@@ -7,35 +7,18 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (!id) {
-      console.error('🚫 [短剧API] 缺少必需的ID参数');
       return NextResponse.json(
         { error: 'id parameter is required' },
         { status: 400 }
       );
     }
 
-    console.log(`🎬 [短剧API] 开始请求短剧全集地址:`, {
-      requestId: id,
-      timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      referer: request.headers.get('referer')
-    });
-
     const apiUrl = new URL(`${API_CONFIG.shortdrama.baseUrl}/vod/parse/all`);
     apiUrl.searchParams.append('id', id);
     apiUrl.searchParams.append('proxy', 'true');
 
-    console.log(`🌐 [短剧API] 外部API调用详情:`, {
-      baseUrl: API_CONFIG.shortdrama.baseUrl,
-      fullUrl: apiUrl.toString(),
-      headers: API_CONFIG.shortdrama.headers,
-      timeout: '60秒'
-    });
-
-    const requestStartTime = performance.now();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      console.error('⏰ [短剧API] 请求超时 - 60秒');
       controller.abort();
     }, 60000);
 
@@ -55,7 +38,7 @@ export async function GET(request: NextRequest) {
       ok: response.ok,
       headers: Object.fromEntries(response.headers.entries()),
       requestDuration: `${requestDuration.toFixed(2)}ms`,
-      contentType: response.headers.get('content-type')
+      contentType: response.headers.get('content-type'),
     });
 
     if (!response.ok) {
@@ -63,9 +46,11 @@ export async function GET(request: NextRequest) {
         status: response.status,
         statusText: response.statusText,
         url: apiUrl.toString(),
-        requestDuration: `${requestDuration.toFixed(2)}ms`
+        requestDuration: `${requestDuration.toFixed(2)}ms`,
       });
-      throw new Error(`API request failed: ${response.status} - ${response.statusText}`);
+      throw new Error(
+        `API request failed: ${response.status} - ${response.statusText}`
+      );
     }
 
     const data = await response.json();
@@ -82,41 +67,55 @@ export async function GET(request: NextRequest) {
       resultsType: typeof data?.results,
       isResultsArray: Array.isArray(data?.results),
       hasCover: !!data?.cover,
-      hasDescription: !!data?.description
+      hasDescription: !!data?.description,
     });
 
     // 分析results数组的详细结构
     if (data?.results && Array.isArray(data.results)) {
-      const successCount = data.results.filter((item: any) => item.status === 'success').length;
-      const failureCount = data.results.filter((item: any) => item.status !== 'success').length;
-      const withUrlCount = data.results.filter((item: any) => item.status === 'success' && item.parsedUrl).length;
+      const successCount = data.results.filter(
+        (item: any) => item.status === 'success'
+      ).length;
+      const failureCount = data.results.filter(
+        (item: any) => item.status !== 'success'
+      ).length;
+      const withUrlCount = data.results.filter(
+        (item: any) => item.status === 'success' && item.parsedUrl
+      ).length;
 
       console.log(`📋 [短剧API] Results数组详细分析:`, {
         totalItems: data.results.length,
         successItems: successCount,
         failureItems: failureCount,
         itemsWithUrl: withUrlCount,
-        sampleSuccessItems: data.results.filter((item: any) => item.status === 'success').slice(0, 3).map((item: any) => ({
-          index: item.index,
-          label: item.label,
-          status: item.status,
-          hasUrl: !!item.parsedUrl,
-          urlLength: item.parsedUrl ? item.parsedUrl.length : 0,
-          urlDomain: item.parsedUrl ? item.parsedUrl.match(/https?:\/\/([^\/]+)/)?.[1] : null
-        })),
-        sampleFailureItems: data.results.filter((item: any) => item.status !== 'success').slice(0, 3).map((item: any) => ({
-          index: item.index,
-          label: item.label,
-          status: item.status,
-          reason: item.reason
-        }))
+        sampleSuccessItems: data.results
+          .filter((item: any) => item.status === 'success')
+          .slice(0, 3)
+          .map((item: any) => ({
+            index: item.index,
+            label: item.label,
+            status: item.status,
+            hasUrl: !!item.parsedUrl,
+            urlLength: item.parsedUrl ? item.parsedUrl.length : 0,
+            urlDomain: item.parsedUrl
+              ? item.parsedUrl.match(/https?:\/\/([^\/]+)/)?.[1]
+              : null,
+          })),
+        sampleFailureItems: data.results
+          .filter((item: any) => item.status !== 'success')
+          .slice(0, 3)
+          .map((item: any) => ({
+            index: item.index,
+            label: item.label,
+            status: item.status,
+            reason: item.reason,
+          })),
       });
     } else {
       console.error(`❌ [短剧API] Results数组无效:`, {
         hasResults: !!data?.results,
         resultsType: typeof data?.results,
         isArray: Array.isArray(data?.results),
-        resultsValue: data?.results
+        resultsValue: data?.results,
       });
     }
 
@@ -127,16 +126,19 @@ export async function GET(request: NextRequest) {
         hasResults: !!data?.results,
         resultsType: typeof data?.results,
         isResultsArray: Array.isArray(data?.results),
-        fullData: data
+        fullData: data,
       });
-      throw new Error('Invalid API response format - 外部API返回的数据格式不正确');
+      throw new Error(
+        'Invalid API response format - 外部API返回的数据格式不正确'
+      );
     }
 
     // 检查播放地址的有效性
     console.log('🔍 [短剧API] 开始验证播放地址有效性...');
 
     const validResults = data.results.filter((item: any) => {
-      const isValid = item.status === 'success' &&
+      const isValid =
+        item.status === 'success' &&
         item.parsedUrl &&
         typeof item.parsedUrl === 'string' &&
         item.parsedUrl.trim().length > 0;
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
           hasUrl: !!item.parsedUrl,
           urlType: typeof item.parsedUrl,
           urlLength: item.parsedUrl ? item.parsedUrl.length : 0,
-          reason: item.reason || '未知原因'
+          reason: item.reason || '未知原因',
         });
       }
 
@@ -160,7 +162,10 @@ export async function GET(request: NextRequest) {
       totalSources: data.results.length,
       validSources: validResults.length,
       invalidSources: data.results.length - validResults.length,
-      validationRate: `${((validResults.length / data.results.length) * 100).toFixed(1)}%`
+      validationRate: `${(
+        (validResults.length / data.results.length) *
+        100
+      ).toFixed(1)}%`,
     });
 
     if (validResults.length === 0) {
@@ -172,8 +177,8 @@ export async function GET(request: NextRequest) {
           status: item.status,
           hasUrl: !!item.parsedUrl,
           urlType: typeof item.parsedUrl,
-          reason: item.reason
-        }))
+          reason: item.reason,
+        })),
       });
       throw new Error('No valid video sources found - 所有播放源都无效');
     }
@@ -186,7 +191,7 @@ export async function GET(request: NextRequest) {
       successfulCount: validResults.length,
       originalTotalEpisodes: data.totalEpisodes,
       originalSuccessfulCount: data.successfulCount,
-      filteredCount: data.results.length - validResults.length
+      filteredCount: data.results.length - validResults.length,
     };
 
     console.log('🎯 [短剧API] 返回处理后的短剧数据:', {
@@ -200,13 +205,17 @@ export async function GET(request: NextRequest) {
       firstEpisode: {
         index: processedData.results[0]?.index,
         label: processedData.results[0]?.label,
-        urlPreview: processedData.results[0]?.parsedUrl?.substring(0, 100) + '...'
+        urlPreview:
+          processedData.results[0]?.parsedUrl?.substring(0, 100) + '...',
       },
       lastEpisode: {
         index: processedData.results[processedData.results.length - 1]?.index,
         label: processedData.results[processedData.results.length - 1]?.label,
-        urlPreview: processedData.results[processedData.results.length - 1]?.parsedUrl?.substring(0, 100) + '...'
-      }
+        urlPreview:
+          processedData.results[
+            processedData.results.length - 1
+          ]?.parsedUrl?.substring(0, 100) + '...',
+      },
     });
 
     return NextResponse.json(processedData);
@@ -222,7 +231,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       isTimeoutError: error instanceof Error && error.name === 'AbortError',
       isFetchError: error instanceof TypeError,
-      isNetworkError: error instanceof Error && error.message.includes('fetch')
+      isNetworkError: error instanceof Error && error.message.includes('fetch'),
     });
 
     // 分析错误类型
@@ -250,16 +259,19 @@ export async function GET(request: NextRequest) {
         index: index,
         label: `第${index + 1}集`,
         // 使用一些测试视频地址，这些是公共测试资源
-        parsedUrl: `https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4?episode=${index + 1}`,
+        parsedUrl: `https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4?episode=${
+          index + 1
+        }`,
         parseInfo: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Referer': 'https://sample-videos.com'
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            Referer: 'https://sample-videos.com',
           },
-          type: 'mp4'
+          type: 'mp4',
         },
         status: 'success',
-        reason: null
+        reason: null,
       })),
       totalEpisodes: 8,
       successfulCount: 8,
@@ -271,8 +283,8 @@ export async function GET(request: NextRequest) {
         errorCategory: errorCategory,
         originalError: error instanceof Error ? error.message : String(error),
         fallbackDataUsed: true,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
 
     console.log('🔧 [短剧API] 返回备用短剧数据:', {
@@ -280,15 +292,16 @@ export async function GET(request: NextRequest) {
       totalEpisodes: mockData.totalEpisodes,
       errorCategory: errorCategory,
       firstEpisodeUrl: mockData.results[0].parsedUrl,
-      hasFallbackData: true
+      hasFallbackData: true,
     });
 
     return NextResponse.json(mockData, {
       headers: {
         'X-Fallback-Data': 'true',
         'X-Error-Category': errorCategory,
-        'X-Original-Error': error instanceof Error ? error.message : String(error)
-      }
+        'X-Original-Error':
+          error instanceof Error ? error.message : String(error),
+      },
     });
   }
 }

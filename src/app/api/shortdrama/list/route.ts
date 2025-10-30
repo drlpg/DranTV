@@ -7,7 +7,7 @@ function transformExternalData(externalItem: any) {
     id: externalItem.id ? externalItem.id.toString() : '', // 分类热搜API返回的id就是唯一标识
     vod_id: externalItem.id, // 分类热搜API返回的id就是视频ID，用于获取全集地址
     name: externalItem.name || '未知短剧', // 分类热搜API返回的是name
-    cover: externalItem.cover || 'https://via.placeholder.com/300x400', // 分类热搜API返回的是cover
+    cover: externalItem.cover || '', // 分类热搜API返回的是cover，为空时不显示占位图
     update_time: externalItem.update_time || new Date().toISOString(), // 分类热搜API返回的是update_time
     score: externalItem.score || 0, // 分类热搜API返回的是score
     total_episodes: '1', // 分类热搜API通常不返回总集数，设为默认值
@@ -66,26 +66,35 @@ export async function GET(request: NextRequest) {
     console.error('Short drama list API error:', error);
 
     // 返回默认列表数据作为备用（格式与真实分类热搜API一致）
-    const mockData = Array.from({ length: 25 }, (_, index) => {
-      const classOptions = ['都市情感', '古装宫廷', '现代言情', '豪门世家', '职场励志'];
+    const mockDataRaw = Array.from({ length: 25 }, (_, index) => {
+      const classOptions = [
+        '都市情感',
+        '古装宫廷',
+        '现代言情',
+        '豪门世家',
+        '职场励志',
+      ];
       const tagOptions = [
         '甜宠,霸总,现代',
         '穿越,古装,宫斗',
         '复仇,虐渣,打脸',
         '重生,逆袭,强者归来',
-        '家庭,伦理,现实'
+        '家庭,伦理,现实',
       ];
 
       return {
-        id: index + 1000, // 直接使用数字ID，与分类热搜API一致，这个ID就是视频ID
-        name: `短剧示例 ${index + 1}`,
-        cover: 'https://via.placeholder.com/300x400',
-        update_time: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        score: Math.floor(Math.random() * 5) + 6, // 6-10的随机分数
-        vod_class: classOptions[index % classOptions.length], // 模拟分类
-        vod_tag: tagOptions[index % tagOptions.length], // 模拟标签
+        id: index + 1000,
+        name: '',
+        cover: '',
+        update_time: '',
+        score: 0,
+        vod_class: '',
+        vod_tag: '',
       };
     });
+
+    // 转换mock数据格式，确保与真实API返回格式一致
+    const mockData = mockDataRaw.map(transformExternalData);
 
     return NextResponse.json({
       total: 100,

@@ -8,6 +8,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GetBangumiCalendarData } from '@/lib/bangumi.client';
 import {
+  getDoubanCategories,
+  getDoubanList,
+  getDoubanRecommends,
+} from '@/lib/douban.client';
+import {
   getCachedDoubanCategories,
   getCachedDoubanList,
   getCachedDoubanRecommends,
@@ -297,25 +302,54 @@ function DoubanPageClient() {
         }
       } else if (type === 'anime') {
         data = await getCachedDoubanRecommends({
-          type: primarySelection === '番剧' ? 'tv' : 'movie',
+          kind: (primarySelection === '番剧' ? 'tv' : 'movie') as
+            | 'tv'
+            | 'movie',
+          category: '动画',
+          format: primarySelection === '番剧' ? '电视剧' : '电影',
           region: multiLevelValues.region || 'all',
           year: multiLevelValues.year || 'all',
           platform: multiLevelValues.platform || 'all',
           label: multiLevelValues.label || 'all',
           sort: multiLevelValues.sort || 'T',
-          page_limit: 25,
-          page_start: 0,
+          pageLimit: 25,
+          pageStart: 0,
         });
       } else if (primarySelection === '全部') {
+        const formatMap: Record<string, string> = {
+          movie: '电影',
+          tv: '电视剧',
+          show: '综艺',
+        };
         data = await getCachedDoubanRecommends({
-          type: type === 'show' ? 'tv' : type,
-          region: multiLevelValues.region || 'all',
-          year: multiLevelValues.year || 'all',
-          platform: multiLevelValues.platform || 'all',
-          label: multiLevelValues.label || 'all',
-          sort: multiLevelValues.sort || 'T',
-          page_limit: 25,
-          page_start: 0,
+          kind: (type === 'show' ? 'tv' : type) as 'tv' | 'movie',
+          category:
+            multiLevelValues.type && multiLevelValues.type !== 'all'
+              ? multiLevelValues.type
+              : '',
+          format: formatMap[type] || '',
+          region:
+            multiLevelValues.region && multiLevelValues.region !== 'all'
+              ? multiLevelValues.region
+              : '',
+          year:
+            multiLevelValues.year && multiLevelValues.year !== 'all'
+              ? multiLevelValues.year
+              : '',
+          platform:
+            multiLevelValues.platform && multiLevelValues.platform !== 'all'
+              ? multiLevelValues.platform
+              : '',
+          label:
+            multiLevelValues.label && multiLevelValues.label !== 'all'
+              ? multiLevelValues.label
+              : '',
+          sort:
+            multiLevelValues.sort && multiLevelValues.sort !== 'T'
+              ? multiLevelValues.sort
+              : '',
+          pageLimit: 25,
+          pageStart: 0,
         });
       } else {
         const params = getRequestParams(0);
@@ -333,18 +367,18 @@ function DoubanPageClient() {
 
         if (isSnapshotEqual(requestSnapshot, currentSnapshot)) {
           setDoubanData(data.list);
-          setHasMore(data.list.length !== 0);
+          // 对于分类API，如果返回20条数据，可能还有更多；对于推荐API，需要25条
+          const expectedCount =
+            primarySelection === '全部' || type === 'anime' ? 25 : 20;
+          setHasMore(data.list.length >= expectedCount);
           setLoading(false);
-        } else {
-          console.log('参数不一致，不执行任何操作，避免设置过期数据');
         }
-        // 如果参数不一致，不执行任何操作，避免设置过期数据
       } else {
         throw new Error(data.message || '获取数据失败');
       }
     } catch (err) {
-      console.error(err);
-      setLoading(false); // 发生错误时总是停止loading状态
+      console.error('加载数据失败:', err);
+      setLoading(false);
     }
   }, [
     type,
@@ -438,7 +472,7 @@ function DoubanPageClient() {
               pageLimit: 25,
               pageStart: currentPage * 25,
               category: '动画',
-              format: primarySelection === '番剧' ? '电视剧' : '',
+              format: primarySelection === '番剧' ? '电视剧' : '电影',
               region: multiLevelValues.region
                 ? (multiLevelValues.region as string)
                 : '',
@@ -456,30 +490,42 @@ function DoubanPageClient() {
                 : '',
             });
           } else if (primarySelection === '全部') {
-            data = await getDoubanRecommends({
+            const formatMap: Record<string, string> = {
+              movie: '电影',
+              tv: '电视剧',
+              show: '综艺',
+            };
+            const params = {
               kind: type === 'show' ? 'tv' : (type as 'tv' | 'movie'),
               pageLimit: 25,
               pageStart: currentPage * 25,
-              category: multiLevelValues.type
-                ? (multiLevelValues.type as string)
-                : '',
-              format: type === 'show' ? '综艺' : type === 'tv' ? '电视剧' : '',
-              region: multiLevelValues.region
-                ? (multiLevelValues.region as string)
-                : '',
-              year: multiLevelValues.year
-                ? (multiLevelValues.year as string)
-                : '',
-              platform: multiLevelValues.platform
-                ? (multiLevelValues.platform as string)
-                : '',
-              sort: multiLevelValues.sort
-                ? (multiLevelValues.sort as string)
-                : '',
-              label: multiLevelValues.label
-                ? (multiLevelValues.label as string)
-                : '',
-            });
+              category:
+                multiLevelValues.type && multiLevelValues.type !== 'all'
+                  ? (multiLevelValues.type as string)
+                  : '',
+              format: formatMap[type] || '',
+              region:
+                multiLevelValues.region && multiLevelValues.region !== 'all'
+                  ? (multiLevelValues.region as string)
+                  : '',
+              year:
+                multiLevelValues.year && multiLevelValues.year !== 'all'
+                  ? (multiLevelValues.year as string)
+                  : '',
+              platform:
+                multiLevelValues.platform && multiLevelValues.platform !== 'all'
+                  ? (multiLevelValues.platform as string)
+                  : '',
+              sort:
+                multiLevelValues.sort && multiLevelValues.sort !== 'T'
+                  ? (multiLevelValues.sort as string)
+                  : '',
+              label:
+                multiLevelValues.label && multiLevelValues.label !== 'all'
+                  ? (multiLevelValues.label as string)
+                  : '',
+            };
+            data = await getDoubanRecommends(params);
           } else {
             data = await getDoubanCategories(
               getRequestParams(currentPage * 25)
@@ -488,20 +534,20 @@ function DoubanPageClient() {
 
           if (data.code === 200) {
             // 检查参数是否仍然一致，如果一致才设置数据
-            // 使用 ref 获取最新的当前值
             const currentSnapshot = { ...currentParamsRef.current };
 
             if (isSnapshotEqual(requestSnapshot, currentSnapshot)) {
               setDoubanData((prev) => [...prev, ...data.list]);
-              setHasMore(data.list.length !== 0);
-            } else {
-              console.log('参数不一致，不执行任何操作，避免设置过期数据');
+              // 对于分类API，如果返回20条数据，可能还有更多；对于推荐API，需要25条
+              const expectedCount =
+                primarySelection === '全部' || type === 'anime' ? 25 : 20;
+              setHasMore(data.list.length >= expectedCount);
             }
           } else {
             throw new Error(data.message || '获取数据失败');
           }
         } catch (err) {
-          console.error(err);
+          console.error('加载更多失败:', err);
         } finally {
           setIsLoadingMore(false);
         }
@@ -521,8 +567,8 @@ function DoubanPageClient() {
 
   // 设置滚动监听
   useEffect(() => {
-    // 如果没有更多数据或正在加载，则不设置监听
-    if (!hasMore || isLoadingMore || loading) {
+    // 如果没有更多数据或正在初始加载，则不设置监听
+    if (!hasMore || loading || !selectorsReady) {
       return;
     }
 
@@ -533,7 +579,12 @@ function DoubanPageClient() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !isLoadingMore &&
+          !loading
+        ) {
           setCurrentPage((prev) => prev + 1);
         }
       },
@@ -548,7 +599,7 @@ function DoubanPageClient() {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, isLoadingMore, loading]);
+  }, [hasMore, isLoadingMore, loading, selectorsReady]);
 
   // 处理选择器变化
   const handlePrimaryChange = useCallback(
@@ -751,20 +802,17 @@ function DoubanPageClient() {
 
           {/* 加载更多指示器 */}
           {hasMore && !loading && (
-            <div
-              ref={(el) => {
-                if (el && el.offsetParent !== null) {
-                  (
-                    loadingRef as React.MutableRefObject<HTMLDivElement | null>
-                  ).current = el;
-                }
-              }}
-              className='flex justify-center mt-12 py-8'
-            >
-              {isLoadingMore && (
+            <div ref={loadingRef} className='flex justify-center mt-12 py-8'>
+              {isLoadingMore ? (
                 <div className='flex items-center gap-2'>
                   <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500'></div>
-                  <span className='text-gray-600'>加载中...</span>
+                  <span className='text-gray-600 dark:text-gray-400'>
+                    加载中...
+                  </span>
+                </div>
+              ) : (
+                <div className='text-gray-400 dark:text-gray-500 text-sm'>
+                  向下滚动加载更多
                 </div>
               )}
             </div>
@@ -772,12 +820,16 @@ function DoubanPageClient() {
 
           {/* 没有更多数据提示 */}
           {!hasMore && doubanData.length > 0 && (
-            <div className='text-center text-gray-500 py-8'>已加载全部内容</div>
+            <div className='text-center text-gray-500 dark:text-gray-400 py-8'>
+              已加载全部内容
+            </div>
           )}
 
           {/* 空状态 */}
           {!loading && doubanData.length === 0 && (
-            <div className='text-center text-gray-500 py-8'>暂无相关内容</div>
+            <div className='text-center text-gray-500 dark:text-gray-400 py-8'>
+              暂无相关内容
+            </div>
           )}
         </div>
       </div>

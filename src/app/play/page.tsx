@@ -391,17 +391,6 @@ function PlayPageClient() {
     // 按综合评分排序，选择最佳播放源
     resultsWithScore.sort((a, b) => b.score - a.score);
 
-    console.log('播放源评分排序结果:');
-    resultsWithScore.forEach((result, index) => {
-      console.log(
-        `${index + 1}. ${
-          result.source.source_name
-        } - 评分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${
-          result.testResult.loadSpeed
-        }, ${result.testResult.pingTime}ms)`
-      );
-    });
-
     return resultsWithScore[0].source;
   };
 
@@ -498,11 +487,6 @@ function PlayPageClient() {
       !newUrl.includes('/api/proxy/video')
     ) {
       newUrl = processShortDramaUrl(newUrl);
-      console.log('更新短剧播放地址:', {
-        episode: episodeIndex + 1,
-        originalUrl: detailData.episodes[episodeIndex],
-        processedUrl: newUrl,
-      });
     }
 
     if (newUrl !== videoUrl) {
@@ -537,7 +521,6 @@ function PlayPageClient() {
         wakeLockRef.current = await (navigator as any).wakeLock.request(
           'screen'
         );
-        console.log('Wake Lock 已启用');
       }
     } catch (err) {
       console.warn('Wake Lock 请求失败:', err);
@@ -549,7 +532,6 @@ function PlayPageClient() {
       if (wakeLockRef.current) {
         await wakeLockRef.current.release();
         wakeLockRef.current = null;
-        console.log('Wake Lock 已释放');
       }
     } catch (err) {
       console.warn('Wake Lock 释放失败:', err);
@@ -568,8 +550,6 @@ function PlayPageClient() {
         // 销毁 ArtPlayer 实例
         artPlayerRef.current.destroy();
         artPlayerRef.current = null;
-
-        console.log('播放器资源已清理');
       } catch (err) {
         console.warn('清理播放器资源时出错:', err);
         artPlayerRef.current = null;
@@ -673,7 +653,6 @@ function PlayPageClient() {
           newConfig
         );
       }
-      console.log('跳过片头片尾配置已保存:', newConfig);
     } catch (err) {
       console.error('保存跳过片头片尾配置失败:', err);
     }
@@ -752,17 +731,8 @@ function PlayPageClient() {
   // 短剧播放地址处理函数 - 参考utils.ts中的代理逻辑
   const processShortDramaUrl = (originalUrl: string): string => {
     if (!originalUrl) {
-      console.warn('🚫 [URL处理] 原始URL为空');
       return originalUrl;
     }
-
-    console.log('🔗 [URL处理] 开始处理短剧播放地址:', {
-      originalUrl:
-        originalUrl.substring(0, 120) + (originalUrl.length > 120 ? '...' : ''),
-      urlLength: originalUrl.length,
-      protocol: originalUrl.split('://')[0] || 'unknown',
-      domain: originalUrl.match(/https?:\/\/([^\/]+)/)?.[1] || 'unknown',
-    });
 
     // 检查是否需要使用代理 - 参考utils.ts中的逻辑
     const proxyChecks = {
@@ -781,34 +751,13 @@ function PlayPageClient() {
     };
 
     const needsProxy = Object.values(proxyChecks).some((check) => check);
-    const triggeredChecks = Object.entries(proxyChecks)
-      .filter(([, check]) => check)
-      .map(([name]) => name);
-
-    console.log('🔍 [URL处理] 代理检查结果:', {
-      needsProxy,
-      triggeredChecks,
-      proxyChecks,
-    });
-
     if (needsProxy) {
       const proxyUrl = `/api/proxy/video?url=${encodeURIComponent(
         originalUrl
       )}`;
-      console.log('🎯 [URL处理] 短剧播放地址需要代理:', {
-        originalUrl: originalUrl.substring(0, 100) + '...',
-        proxyUrl: proxyUrl.substring(0, 100) + '...',
-        triggeredChecks,
-        encodedLength: encodeURIComponent(originalUrl).length,
-      });
       return proxyUrl;
     }
 
-    console.log('✅ [URL处理] 短剧播放地址直接使用:', {
-      url:
-        originalUrl.substring(0, 100) + (originalUrl.length > 100 ? '...' : ''),
-      reason: '不满足代理条件',
-    });
     return originalUrl;
   };
 
@@ -817,17 +766,6 @@ function PlayPageClient() {
     shortdramaId: string
   ): Promise<SearchResult> => {
     try {
-      console.log('🎬 [短剧API] 开始获取短剧数据');
-      console.log('🔍 [短剧API] 请求参数:', {
-        shortdramaId: shortdramaId,
-        requestUrl: `/api/shortdrama/parse/all?id=${encodeURIComponent(
-          shortdramaId
-        )}`,
-        timestamp: new Date().toISOString(),
-      });
-
-      const requestStartTime = performance.now();
-
       const response = await fetch(
         `/api/shortdrama/parse/all?id=${encodeURIComponent(shortdramaId)}`,
         {
@@ -837,17 +775,6 @@ function PlayPageClient() {
           },
         }
       );
-
-      const requestEndTime = performance.now();
-      const requestDuration = requestEndTime - requestStartTime;
-
-      console.log('📡 [短剧API] 响应状态:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries()),
-        requestDuration: `${requestDuration.toFixed(2)}ms`,
-      });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -865,67 +792,16 @@ function PlayPageClient() {
       }
 
       const data = await response.json();
-      console.log('📦 [短剧API] 响应数据结构:', {
-        hasData: !!data,
-        dataKeys: data ? Object.keys(data) : [],
-        videoId: data?.videoId,
-        videoName: data?.videoName,
-        hasResults: !!data?.results,
-        resultsLength: data?.results?.length || 0,
-        totalEpisodes: data?.totalEpisodes,
-        successfulCount: data?.successfulCount,
-        failedCount: data?.failedCount,
-        hasCover: !!data?.cover,
-        hasDescription: !!data?.description,
-      });
-
-      // 详细打印 results 数组的结构
-      if (data?.results && Array.isArray(data.results)) {
-        console.log('📋 [短剧API] Results数组详情:', {
-          totalCount: data.results.length,
-          sample: data.results.slice(0, 3).map((item: any) => ({
-            index: item.index,
-            label: item.label,
-            status: item.status,
-            hasParsedUrl: !!item.parsedUrl,
-            parsedUrlType: typeof item.parsedUrl,
-            parsedUrlLength: item.parsedUrl ? item.parsedUrl.length : 0,
-            parseInfo: item.parseInfo ? Object.keys(item.parseInfo) : null,
-            reason: item.reason,
-          })),
-        });
-      } else {
-        console.error('❌ [短剧API] Results数组无效:', {
-          results: data?.results,
-          resultsType: typeof data?.results,
-          isArray: Array.isArray(data?.results),
-        });
-      }
 
       // 检查数据有效性
       if (!data) {
-        console.error('❌ [短剧API] 数据为空');
         throw new Error('短剧数据为空');
       }
-
-      console.log('🔄 [短剧处理] 开始转换数据为SearchResult格式');
 
       // 将短剧数据转换为SearchResult格式
       const episodes: string[] = [];
       const episodesTitles: string[] = [];
-      const processingLog: any[] = [];
-
       if (data.results && Array.isArray(data.results)) {
-        console.log('📝 [短剧处理] 处理播放源数据:', {
-          totalCount: data.results.length,
-          validCount: data.results.filter(
-            (item: any) => item.status === 'success'
-          ).length,
-          failedCount: data.results.filter(
-            (item: any) => item.status !== 'success'
-          ).length,
-        });
-
         // 按index排序确保集数顺序正确
         const sortedResults = data.results.sort((a: any, b: any) => {
           const indexA = parseInt(a.index) || 0;
@@ -933,35 +809,8 @@ function PlayPageClient() {
           return indexA - indexB;
         });
 
-        console.log('🔢 [短剧处理] 排序后的集数范围:', {
-          minIndex: sortedResults[0]?.index,
-          maxIndex: sortedResults[sortedResults.length - 1]?.index,
-          firstLabel: sortedResults[0]?.label,
-          lastLabel: sortedResults[sortedResults.length - 1]?.label,
-        });
-
         sortedResults.forEach((item: any, arrayIndex: number) => {
-          const itemLog: any = {
-            arrayIndex,
-            index: item.index,
-            label: item.label,
-            status: item.status,
-            hasUrl: !!item.parsedUrl,
-            urlLength: item.parsedUrl ? item.parsedUrl.length : 0,
-            reason: item.reason,
-          };
-
           if (item.status === 'success' && item.parsedUrl) {
-            console.log(`✅ [短剧处理] 处理第 ${arrayIndex + 1} 个数据项:`, {
-              index: item.index,
-              label: item.label,
-              originalUrl:
-                item.parsedUrl.substring(0, 100) +
-                (item.parsedUrl.length > 100 ? '...' : ''),
-              urlDomain:
-                item.parsedUrl.match(/https?:\/\/([^\/]+)/)?.[1] || 'unknown',
-            });
-
             // 处理播放地址，添加代理支持
             const processedUrl = processShortDramaUrl(item.parsedUrl);
             episodes.push(processedUrl);
@@ -973,13 +822,6 @@ function PlayPageClient() {
                 item.index !== undefined ? item.index + 1 : arrayIndex + 1
               }集`;
             episodesTitles.push(episodeTitle);
-
-            console.log(`📺 [短剧处理] 成功添加集数 ${episodes.length}:`, {
-              title: episodeTitle,
-              originalUrl: item.parsedUrl.substring(0, 80) + '...',
-              processedUrl: processedUrl.substring(0, 80) + '...',
-              needsProxy: processedUrl.includes('/api/proxy/video'),
-            });
 
             itemLog.processed = true;
             itemLog.needsProxy = processedUrl.includes('/api/proxy/video');
@@ -1000,14 +842,6 @@ function PlayPageClient() {
 
           processingLog.push(itemLog);
         });
-
-        console.log('📊 [短剧处理] 数据处理统计:', {
-          totalProcessed: processingLog.length,
-          successfulEpisodes: episodes.length,
-          failedItems: processingLog.filter((item: any) => !item.processed)
-            .length,
-          processingDetails: processingLog,
-        });
       } else {
         console.error('❌ [短剧处理] Results数组无效或为空:', {
           hasResults: !!data.results,
@@ -1018,21 +852,8 @@ function PlayPageClient() {
       }
 
       if (episodes.length === 0) {
-        console.error('❌ [短剧处理] 没有找到有效的播放地址:', {
-          originalDataResults: data.results?.length || 0,
-          validResults:
-            data.results?.filter((item: any) => item.status === 'success')
-              ?.length || 0,
-          withUrls:
-            data.results?.filter(
-              (item: any) => item.status === 'success' && item.parsedUrl
-            )?.length || 0,
-          processingLog,
-        });
         throw new Error('未找到可播放的视频源，请稍后重试');
       }
-
-      console.log('🎯 [短剧处理] 构建SearchResult对象');
 
       const searchResult: SearchResult = {
         source: 'shortdrama',
@@ -1048,35 +869,6 @@ function PlayPageClient() {
         desc: data.description || '精彩短剧，为您呈现优质内容',
         douban_id: 0,
       };
-
-      console.log('✅ [短剧处理] 转换完成的短剧数据:', {
-        source: searchResult.source,
-        id: searchResult.id,
-        title: searchResult.title,
-        totalEpisodes: searchResult.episodes.length,
-        episodesTitles: searchResult.episodes_titles,
-        firstEpisodeUrl: searchResult.episodes[0]?.substring(0, 100) + '...',
-        lastEpisodeUrl:
-          searchResult.episodes[searchResult.episodes.length - 1]?.substring(
-            0,
-            100
-          ) + '...',
-        poster: searchResult.poster,
-        year: searchResult.year,
-        desc: searchResult.desc?.substring(0, 100) + '...',
-      });
-
-      console.log('🔗 [短剧处理] 播放地址列表预览:');
-      episodes.slice(0, 5).forEach((url, index) => {
-        console.log(
-          `  ${index + 1}. ${episodesTitles[index]} - ${url.substring(0, 120)}${
-            url.length > 120 ? '...' : ''
-          }`
-        );
-      });
-      if (episodes.length > 5) {
-        console.log(`  ... 还有 ${episodes.length - 5} 个播放地址`);
-      }
 
       return searchResult;
     } catch (error) {
@@ -1355,8 +1147,6 @@ function PlayPageClient() {
         detailData = await preferBestSource(sourcesInfo);
       }
 
-      console.log(detailData.source, detailData.id);
-
       setNeedPrefer(false);
       setCurrentSource(detailData.source);
       setCurrentId(detailData.id);
@@ -1453,7 +1243,6 @@ function PlayPageClient() {
 
       // 记录当前播放进度（仅在同一集数切换时恢复）
       const currentPlayTime = artPlayerRef.current?.currentTime || 0;
-      console.log('换源前当前播放时间:', currentPlayTime);
 
       // 清除前一个历史记录
       if (currentSourceRef.current && currentIdRef.current) {
@@ -1462,7 +1251,6 @@ function PlayPageClient() {
             currentSourceRef.current,
             currentIdRef.current
           );
-          console.log('已清除前一个播放记录');
         } catch (err) {
           console.error('清除播放记录失败:', err);
         }
@@ -1701,12 +1489,6 @@ function PlayPageClient() {
       });
 
       lastSaveTimeRef.current = Date.now();
-      console.log('播放进度已保存:', {
-        title: videoTitleRef.current,
-        episode: currentEpisodeIndexRef.current + 1,
-        year: detailRef.current?.year,
-        progress: `${Math.floor(currentTime)}/${Math.floor(duration)}`,
-      });
     } catch (err) {
       console.error('保存播放进度失败:', err);
     }
@@ -1848,7 +1630,6 @@ function PlayPageClient() {
       setError('视频地址无效');
       return;
     }
-    console.log(videoUrl);
 
     // 检测是否为WebKit浏览器
     const isWebkit =
@@ -1995,12 +1776,6 @@ function PlayPageClient() {
                 : Hls.DefaultConfig.loader,
             };
 
-            console.log('HLS配置:', {
-              isShortDrama,
-              url: url.includes('/api/proxy/video') ? '使用代理' : '直接访问',
-              config: hlsConfig,
-            });
-
             const hls = new Hls(hlsConfig);
 
             hls.loadSource(url);
@@ -2022,7 +1797,6 @@ function PlayPageClient() {
               if (data.fatal) {
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
-                    console.log('网络错误，尝试恢复...', data.details);
                     if (isShortDrama && data.details === 'manifestLoadError') {
                       // 短剧清单加载失败，尝试重新加载
                       setTimeout(() => {
@@ -2035,11 +1809,9 @@ function PlayPageClient() {
                     }
                     break;
                   case Hls.ErrorTypes.MEDIA_ERROR:
-                    console.log('媒体错误，尝试恢复...', data.details);
                     hls.recoverMediaError();
                     break;
                   default:
-                    console.log('无法恢复的错误:', data.type, data.details);
                     if (isShortDrama) {
                       // 短剧播放失败时给出更明确的提示
                       artPlayerRef.current?.notice?.show?.(
@@ -2335,21 +2107,6 @@ function PlayPageClient() {
       artPlayerRef.current.on('ready', () => {
         setError(null);
 
-        // 短剧播放状态日志
-        const isShortDrama = currentSourceRef.current === 'shortdrama';
-        if (isShortDrama) {
-          console.log('短剧播放器就绪:', {
-            title: videoTitle,
-            episode: currentEpisodeIndex + 1,
-            url: videoUrl.includes('/api/proxy/video')
-              ? '使用代理'
-              : '直接播放',
-            videoElement: artPlayerRef.current?.video
-              ? '视频元素正常'
-              : '视频元素异常',
-          });
-        }
-
         // 检查弹幕插件是否正确加载
         if (danmuEnabled) {
           // 弹幕启用，无需调试日志
@@ -2398,7 +2155,6 @@ function PlayPageClient() {
               target = Math.max(0, duration - 5);
             }
             artPlayerRef.current.currentTime = target;
-            console.log('成功恢复播放进度到:', resumeTimeRef.current);
           } catch (err) {
             console.warn('恢复播放进度失败:', err);
           }
@@ -2633,8 +2389,8 @@ function PlayPageClient() {
   if (error) {
     return (
       <PageLayout activePath='/play'>
-        <div className='fixed inset-0 flex items-center justify-center bg-transparent overflow-hidden mt-12 mb-14 md:mt-0 md:mb-0 px-12 md:px-[30%]'>
-          <div className='flex flex-col items-center w-full max-w-sm md:max-w-none'>
+        <div className='fixed inset-0 flex items-center justify-center bg-transparent overflow-hidden mt-12 mb-14 md:mt-0 md:mb-0'>
+          <div className='flex flex-col items-center w-full px-6 md:px-0 md:w-[30vw]'>
             {/* 错误图标 */}
             <div className='relative mb-6'>
               <div className='relative w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl shadow-lg flex items-center justify-center'>
@@ -2643,11 +2399,11 @@ function PlayPageClient() {
             </div>
 
             {/* 错误信息 */}
-            <div className='space-y-3 mb-6 text-center w-full md:w-[25vw]'>
+            <div className='space-y-3 mb-6 text-center w-full'>
               <h2 className='text-lg font-bold text-gray-800 dark:text-gray-200'>
                 哎呀，出现了一些问题
               </h2>
-              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3'>
+              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-5 py-2.5'>
                 <p className='text-sm text-red-600 dark:text-red-400 font-medium'>
                   {error}
                 </p>
@@ -2665,14 +2421,14 @@ function PlayPageClient() {
                     ? router.push(`/search?q=${encodeURIComponent(videoTitle)}`)
                     : router.back()
                 }
-                className='w-full md:flex-1 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg'
+                className='flex-1 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200'
               >
                 {videoTitle ? '返回搜索' : '返回上页'}
               </button>
 
               <button
                 onClick={() => window.location.reload()}
-                className='w-full md:flex-1 px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200'
+                className='flex-1 px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200'
               >
                 重新尝试
               </button>
@@ -2693,8 +2449,8 @@ function PlayPageClient() {
             <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
               {videoTitle || '影片标题'}
               {totalEpisodes > 1 && (
-                <span className='text-gray-500 dark:text-gray-400'>
-                  {` > ${
+                <span className='ml-2 font-normal text-gray-500 dark:text-gray-400'>
+                  {` ${
                     detail?.episodes_titles?.[currentEpisodeIndex] ||
                     `第 ${currentEpisodeIndex + 1} 集`
                   }`}
@@ -2714,8 +2470,8 @@ function PlayPageClient() {
               <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100 leading-none'>
                 {videoTitle || '影片标题'}
                 {totalEpisodes > 1 && (
-                  <span className='text-gray-500 dark:text-gray-400'>
-                    {` > ${
+                  <span className='ml-2 font-normal text-gray-500 dark:text-gray-400'>
+                    {` ${
                       detail?.episodes_titles?.[currentEpisodeIndex] ||
                       `第 ${currentEpisodeIndex + 1} 集`
                     }`}
@@ -2729,13 +2485,13 @@ function PlayPageClient() {
               onClick={() =>
                 setIsEpisodeSelectorCollapsed(!isEpisodeSelectorCollapsed)
               }
-              className='group flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-200'
+              className='group flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 transition-all duration-200'
               title={
                 isEpisodeSelectorCollapsed ? '显示选集面板' : '隐藏选集面板'
               }
             >
               <svg
-                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all duration-200 ${
                   isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
                 }`}
                 fill='none'
@@ -2749,7 +2505,7 @@ function PlayPageClient() {
                   d='M9 5l7 7-7 7'
                 />
               </svg>
-              <span className='text-xs font-medium text-gray-600 dark:text-gray-300 leading-none'>
+              <span className='text-xs font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-none transition-colors duration-200'>
                 {isEpisodeSelectorCollapsed ? '显示' : '隐藏'}
               </span>
             </button>
