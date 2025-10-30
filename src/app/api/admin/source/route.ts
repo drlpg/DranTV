@@ -146,7 +146,8 @@ export async function POST(request: NextRequest) {
         if (idx === -1)
           return NextResponse.json({ error: '源不存在' }, { status: 404 });
         const entry = adminConfig.SourceConfig[idx];
-        if (entry.from === 'config') {
+        // 只有站长可以删除来自config的源
+        if (entry.from === 'config' && username !== process.env.USERNAME) {
           return NextResponse.json({ error: '该源不可删除' }, { status: 400 });
         }
         adminConfig.SourceConfig.splice(idx, 1);
@@ -209,10 +210,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        // 过滤掉 from=config 的源，但不报错
+        // 站长可以删除所有源，其他管理员只能删除custom源
         const keysToDelete = keys.filter((key) => {
           const entry = adminConfig.SourceConfig.find((s) => s.key === key);
-          return entry && entry.from !== 'config';
+          if (!entry) return false;
+          // 站长可以删除所有源
+          if (username === process.env.USERNAME) return true;
+          // 其他管理员只能删除custom源
+          return entry.from !== 'config';
         });
 
         // 批量删除

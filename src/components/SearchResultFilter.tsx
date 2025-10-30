@@ -172,8 +172,8 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
 
   return (
     <>
-      <div className='relative inline-flex rounded-full p-0.5 sm:p-1 bg-transparent gap-1 sm:gap-2'>
-        {categories.map((category) => (
+      <div className='relative inline-flex rounded-full p-0 bg-transparent gap-1 sm:gap-2'>
+        {categories.map((category, index) => (
           <div
             key={category.key}
             ref={(el) => {
@@ -183,7 +183,11 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
           >
             <button
               onClick={() => handleCategoryClick(category.key)}
-              className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+              className={`relative z-10 flex items-center ${
+                index === 0
+                  ? 'pl-0 pr-0 sm:pl-0 sm:pr-2 md:pl-0 md:pr-4'
+                  : 'px-0 sm:px-2 md:px-4'
+              } py-0.5 sm:py-1 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
                 activeCategory === category.key
                   ? isDefaultValue(category.key)
                     ? 'text-gray-900 dark:text-gray-100 cursor-default'
@@ -195,7 +199,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
             >
               <span>{getDisplayText(category.key)}</span>
               <svg
-                className={`inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${
                   activeCategory === category.key ? 'rotate-180' : ''
                 }`}
                 fill='none'
@@ -232,7 +236,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
               }
               onChange({ ...mergedValues, yearOrder: next });
             }}
-            className={`relative z-10 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+            className={`relative z-10 flex items-center px-0 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
               mergedValues.yearOrder === 'none'
                 ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
                 : 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer'
@@ -247,11 +251,11 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
           >
             <span>年份</span>
             {mergedValues.yearOrder === 'none' ? (
-              <ArrowUpDown className='inline-block ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowUpDown className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
             ) : mergedValues.yearOrder === 'desc' ? (
-              <ArrowDownWideNarrow className='inline-block ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowDownWideNarrow className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
             ) : (
-              <ArrowUpNarrowWide className='inline-block ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowUpNarrowWide className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
             )}
           </button>
         </div>
@@ -261,24 +265,17 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
         createPortal(
           <div
             ref={dropdownRef}
-            className='fixed z-[9999] bg-white/95 dark:bg-gray-800/95 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm max-h-[50dvh] flex flex-col'
+            className='fixed z-[9999] bg-white/95 dark:bg-gray-800/95 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm max-h-[50dvh] flex flex-col w-auto overflow-hidden'
             style={{
               left: `${dropdownPosition.x}px`,
               top: `${dropdownPosition.y}px`,
-              ...(typeof window !== 'undefined' && window.innerWidth < 768
-                ? { width: `${dropdownPosition.width}px` }
-                : {
-                    minWidth: `${Math.max(
-                      dropdownPosition.width,
-                      activeCategory === 'title' ? 400 : 240
-                    )}px`,
-                  }),
+              minWidth: '180px',
               maxWidth: '600px',
               position: 'fixed',
             }}
           >
             <div className='p-2 sm:p-4 overflow-y-auto flex-1 min-h-0'>
-              <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 sm:gap-2'>
+              <div className='flex flex-col gap-1 sm:gap-2'>
                 {categories
                   .find((cat) => cat.key === activeCategory)
                   ?.options.map((option) => (
@@ -287,7 +284,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
                       onClick={() =>
                         handleOptionSelect(activeCategory, option.value)
                       }
-                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-left ${
+                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-center flex items-center justify-center whitespace-nowrap w-full ${
                         isOptionSelected(activeCategory, option.value)
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80'

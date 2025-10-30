@@ -2842,10 +2842,30 @@ const VideoSourceConfig = ({
     new Set()
   );
 
+  // 搜索相关状态
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  // 过滤后的视频源列表
+  const filteredSources = useMemo(() => {
+    if (!searchKeyword.trim()) {
+      return sources;
+    }
+    const keyword = searchKeyword.toLowerCase().trim();
+    return sources.filter(
+      (source) =>
+        source.name.toLowerCase().includes(keyword) ||
+        source.key.toLowerCase().includes(keyword) ||
+        source.api.toLowerCase().includes(keyword)
+    );
+  }, [sources, searchKeyword]);
+
   // 使用 useMemo 计算全选状态，避免每次渲染都重新计算
   const selectAll = useMemo(() => {
-    return selectedSources.size === sources.length && selectedSources.size > 0;
-  }, [selectedSources.size, sources.length]);
+    return (
+      selectedSources.size === filteredSources.length &&
+      selectedSources.size > 0
+    );
+  }, [selectedSources.size, filteredSources.length]);
 
   // 确认弹窗状态
   const [confirmModal, setConfirmModal] = useState<{
@@ -2864,7 +2884,7 @@ const VideoSourceConfig = ({
 
   // 有效性检测相关状态
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [validationKeyword, setValidationKeyword] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<
     Array<{
@@ -3048,7 +3068,7 @@ const VideoSourceConfig = ({
 
   // 有效性检测函数
   const handleValidateSources = async () => {
-    if (!searchKeyword.trim()) {
+    if (!validationKeyword.trim()) {
       showAlert({
         type: 'warning',
         title: '请输入搜索关键词',
@@ -3077,7 +3097,7 @@ const VideoSourceConfig = ({
         // 使用EventSource接收流式数据
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
-            searchKeyword.trim()
+            validationKeyword.trim()
           )}`
         );
 
@@ -3399,7 +3419,7 @@ const VideoSourceConfig = ({
     }
   };
 
-  // 可拖拽行封装 (dnd-kit)
+  // 可拖拽行封装 (dnd-kit) - Flex布局
   const DraggableRow = ({ source }: { source: DataSource }) => {
     const { attributes, listeners, setNodeRef, transform, transition } =
       useSortable({ id: source.key });
@@ -3410,48 +3430,67 @@ const VideoSourceConfig = ({
     } as React.CSSProperties;
 
     return (
-      <tr
+      <div
         ref={setNodeRef}
         style={style}
-        className='hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
+        className='flex items-center px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
       >
-        <td
-          className='px-2 py-4 cursor-grab text-gray-400'
+        {/* 拖拽手柄 */}
+        <div
+          className='w-6 flex-shrink-0 flex justify-center cursor-grab text-gray-400'
           style={{ touchAction: 'none' }}
           {...attributes}
           {...listeners}
         >
           <GripVertical size={16} />
-        </td>
-        <td className='px-2 py-4 text-center'>
+        </div>
+
+        {/* 复选框 */}
+        <div className='w-10 flex-shrink-0 flex justify-center'>
           <input
             type='checkbox'
             checked={selectedSources.has(source.key)}
             onChange={(e) => handleSelectSource(source.key, e.target.checked)}
             className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
           />
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+
+        {/* 名称 */}
+        <div
+          className='w-24 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
+          title={source.name}
+        >
           {source.name}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+
+        {/* Key */}
+        <div
+          className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
+          title={source.key}
+        >
           {source.key}
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[12rem] truncate'
+        </div>
+
+        {/* API 地址 - 固定宽度，溢出省略 */}
+        <div
+          className='w-64 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={source.api}
         >
           {source.api}
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[8rem] truncate'
+        </div>
+
+        {/* Detail 地址 - 弹性宽度，溢出省略 */}
+        <div
+          className='flex-1 min-w-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={source.detail || '-'}
         >
           {source.detail || '-'}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        </div>
+
+        {/* 状态 */}
+        <div className='w-20 flex-shrink-0 px-2'>
           <span
-            className={`px-2 py-1 text-xs rounded-full ${
+            className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
               !source.disabled
                 ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
                 : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
@@ -3459,32 +3498,36 @@ const VideoSourceConfig = ({
           >
             {!source.disabled ? '启用中' : '已禁用'}
           </span>
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        </div>
+
+        {/* 有效性 */}
+        <div className='w-28 flex-shrink-0 px-2'>
           {(() => {
             const status = getValidationStatus(source.key);
             if (!status) {
               return (
-                <span className='px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400'>
+                <span className='px-2 py-1 text-xs rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 whitespace-nowrap'>
                   未检测
                 </span>
               );
             }
             return (
               <span
-                className={`px-2 py-1 text-xs rounded-full ${status.className}`}
+                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${status.className}`}
                 title={status.message}
               >
                 {status.icon} {status.text}
               </span>
             );
           })()}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className='w-52 flex-shrink-0 px-2 flex items-center gap-2'>
           <button
             onClick={() => handleToggleEnable(source.key)}
             disabled={isLoading(`toggleSource_${source.key}`)}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+            className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
               !source.disabled
                 ? buttonStyles.roundedDanger
                 : buttonStyles.roundedSuccess
@@ -3504,7 +3547,9 @@ const VideoSourceConfig = ({
               setIsSingleValidating(false);
             }}
             disabled={isLoading(`editSource_${source.key}`)}
-            className={`${buttonStyles.roundedPrimary} ${
+            className={`flex-1 ${
+              buttonStyles.roundedPrimary
+            } whitespace-nowrap justify-center ${
               isLoading(`editSource_${source.key}`)
                 ? 'opacity-50 cursor-not-allowed'
                 : ''
@@ -3516,7 +3561,9 @@ const VideoSourceConfig = ({
           <button
             onClick={() => handleDelete(source.key)}
             disabled={isLoading(`deleteSource_${source.key}`)}
-            className={`${buttonStyles.roundedSecondary} ${
+            className={`flex-1 ${
+              buttonStyles.roundedSecondary
+            } whitespace-nowrap justify-center ${
               isLoading(`deleteSource_${source.key}`)
                 ? 'opacity-50 cursor-not-allowed'
                 : ''
@@ -3525,8 +3572,8 @@ const VideoSourceConfig = ({
           >
             删除
           </button>
-        </td>
-      </tr>
+        </div>
+      </div>
     );
   };
 
@@ -3534,13 +3581,13 @@ const VideoSourceConfig = ({
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
-        const allKeys = sources.map((s) => s.key);
+        const allKeys = filteredSources.map((s) => s.key);
         setSelectedSources(new Set(allKeys));
       } else {
         setSelectedSources(new Set());
       }
     },
-    [sources]
+    [filteredSources]
   );
 
   // 单个选择
@@ -3648,23 +3695,28 @@ const VideoSourceConfig = ({
       {/* 添加视频源表单 */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          视频源列表
+          视频源列表 ({filteredSources.length}/{sources.length})
         </h4>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
-          {/* 批量操作按钮 - 移动端显示在下一行，PC端显示在左侧 */}
+          {/* 批量操作按钮 */}
           {selectedSources.size > 0 && (
             <>
-              <div className='flex flex-wrap items-center gap-3 order-2 sm:order-1'>
-                <span className='text-sm text-gray-600 dark:text-gray-400'>
-                  <span className='sm:hidden'>已选 {selectedSources.size}</span>
-                  <span className='hidden sm:inline'>
-                    已选择 {selectedSources.size} 个视频源
-                  </span>
+              <div className='flex flex-wrap items-center gap-3'>
+                <span className='text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap'>
+                  已选择 {selectedSources.size} 个视频源
                 </span>
+                {/* 搜索框 */}
+                <input
+                  type='text'
+                  placeholder='搜索视频源...'
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  className='px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-600 w-48'
+                />
                 <button
                   onClick={() => handleBatchOperation('batch_enable')}
                   disabled={isLoading('batchSource_batch_enable')}
-                  className={`px-3 py-1 text-sm ${
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
                     isLoading('batchSource_batch_enable')
                       ? buttonStyles.disabled
                       : buttonStyles.success
@@ -3677,7 +3729,7 @@ const VideoSourceConfig = ({
                 <button
                   onClick={() => handleBatchOperation('batch_disable')}
                   disabled={isLoading('batchSource_batch_disable')}
-                  className={`px-3 py-1 text-sm ${
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
                     isLoading('batchSource_batch_disable')
                       ? buttonStyles.disabled
                       : buttonStyles.warning
@@ -3690,7 +3742,7 @@ const VideoSourceConfig = ({
                 <button
                   onClick={() => handleBatchOperation('batch_delete')}
                   disabled={isLoading('batchSource_batch_delete')}
-                  className={`px-3 py-1 text-sm ${
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
                     isLoading('batchSource_batch_delete')
                       ? buttonStyles.disabled
                       : buttonStyles.danger
@@ -3701,10 +3753,20 @@ const VideoSourceConfig = ({
                     : '批量删除'}
                 </button>
               </div>
-              <div className='hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600 order-2'></div>
+              <div className='hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600'></div>
             </>
           )}
-          <div className='flex items-center gap-2 order-1 sm:order-2'>
+          {/* 当没有选中项时显示搜索框 */}
+          {selectedSources.size === 0 && (
+            <input
+              type='text'
+              placeholder='搜索视频源...'
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className='px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-600 w-full sm:w-48'
+            />
+          )}
+          <div className='flex items-center gap-2'>
             <button
               onClick={() => setShowValidationModal(true)}
               disabled={isValidating}
@@ -4058,7 +4120,7 @@ const VideoSourceConfig = ({
         </div>
       )}
 
-      {/* 视频源表格 */}
+      {/* 视频源列表 - Flex布局 */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -4067,55 +4129,48 @@ const VideoSourceConfig = ({
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
         <div
-          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
+          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'
           data-table='source-list'
         >
-          <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-            <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
-              <tr>
-                <th className='w-8' />
-                <th className='w-12 px-2 py-3 text-center'>
-                  <input
-                    type='checkbox'
-                    checked={selectAll}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
-                  />
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  名称
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  Key
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  API 地址
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  Detail 地址
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  状态
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  有效性
-                </th>
-                <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <SortableContext
-              items={sources.map((s) => s.key)}
-              strategy={verticalListSortingStrategy}
-            >
-              <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
-                {sources.map((source) => (
+          {/* 表头 */}
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+            <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+              <div className='w-6 flex-shrink-0 flex justify-center'></div>
+              <div className='w-10 flex-shrink-0 flex justify-center'>
+                <input
+                  type='checkbox'
+                  checked={selectAll}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                />
+              </div>
+              <div className='w-24 flex-shrink-0 px-2'>名称</div>
+              <div className='w-20 flex-shrink-0 px-2'>KEY</div>
+              <div className='w-64 flex-shrink-0 px-2'>API 地址</div>
+              <div className='flex-1 min-w-0 px-2'>DETAIL 地址</div>
+              <div className='w-20 flex-shrink-0 px-2'>状态</div>
+              <div className='w-28 flex-shrink-0 px-2'>有效性</div>
+              <div className='w-52 flex-shrink-0 px-2'>操作</div>
+            </div>
+          </div>
+
+          {/* 列表内容 */}
+          <SortableContext
+            items={filteredSources.map((s) => s.key)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+              {filteredSources.length > 0 ? (
+                filteredSources.map((source) => (
                   <DraggableRow key={source.key} source={source} />
-                ))}
-              </tbody>
-            </SortableContext>
-          </table>
+                ))
+              ) : (
+                <div className='px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400'>
+                  {searchKeyword.trim() ? '没有找到匹配的视频源' : '暂无视频源'}
+                </div>
+              )}
+            </div>
+          </SortableContext>
         </div>
       </DndContext>
 
@@ -4157,8 +4212,8 @@ const VideoSourceConfig = ({
                 <input
                   type='text'
                   placeholder='请输入搜索关键词'
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  value={validationKeyword}
+                  onChange={(e) => setValidationKeyword(e.target.value)}
                   className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                   onKeyPress={(e) =>
                     e.key === 'Enter' && handleValidateSources()
@@ -4173,9 +4228,9 @@ const VideoSourceConfig = ({
                   </button>
                   <button
                     onClick={handleValidateSources}
-                    disabled={!searchKeyword.trim()}
+                    disabled={!validationKeyword.trim()}
                     className={`px-4 py-2 ${
-                      !searchKeyword.trim()
+                      !validationKeyword.trim()
                         ? buttonStyles.disabled
                         : buttonStyles.primary
                     }`}
@@ -6246,8 +6301,8 @@ function AdminPageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/admin'>
-        <div className='px-2 sm:px-10 py-4 sm:py-8'>
-          <div className='max-w-[95%] mx-auto'>
+        <div className='p-10'>
+          <div className='w-full'>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8'>
               管理员设置
             </h1>
@@ -6272,8 +6327,8 @@ function AdminPageClient() {
 
   return (
     <PageLayout activePath='/admin'>
-      <div className='px-2 sm:px-10 py-4 sm:py-8'>
-        <div className='max-w-[95%] mx-auto'>
+      <div className='p-10'>
+        <div className='w-full'>
           {/* 标题 + 重置配置按钮 */}
           <div className='flex items-center gap-2 mb-8'>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-gray-100'>

@@ -89,15 +89,19 @@ function parseChangelog(content) {
 function generateTypeScript(changelogData) {
   const entries = changelogData.versions
     .map((version) => {
-      const addedEntries = version.added
-        .map((entry) => `    "${entry}"`)
-        .join(',\n');
-      const changedEntries = version.changed
-        .map((entry) => `    "${entry}"`)
-        .join(',\n');
-      const fixedEntries = version.fixed
-        .map((entry) => `    "${entry}"`)
-        .join(',\n');
+      // 转义函数：将双引号替换为单引号包裹，或转义双引号
+      const escapeEntry = (entry) => {
+        // 如果包含双引号，使用单引号包裹
+        if (entry.includes('"')) {
+          return `    '${entry.replace(/'/g, "\\'")}'`;
+        }
+        // 否则使用双引号包裹
+        return `    "${entry}"`;
+      };
+
+      const addedEntries = version.added.map(escapeEntry).join(',\n');
+      const changedEntries = version.changed.map(escapeEntry).join(',\n');
+      const fixedEntries = version.fixed.map(escapeEntry).join(',\n');
 
       return `  {
     version: "${version.version}",
