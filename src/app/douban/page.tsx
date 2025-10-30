@@ -8,10 +8,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GetBangumiCalendarData } from '@/lib/bangumi.client';
 import {
-  getDoubanCategories,
-  getDoubanList,
-  getDoubanRecommends,
-} from '@/lib/douban.client';
+  getCachedDoubanCategories,
+  getCachedDoubanList,
+  getCachedDoubanRecommends,
+} from '@/lib/cachedDoubanApi';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
 import dynamic from 'next/dynamic';
@@ -260,11 +260,11 @@ function DoubanPageClient() {
         );
 
         if (selectedCategory) {
-          data = await getDoubanList({
+          data = await getCachedDoubanList({
             tag: selectedCategory.query,
             type: selectedCategory.type,
-            pageLimit: 25,
-            pageStart: 0,
+            page_limit: 25,
+            page_start: 0,
           });
         } else {
           throw new Error('没有找到对应的分类');
@@ -296,47 +296,34 @@ function DoubanPageClient() {
           throw new Error('没有找到对应的日期');
         }
       } else if (type === 'anime') {
-        data = await getDoubanRecommends({
-          kind: primarySelection === '番剧' ? 'tv' : 'movie',
-          pageLimit: 25,
-          pageStart: 0,
-          category: '动画',
-          format: primarySelection === '番剧' ? '电视剧' : '',
-          region: multiLevelValues.region
-            ? (multiLevelValues.region as string)
-            : '',
-          year: multiLevelValues.year ? (multiLevelValues.year as string) : '',
-          platform: multiLevelValues.platform
-            ? (multiLevelValues.platform as string)
-            : '',
-          sort: multiLevelValues.sort ? (multiLevelValues.sort as string) : '',
-          label: multiLevelValues.label
-            ? (multiLevelValues.label as string)
-            : '',
+        data = await getCachedDoubanRecommends({
+          type: primarySelection === '番剧' ? 'tv' : 'movie',
+          region: multiLevelValues.region || 'all',
+          year: multiLevelValues.year || 'all',
+          platform: multiLevelValues.platform || 'all',
+          label: multiLevelValues.label || 'all',
+          sort: multiLevelValues.sort || 'T',
+          page_limit: 25,
+          page_start: 0,
         });
       } else if (primarySelection === '全部') {
-        data = await getDoubanRecommends({
-          kind: type === 'show' ? 'tv' : (type as 'tv' | 'movie'),
-          pageLimit: 25,
-          pageStart: 0, // 初始数据加载始终从第一页开始
-          category: multiLevelValues.type
-            ? (multiLevelValues.type as string)
-            : '',
-          format: type === 'show' ? '综艺' : type === 'tv' ? '电视剧' : '',
-          region: multiLevelValues.region
-            ? (multiLevelValues.region as string)
-            : '',
-          year: multiLevelValues.year ? (multiLevelValues.year as string) : '',
-          platform: multiLevelValues.platform
-            ? (multiLevelValues.platform as string)
-            : '',
-          sort: multiLevelValues.sort ? (multiLevelValues.sort as string) : '',
-          label: multiLevelValues.label
-            ? (multiLevelValues.label as string)
-            : '',
+        data = await getCachedDoubanRecommends({
+          type: type === 'show' ? 'tv' : type,
+          region: multiLevelValues.region || 'all',
+          year: multiLevelValues.year || 'all',
+          platform: multiLevelValues.platform || 'all',
+          label: multiLevelValues.label || 'all',
+          sort: multiLevelValues.sort || 'T',
+          page_limit: 25,
+          page_start: 0,
         });
       } else {
-        data = await getDoubanCategories(getRequestParams(0));
+        const params = getRequestParams(0);
+        data = await getCachedDoubanCategories({
+          kind: params.kind,
+          category: params.category,
+          type: params.type,
+        });
       }
 
       if (data.code === 200) {

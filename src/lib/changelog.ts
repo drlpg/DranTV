@@ -11,6 +11,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.10",
+    date: "2025-10-30",
+    added: [
+    "添加轻量级缓存系统，减少重复 API 请求",
+    "添加数据预加载机制，提升首次访问速度",
+    "添加防抖和节流 Hooks，优化用户交互",
+    "添加懒加载组件，优化初始渲染性能"
+    ],
+    changed: [
+    "应用缓存 API 到首页和 douban 页面",
+    "提取设置管理逻辑到独立 Hook",
+    "优化 Next.js 配置，禁用 optimizeCss 避免构建错误"
+    ],
+    fixed: [
+    "修复构建失败问题（critters 依赖）"
+    ]
+  },
+  {
     version: "1.0.9",
     date: "2025-10-30",
     added: [

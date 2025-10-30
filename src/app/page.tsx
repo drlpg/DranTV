@@ -11,6 +11,7 @@ import {
   BangumiCalendarData,
   GetBangumiCalendarData,
 } from '@/lib/bangumi.client';
+import { getCachedDoubanCategories } from '@/lib/cachedDoubanApi';
 // 客户端收藏 API
 import {
   clearAllFavorites,
@@ -18,7 +19,6 @@ import {
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { getDoubanCategories } from '@/lib/douban.client';
 import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
@@ -27,6 +27,8 @@ import ContinueWatching from '@/components/ContinueWatching';
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
+import { preloadOnIdle } from '@/lib/preloadData';
+
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';
@@ -44,6 +46,11 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  // 预加载常用页面数据
+  useEffect(() => {
+    preloadOnIdle();
+  }, []);
 
   // 检查公告弹窗状态
   useEffect(() => {
@@ -77,16 +84,24 @@ function HomeClient() {
       try {
         setLoading(true);
 
-        // 并行获取热门电影、热门剧集和热门综艺
+        // 使用缓存API并行获取数据
         const [moviesData, tvShowsData, varietyShowsData, bangumiCalendarData] =
           await Promise.all([
-            getDoubanCategories({
+            getCachedDoubanCategories({
               kind: 'movie',
               category: '热门',
               type: '全部',
             }),
-            getDoubanCategories({ kind: 'tv', category: 'tv', type: 'tv' }),
-            getDoubanCategories({ kind: 'tv', category: 'show', type: 'show' }),
+            getCachedDoubanCategories({
+              kind: 'tv',
+              category: 'tv',
+              type: 'tv',
+            }),
+            getCachedDoubanCategories({
+              kind: 'tv',
+              category: 'show',
+              type: 'show',
+            }),
             GetBangumiCalendarData(),
           ]);
 
