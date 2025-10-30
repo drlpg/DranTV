@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.8",
+    date: "2025-10-30",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化聊天界面样式，调整气泡圆角、间距和颜色",
+    "移除聊天气泡和头像阴影效果",
+    "优化输入框样式和聚焦状态"
+    ],
+    fixed: [
+    "修复管理页面 HTML 结构错误",
+    "移除调试日志输出"
+    ]
+  },
+  {
     version: "1.0.7",
     date: "2025-10-29",
     added: [

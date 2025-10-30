@@ -980,23 +980,25 @@ export function ChatModal({
 
   return (
     <div
-      className={`fixed inset-0 z-[2147483647] ${
-        isMobile
-          ? 'flex items-center justify-center bg-black bg-opacity-50 p-4'
-          : 'flex items-center justify-center bg-black bg-opacity-50'
-      }`}
+      className='fixed inset-0 z-[2147483647] flex items-center justify-center bg-black bg-opacity-50'
       style={{
         zIndex: '2147483647',
         minHeight: '100dvh',
+        paddingTop: isMobile ? '80px' : '0',
+        paddingBottom: isMobile ? '80px' : '0',
+        paddingLeft: isMobile ? '16px' : '0',
+        paddingRight: isMobile ? '16px' : '0',
       }}
     >
       <div
-        className={`${
+        className={`bg-white dark:bg-gray-900 rounded-2xl shadow-xl relative overflow-hidden ${
           isMobile
-            ? 'w-full max-w-md h-[80dvh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col relative'
-            : 'w-full max-w-4xl h-[80dvh] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-row relative'
+            ? 'w-full max-w-md flex flex-col'
+            : 'w-full max-w-4xl flex flex-row'
         }`}
         style={{
+          height: isMobile ? 'calc(100dvh - 160px)' : '80dvh',
+          maxHeight: isMobile ? 'calc(100dvh - 160px)' : '80dvh',
           transform: !isMobile
             ? `translate(${dragPosition.x}px, ${dragPosition.y}px)`
             : 'none',
@@ -1005,7 +1007,7 @@ export function ChatModal({
       >
         {/* 拖动头部 - 仅桌面端显示 */}
         <div
-          className='absolute top-0 left-0 right-0 h-8 bg-gray-100 dark:bg-gray-800 rounded-t-lg cursor-grab active:cursor-grabbing hidden md:flex items-center justify-between'
+          className='absolute top-0 left-0 right-0 h-8 bg-gray-200 dark:bg-gray-700 rounded-t-lg cursor-grab active:cursor-grabbing hidden md:flex items-center justify-between'
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
@@ -1019,7 +1021,7 @@ export function ChatModal({
           <div className='flex-1 flex justify-end'>
             <button
               onClick={onClose}
-              className='p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors'
+              className='px-2 py-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors'
               aria-label='关闭'
             >
               <X className='w-5 h-5' />
@@ -1029,7 +1031,7 @@ export function ChatModal({
         {/* 移动端关闭按钮 */}
         <button
           onClick={onClose}
-          className='absolute top-2 right-2 z-10 p-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors md:hidden'
+          className='absolute top-2 right-2 z-10 px-2 py-1 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition-colors md:hidden'
           aria-label='关闭'
         >
           <X className='w-6 h-6' />
@@ -1254,8 +1256,8 @@ export function ChatModal({
                       onClick={() => handleConversationSelect(conv)}
                       className={`w-full p-3 rounded-lg text-left transition-all duration-200 relative ${
                         selectedConversation?.id === conv.id
-                          ? 'bg-blue-100 dark:bg-blue-900/50 shadow-md'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'
+                          ? 'bg-blue-100 dark:bg-blue-900/50'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                       }`}
                     >
                       <div className='flex items-center space-x-3'>
@@ -1336,7 +1338,7 @@ export function ChatModal({
                               <img
                                 src={getAvatarUrl(request.from_user)}
                                 alt={request.from_user}
-                                className='w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm'
+                                className='w-10 h-10 rounded-full ring-2 ring-gray-200 dark:ring-gray-700'
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -1597,7 +1599,7 @@ export function ChatModal({
                       } ${isSequential ? 'mt-1' : 'mt-4'}`}
                     >
                       <div
-                        className={`flex items-end space-x-3 max-w-xs lg:max-w-md xl:max-w-lg ${
+                        className={`flex items-start space-x-3 max-w-xs lg:max-w-md xl:max-w-lg ${
                           isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
                         }`}
                       >
@@ -1607,7 +1609,7 @@ export function ChatModal({
                             <img
                               src={getAvatarUrl(message.sender_id)}
                               alt={getDisplayName(message.sender_id)}
-                              className='w-10 h-10 rounded-full ring-2 ring-white dark:ring-gray-600 shadow-md'
+                              className='w-10 h-10 rounded-full ring-2 ring-gray-200 dark:ring-gray-600'
                               onError={(e) => {
                                 // 头像加载失败时显示文字头像
                                 const target = e.target as HTMLImageElement;
@@ -1628,7 +1630,7 @@ export function ChatModal({
                         </div>
 
                         {/* 消息内容 */}
-                        <div className='flex flex-col min-w-0'>
+                        <div className='flex flex-col min-w-0 mt-1'>
                           {/* 发送者名称（仅在非连续消息时显示） */}
                           {!isOwnMessage && showName && (
                             <div className='mb-2 px-1'>
@@ -1640,10 +1642,10 @@ export function ChatModal({
 
                           {/* 消息气泡 */}
                           <div
-                            className={`relative px-5 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${
+                            className={`relative px-3 py-2.5 rounded-md backdrop-blur-sm transition-all duration-200 ${
                               isOwnMessage
-                                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/25 rounded-br-md'
-                                : 'bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white shadow-gray-900/10 dark:shadow-black/20 ring-1 ring-gray-200/50 dark:ring-gray-600/50 rounded-bl-md'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white/90 dark:bg-gray-700/90 text-gray-900 dark:text-white ring-1 ring-gray-200/50 dark:ring-gray-600/50'
                             }`}
                           >
                             {message.message_type === 'image' ? (
@@ -1687,10 +1689,10 @@ export function ChatModal({
 
                             {/* 消息气泡装饰尾巴 */}
                             <div
-                              className={`absolute bottom-2 w-3 h-3 ${
+                              className={`absolute top-3 w-2 h-2 ${
                                 isOwnMessage
-                                  ? 'right-0 -mr-1.5 bg-gradient-to-br from-blue-500 to-blue-600'
-                                  : 'left-0 -ml-1.5 bg-white/90 dark:bg-gray-700/90 ring-1 ring-gray-200/50 dark:ring-gray-600/50'
+                                  ? 'right-0 -mr-1 bg-blue-500'
+                                  : 'left-0 -ml-1 bg-white/90 dark:bg-gray-700/90 ring-1 ring-gray-200/50 dark:ring-gray-600/50'
                               } transform rotate-45`}
                             ></div>
                           </div>
@@ -1719,50 +1721,50 @@ export function ChatModal({
               </div>
 
               {/* 消息输入区域 */}
-              <div className='border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 relative'>
-                {/* 表情选择器 - 绝对定位，不占据文档流空间 */}
-                {showEmojiPicker && (
-                  <div className='emoji-picker-container absolute left-4 right-4 bottom-full mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl z-50'>
-                    <div className='flex items-center justify-between mb-3'>
-                      <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                        选择表情
-                      </h3>
-                      <button
-                        onClick={() => setShowEmojiPicker(false)}
-                        className='p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors'
-                      >
-                        <X className='w-4 h-4' />
-                      </button>
-                    </div>
-                    <div className='grid grid-cols-9 gap-1 max-h-40 overflow-y-auto custom-scrollbar'>
-                      {emojis.map((emoji, index) => (
+              <div className='relative p-3'>
+                <div className='bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus-within:border-gray-200 dark:focus-within:border-gray-600 focus-within:ring-0 focus-within:outline-none'>
+                  {/* 表情选择器 - 绝对定位，不占据文档流空间 */}
+                  {showEmojiPicker && (
+                    <div className='emoji-picker-container absolute left-4 right-4 bottom-full mb-2 p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl z-50'>
+                      <div className='flex items-center justify-between mb-3'>
+                        <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                          选择表情
+                        </h3>
                         <button
-                          key={index}
-                          onClick={() => handleEmojiSelect(emoji)}
-                          className='p-2 text-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95'
-                          title={emoji}
+                          onClick={() => setShowEmojiPicker(false)}
+                          className='p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full transition-colors'
                         >
-                          {emoji}
+                          <X className='w-4 h-4' />
                         </button>
-                      ))}
+                      </div>
+                      <div className='grid grid-cols-9 gap-1 max-h-40 overflow-y-auto custom-scrollbar'>
+                        {emojis.map((emoji, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleEmojiSelect(emoji)}
+                            className='p-2 text-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95'
+                            title={emoji}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* 主输入区域 */}
-                <div className={`${isMobile ? 'p-2' : 'p-3'} pb-safe`}>
-                  <div className='bg-white dark:bg-gray-700 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-600/80 backdrop-blur-sm'>
+                  {/* 主输入区域 */}
+                  <div className='p-3'>
                     {/* 顶部工具栏 */}
-                    <div className='flex items-center justify-between px-3 py-1.5 border-b border-gray-100 dark:border-gray-600'>
+                    <div className='flex items-center justify-between pb-2 mb-3 border-b border-dashed border-gray-200 dark:border-gray-600'>
                       {/* 左侧功能按钮组 */}
                       <div className='flex items-center space-x-1'>
                         {/* 表情按钮 */}
                         <button
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className={`emoji-picker-container p-2 rounded-xl transition-all duration-200 transform hover:scale-105 ${
+                          className={`emoji-picker-container p-2 rounded-xl transition-all duration-200 ${
                             showEmojiPicker
                               ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                              : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                              : 'text-gray-500 hover:text-blue-600'
                           }`}
                           title='表情'
                         >
@@ -1773,7 +1775,7 @@ export function ChatModal({
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingImage}
-                          className='p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                          className='p-2 text-gray-500 hover:text-green-600 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
                           title='上传图片'
                         >
                           {uploadingImage ? (
@@ -1794,7 +1796,7 @@ export function ChatModal({
 
                         {/* 附件按钮（预留） */}
                         <button
-                          className='p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-xl transition-all duration-200 transform hover:scale-105'
+                          className='p-2 text-gray-400 hover:text-purple-500 rounded-xl transition-all duration-200'
                           disabled
                           title='附件（即将开放）'
                         >
@@ -1831,74 +1833,66 @@ export function ChatModal({
                     </div>
 
                     {/* 消息输入区域 */}
-                    <div className='p-3'>
-                      <div className='relative'>
-                        <textarea
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          placeholder='输入消息内容... 按Enter发送，Shift+Enter换行'
-                          className='w-full px-3 py-2 pr-14 bg-gray-50 dark:bg-gray-600 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-500 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[40px] max-h-28 transition-all duration-200'
-                          rows={1}
-                          maxLength={1000}
-                          style={{ height: 'auto' }}
-                          onInput={(e) => {
-                            // 自动调整高度
-                            const target = e.target as HTMLTextAreaElement;
-                            target.style.height = 'auto';
-                            target.style.height =
-                              Math.min(target.scrollHeight, 128) + 'px';
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSendMessage();
-                            }
-                          }}
-                        />
-
-                        {/* 发送按钮 */}
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={!newMessage.trim() || uploadingImage}
-                          className='absolute right-2 bottom-2 p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl'
-                          title={
-                            !newMessage.trim()
-                              ? '请输入消息内容'
-                              : '发送消息 (Enter)'
+                    <div
+                      className='flex items-center gap-2 bg-gray-100 dark:bg-gray-600 rounded-md p-1.5 border border-transparent focus-within:border-blue-500 transition-colors duration-200'
+                      style={{
+                        outline: 'none !important',
+                        boxShadow: 'none !important',
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.outline = 'none';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <textarea
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder={
+                          isMobile
+                            ? '输入消息内容...'
+                            : '输入消息内容... 按Enter发送，Shift+Enter换行'
+                        }
+                        className='flex-1 p-1.5 bg-transparent border-0 placeholder-gray-400 dark:placeholder-gray-400 resize-none min-h-[36px] max-h-28 leading-normal'
+                        style={{
+                          outline: 'none !important',
+                          boxShadow: 'none !important',
+                          border: 'none !important',
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.outline = 'none';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }}
+                        rows={1}
+                        maxLength={1000}
+                        style={{ height: 'auto' }}
+                        onInput={(e) => {
+                          // 自动调整高度
+                          const target = e.target as HTMLTextAreaElement;
+                          target.style.height = 'auto';
+                          target.style.height =
+                            Math.min(target.scrollHeight, 128) + 'px';
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
                           }
-                        >
-                          <Send className='w-4 h-4' />
-                        </button>
-                      </div>
-                    </div>
+                        }}
+                      />
 
-                    {/* 底部信息栏 */}
-                    <div className='flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-gray-600/50 rounded-b-2xl border-t border-gray-100 dark:border-gray-600'>
-                      <div className='flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400'>
-                        <span className='flex items-center space-x-1'>
-                          <span>📝</span>
-                          <span>支持文字</span>
-                        </span>
-                        <span className='flex items-center space-x-1'>
-                          <span>😊</span>
-                          <span>表情</span>
-                        </span>
-                        <span className='flex items-center space-x-1'>
-                          <span>🖼️</span>
-                          <span>图片 (5MB内)</span>
-                        </span>
-                      </div>
-
-                      <div className='text-xs text-gray-400'>
-                        {uploadingImage ? (
-                          <span className='flex items-center space-x-1 text-blue-500'>
-                            <div className='w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin' />
-                            <span>上传中...</span>
-                          </span>
-                        ) : (
-                          <span>Enter发送</span>
-                        )}
-                      </div>
+                      {/* 发送按钮 */}
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim() || uploadingImage}
+                        className='flex-shrink-0 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+                        title={
+                          !newMessage.trim()
+                            ? '请输入消息内容'
+                            : '发送消息 (Enter)'
+                        }
+                      >
+                        <Send className='w-5 h-5' />
+                      </button>
                     </div>
                   </div>
                 </div>

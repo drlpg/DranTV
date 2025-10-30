@@ -1,0 +1,48 @@
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 构建产物
+.next/
+out/
+build/
+dist/
+
+# 环境变量
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# 配置文件
+config.json
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# 测试
+coverage/
+.nyc_output/
+
+# 临时文件
+*.log
+*.tmp
+*.temp
+
+# 项目管理脚本
+organize-project.bat
+git-auto.sh
+clear-database.js

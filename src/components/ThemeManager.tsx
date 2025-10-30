@@ -300,13 +300,11 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
   // 从API加载主题配置（唯一数据源）
   const loadGlobalThemeConfig = async () => {
     try {
-      console.log('从API获取主题配置...');
       const response = await fetch('/api/admin/config');
       const result = await response.json();
 
       if (result?.Config?.ThemeConfig) {
         const themeConfig = result.Config.ThemeConfig;
-        console.log('API返回的主题配置:', themeConfig);
         setGlobalThemeConfig(themeConfig);
 
         // 更新运行时配置，保持同步
@@ -316,8 +314,6 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
         }
 
         return themeConfig;
-      } else {
-        console.log('无法获取主题配置，可能未登录或权限不足:', result);
       }
     } catch (error) {
       console.error('从API加载主题配置失败:', error);
