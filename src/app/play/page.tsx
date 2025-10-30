@@ -822,32 +822,7 @@ function PlayPageClient() {
                 item.index !== undefined ? item.index + 1 : arrayIndex + 1
               }集`;
             episodesTitles.push(episodeTitle);
-
-            itemLog.processed = true;
-            itemLog.needsProxy = processedUrl.includes('/api/proxy/video');
-          } else {
-            console.warn(`⚠️ [短剧处理] 跳过无效的播放源:`, {
-              index: item.index,
-              label: item.label,
-              status: item.status,
-              hasUrl: !!item.parsedUrl,
-              reason: item.reason,
-              fullItem: item,
-            });
-            itemLog.processed = false;
-            itemLog.skipReason = `状态: ${
-              item.status
-            }, 有URL: ${!!item.parsedUrl}`;
           }
-
-          processingLog.push(itemLog);
-        });
-      } else {
-        console.error('❌ [短剧处理] Results数组无效或为空:', {
-          hasResults: !!data.results,
-          resultsType: typeof data.results,
-          isArray: Array.isArray(data.results),
-          rawResults: data.results,
         });
       }
 
