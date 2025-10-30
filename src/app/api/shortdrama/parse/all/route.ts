@@ -29,25 +29,8 @@ export async function GET(request: NextRequest) {
     });
 
     clearTimeout(timeoutId);
-    const requestEndTime = performance.now();
-    const requestDuration = requestEndTime - requestStartTime;
-
-    console.log(`📡 [短剧API] 外部API响应状态:`, {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries()),
-      requestDuration: `${requestDuration.toFixed(2)}ms`,
-      contentType: response.headers.get('content-type'),
-    });
 
     if (!response.ok) {
-      console.error(`❌ [短剧API] 外部API请求失败:`, {
-        status: response.status,
-        statusText: response.statusText,
-        url: apiUrl.toString(),
-        requestDuration: `${requestDuration.toFixed(2)}ms`,
-      });
       throw new Error(
         `API request failed: ${response.status} - ${response.statusText}`
       );
