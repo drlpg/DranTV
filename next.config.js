@@ -27,8 +27,8 @@ const nextConfig = {
       'framer-motion',
       'react-icons',
     ],
-    optimizeCss: true,
-    // 启用并发特性
+    // optimizeCss 需要 critters 依赖，暂时禁用
+    // optimizeCss: true,
     serverActions: {
       bodySizeLimit: '2mb',
     },
