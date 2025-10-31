@@ -2,7 +2,7 @@
 'use client';
 
 import { ChevronUp, Search, X } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import React, {
   startTransition,
   Suspense,
@@ -36,7 +36,6 @@ function SearchPageClient() {
   // 滚动进度状态
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentQueryRef = useRef<string>('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,6 +49,8 @@ function SearchPageClient() {
   const pendingResultsRef = useRef<SearchResult[]>([]);
   const flushTimerRef = useRef<number | null>(null);
   const [useFluidSearch, setUseFluidSearch] = useState(true);
+  const [emptySearchError, setEmptySearchError] = useState(false);
+  const [hotKeywords, setHotKeywords] = useState<string[]>([]);
   // 聚合卡片 refs 与聚合统计缓存
   const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
     new Map()
@@ -567,9 +568,11 @@ function SearchPageClient() {
     const titlesSet = new Set<string>();
     const yearsSet = new Set<string>();
 
+    // 使用实际执行搜索的关键字，而不是输入框中的当前值
+    const actualQuery = currentQueryRef.current;
     // 只考虑与搜索关键字相关的结果来构建过滤选项
     const relevantResults = searchResults.filter((item) =>
-      isRelevantResult(item, searchQuery)
+      isRelevantResult(item, actualQuery)
     );
 
     relevantResults.forEach((item) => {
@@ -624,9 +627,11 @@ function SearchPageClient() {
   // 非聚合：应用筛选与排序
   const filteredAllResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAll;
+    // 使用实际执行搜索的关键字，而不是输入框中的当前值
+    const actualQuery = currentQueryRef.current;
     const filtered = searchResults.filter((item) => {
       // 首先检查相关性
-      if (!isRelevantResult(item, searchQuery)) return false;
+      if (!isRelevantResult(item, actualQuery)) return false;
       // 然后应用其他过滤器
       if (source !== 'all' && item.source !== source) return false;
       if (title !== 'all' && item.title !== title) return false;
@@ -646,8 +651,8 @@ function SearchPageClient() {
       if (yearComp !== 0) return yearComp;
 
       // 年份相同时，精确匹配在前
-      const aExactMatch = a.title === searchQuery.trim();
-      const bExactMatch = b.title === searchQuery.trim();
+      const aExactMatch = a.title === actualQuery.trim();
+      const bExactMatch = b.title === actualQuery.trim();
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
 
@@ -656,15 +661,17 @@ function SearchPageClient() {
         ? a.title.localeCompare(b.title)
         : b.title.localeCompare(a.title);
     });
-  }, [searchResults, filterAll, searchQuery]);
+  }, [searchResults, filterAll]);
 
   // 聚合：应用筛选与排序
   const filteredAggResults = useMemo(() => {
     const { source, title, year, yearOrder } = filterAgg as any;
+    // 使用实际执行搜索的关键字，而不是输入框中的当前值
+    const actualQuery = currentQueryRef.current;
     const filtered = aggregatedResults.filter(([_, group]) => {
       // 检查聚合组中是否至少有一个结果与搜索关键字相关
       const hasRelevantResult = group.some((item) =>
-        isRelevantResult(item, searchQuery)
+        isRelevantResult(item, actualQuery)
       );
       if (!hasRelevantResult) return false;
 
@@ -704,14 +711,83 @@ function SearchPageClient() {
         ? aTitle.localeCompare(bTitle)
         : bTitle.localeCompare(aTitle);
     });
-  }, [aggregatedResults, filterAgg, searchQuery]);
+  }, [aggregatedResults, filterAgg]);
+
+  // 控制页面滚动 - 在居中状态下禁止滚动
+  useEffect(() => {
+    if (!showResults && searchHistory.length === 0) {
+      // 禁止滚动
+      document.body.style.overflow = 'hidden';
+    } else {
+      // 恢复滚动
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      // 清理：恢复滚动
+      document.body.style.overflow = '';
+    };
+  }, [showResults, searchHistory.length]);
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
     !searchParams.get('q') && document.getElementById('searchInput')?.focus();
 
     // 初始加载搜索历史
-    getSearchHistory().then(setSearchHistory);
+    getSearchHistory().then((history) => {
+      // 去重处理，确保没有重复项
+      const uniqueHistory = Array.from(new Set(history));
+      setSearchHistory(uniqueHistory);
+    });
+
+    // 获取热门影视标题作为热门搜索关键词
+    const fetchHotKeywords = async () => {
+      try {
+        const { getCachedDoubanCategories } = await import(
+          '@/lib/cachedDoubanApi'
+        );
+        const [moviesResult, tvShowsResult] = await Promise.all([
+          getCachedDoubanCategories({
+            kind: 'movie',
+            category: '热门',
+            type: '全部',
+          }),
+          getCachedDoubanCategories({
+            kind: 'tv',
+            category: 'tv',
+            type: 'tv',
+          }),
+        ]);
+
+        // 从结果中提取list数组
+        const moviesArray = Array.isArray(moviesResult?.list)
+          ? moviesResult.list
+          : [];
+        const tvShowsArray = Array.isArray(tvShowsResult?.list)
+          ? tvShowsResult.list
+          : [];
+
+        // 合并电影和剧集，取前5个标题
+        const allItems = [...moviesArray, ...tvShowsArray];
+        const keywords = allItems
+          .slice(0, 5)
+          .map((item) => item.title)
+          .filter(Boolean);
+
+        if (keywords.length > 0) {
+          setHotKeywords(keywords);
+        } else {
+          // 如果没有获取到关键词，使用默认关键词
+          setHotKeywords(['斗罗大陆', '斗破苍穹', '庆余年', '三体', '狂飙']);
+        }
+      } catch (error) {
+        console.error('获取热门关键词失败:', error);
+        // 使用默认关键词
+        setHotKeywords(['斗罗大陆', '斗破苍穹', '庆余年', '三体', '狂飙']);
+      }
+    };
+
+    fetchHotKeywords();
 
     // 读取流式搜索设置
     if (typeof window !== 'undefined') {
@@ -729,7 +805,9 @@ function SearchPageClient() {
     const unsubscribe = subscribeToDataUpdates(
       'searchHistoryUpdated',
       (newHistory: string[]) => {
-        setSearchHistory(newHistory);
+        // 去重处理，确保没有重复项
+        const uniqueHistory = Array.from(new Set(newHistory));
+        setSearchHistory(uniqueHistory);
       }
     );
 
@@ -812,7 +890,6 @@ function SearchPageClient() {
         cachedState
       ) {
         // 从播放页返回且有缓存，使用缓存的搜索结果
-        console.log('使用缓存的搜索结果');
 
         try {
           const results = JSON.parse(cachedResults);
@@ -1157,6 +1234,11 @@ function SearchPageClient() {
     const value = e.target.value;
     setSearchQuery(value);
 
+    // 清除错误提示
+    if (emptySearchError) {
+      setEmptySearchError(false);
+    }
+
     if (value.trim()) {
       setShowSuggestions(true);
     } else {
@@ -1175,8 +1257,14 @@ function SearchPageClient() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
-    if (!trimmed) return;
+    if (!trimmed) {
+      setEmptySearchError(true);
+      // 3秒后自动隐藏错误提示
+      setTimeout(() => setEmptySearchError(false), 3000);
+      return;
+    }
 
+    setEmptySearchError(false);
     setShowSuggestions(false);
     // 直接调用搜索函数
     performSearch(trimmed);
@@ -1204,57 +1292,133 @@ function SearchPageClient() {
 
   return (
     <PageLayout activePath='/search'>
-      <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible mb-10'>
-        {/* 搜索框 */}
-        <div className='mb-8'>
-          <form onSubmit={handleSearch} className='max-w-2xl mx-auto'>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500' />
-              <input
-                id='searchInput'
-                type='text'
-                value={searchQuery}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                placeholder='搜索电影、电视剧、短剧...'
-                autoComplete='off'
-                className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-12 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
-              />
-
-              {/* 清除按钮 */}
-              {searchQuery && (
-                <button
-                  type='button'
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSuggestions(false);
-                    document.getElementById('searchInput')?.focus();
-                  }}
-                  className='absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300'
-                  aria-label='清除搜索内容'
-                >
-                  <X className='h-5 w-5' />
-                </button>
+      <div
+        className={`px-4 sm:px-10 py-4 sm:py-8 overflow-visible transition-all duration-500 ${
+          !showResults && searchHistory.length === 0
+            ? 'min-h-[calc(100vh-80px)] flex items-center justify-center mb-0'
+            : 'mb-10'
+        }`}
+      >
+        {/* 搜索框容器 - 根据是否有内容决定位置 */}
+        <div
+          className={`w-full transition-all duration-500 ${
+            !showResults && searchHistory.length === 0 ? '' : 'mb-8'
+          }`}
+        >
+          <div className='w-full max-w-2xl mx-auto'>
+            <form onSubmit={handleSearch} className='relative'>
+              {/* 标题 - 仅在居中状态显示，相对搜索框定位 */}
+              {!showResults && searchHistory.length === 0 && (
+                <h1 className='absolute left-0 right-0 -top-12 sm:-top-16 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 text-center animate-fade-in'>
+                  聚合搜索
+                </h1>
               )}
+              <div className='relative flex items-center h-11 sm:h-12 rounded-full bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-600 focus-within:!border-blue-500 dark:focus-within:!border-blue-600 transition-colors overflow-hidden'>
+                <Search
+                  className='h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-500'
+                  style={{ marginLeft: '14px' }}
+                />
+                <input
+                  id='searchInput'
+                  type='text'
+                  value={searchQuery}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  placeholder='搜索电影、电视剧、短剧...'
+                  autoComplete='off'
+                  className='flex-1 h-full px-3 bg-transparent text-sm text-gray-700 placeholder-gray-400 dark:text-gray-300 dark:placeholder-gray-500 border-0'
+                  style={{ outline: 'none', boxShadow: 'none' }}
+                  onFocus={(e) => {
+                    handleInputFocus(e);
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
 
-              {/* 搜索建议 */}
-              <SearchSuggestions
-                query={searchQuery}
-                isVisible={showSuggestions}
-                onSelect={handleSuggestionSelect}
-                onClose={() => setShowSuggestions(false)}
-                onEnterKey={() => {
-                  // 当用户按回车键时，使用搜索框的实际内容进行搜索
-                  const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
-                  if (!trimmed) return;
+                {/* 清除按钮 */}
+                {searchQuery && (
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                      setShowResults(false);
+                      setSearchResults([]);
+                      currentQueryRef.current = '';
+                      document.getElementById('searchInput')?.focus();
+                    }}
+                    className='mr-2 h-5 w-5 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:text-gray-300'
+                    aria-label='清除搜索内容'
+                  >
+                    <X className='h-5 w-5' />
+                  </button>
+                )}
 
-                  setShowSuggestions(false);
-                  // 直接调用搜索函数
-                  performSearch(trimmed);
-                }}
-              />
-            </div>
-          </form>
+                {/* 搜索按钮 */}
+                <button
+                  type='submit'
+                  className='h-full px-4 sm:px-6 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs sm:text-sm font-medium transition-colors flex items-center justify-center rounded-r-full'
+                  aria-label='搜索'
+                >
+                  搜索
+                </button>
+
+                {/* 搜索建议 */}
+                <SearchSuggestions
+                  query={searchQuery}
+                  isVisible={showSuggestions}
+                  onSelect={handleSuggestionSelect}
+                  onClose={() => setShowSuggestions(false)}
+                  onEnterKey={() => {
+                    // 当用户按回车键时，使用搜索框的实际内容进行搜索
+                    const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
+                    if (!trimmed) {
+                      setEmptySearchError(true);
+                      setTimeout(() => setEmptySearchError(false), 3000);
+                      return;
+                    }
+
+                    setEmptySearchError(false);
+                    setShowSuggestions(false);
+                    // 直接调用搜索函数
+                    performSearch(trimmed);
+                  }}
+                />
+              </div>
+
+              {/* 空搜索错误提示 - 绝对定位避免影响布局 */}
+              <div className='relative h-0'>
+                {emptySearchError && (
+                  <div className='absolute top-2 left-0 right-0 text-sm text-red-500 dark:text-red-400 text-center animate-fade-in'>
+                    请输入搜索内容
+                  </div>
+                )}
+              </div>
+
+              {/* 热门搜索 - 仅在居中状态显示，相对搜索框定位 */}
+              {!showResults &&
+                searchHistory.length === 0 &&
+                hotKeywords.length > 0 && (
+                  <div className='absolute left-0 right-0 top-[calc(100%+1rem)] sm:top-[calc(100%+1.5rem)] animate-fade-in'>
+                    <div className='flex flex-wrap justify-center gap-1.5 sm:gap-2'>
+                      {hotKeywords.map((keyword) => (
+                        <button
+                          key={keyword}
+                          type='button'
+                          onClick={() => {
+                            setSearchQuery(keyword);
+                            performSearch(keyword);
+                          }}
+                          className='px-3 py-1.5 sm:px-4 sm:py-2 bg-white hover:bg-blue-500 hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-gray-700 rounded-full text-xs sm:text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200'
+                        >
+                          {keyword}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </form>
+          </div>
         </div>
 
         {/* 搜索结果或搜索历史 */}
@@ -1265,9 +1429,13 @@ function SearchPageClient() {
               <div className='mb-4'>
                 <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
                   搜索结果
-                  {totalSources > 0 && useFluidSearch && (
+                  {searchResults.length > 0 && (
                     <span className='ml-2 text-sm font-normal text-gray-500 dark:text-gray-400'>
-                      {completedSources}/{totalSources}
+                      (
+                      {viewMode === 'agg'
+                        ? aggregatedResults.length
+                        : searchResults.length}
+                      )
                     </span>
                   )}
                   {isLoading && useFluidSearch && (
@@ -1412,8 +1580,8 @@ function SearchPageClient() {
                 )}
               </h2>
               <div className='flex flex-wrap gap-2'>
-                {searchHistory.map((item) => (
-                  <div key={item} className='relative group'>
+                {searchHistory.map((item, index) => (
+                  <div key={`${item}-${index}`} className='relative group'>
                     <button
                       onClick={() => {
                         // 直接调用搜索函数

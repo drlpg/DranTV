@@ -121,11 +121,11 @@ export async function GET(request: NextRequest) {
         }
       };
 
-      // 发送开始事件 (包含短剧搜索源)
+      // 发送开始事件 (不包含短剧搜索源，因为它是独立处理的)
       const startEvent = `data: ${JSON.stringify({
         type: 'start',
         query,
-        totalSources: apiSites.length + 1, // +1 for short drama search
+        totalSources: apiSites.length, // 只计算API源，短剧搜索独立处理
         timestamp: Date.now(),
       })}\n\n`;
 
@@ -211,8 +211,8 @@ export async function GET(request: NextRequest) {
             }
           }
 
-          // 检查是否所有源都已完成 (包括短剧搜索)
-          if (completedSources === apiSites.length + 1) {
+          // 检查是否所有API源都已完成 (不包括短剧搜索)
+          if (completedSources === apiSites.length) {
             if (!streamClosed) {
               // 发送最终完成事件
               const completeEvent = `data: ${JSON.stringify({
@@ -285,30 +285,12 @@ export async function GET(request: NextRequest) {
               }
             }
           } finally {
-            // 无论成功还是失败，都要增加计数
-            completedSources++;
+            // 短剧搜索不计入completedSources，因为它是独立处理的
+            // 不增加计数，避免与API源计数混淆
           }
 
-          // 检查是否所有源都已完成
-          if (completedSources === apiSites.length + 1) {
-            if (!streamClosed) {
-              // 发送最终完成事件
-              const completeEvent = `data: ${JSON.stringify({
-                type: 'complete',
-                totalResults: allResults.length,
-                completedSources,
-                timestamp: Date.now(),
-              })}\n\n`;
-
-              if (safeEnqueue(encoder.encode(completeEvent))) {
-                try {
-                  controller.close();
-                } catch (error) {
-                  console.warn('Failed to close controller:', error);
-                }
-              }
-            }
-          }
+          // 短剧搜索完成后不需要检查总数，因为它是独立的
+          // API源完成后会自动关闭流
         },
       ];
 

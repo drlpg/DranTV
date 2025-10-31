@@ -46,6 +46,16 @@
   .slide-in-from-right-2 {
     animation-name: slide-in-from-right;
   }
+
+  /* 管理面板折叠标签样式 */
+  .admin-collapsible-tab {
+    border: 1px solid #e5e7eb;
+    box-shadow: none;
+  }
+
+  .dark .admin-collapsible-tab {
+    border-color: #374151;
+  }
 }
 
 :root {

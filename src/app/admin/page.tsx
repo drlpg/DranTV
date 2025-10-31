@@ -615,7 +615,7 @@ const CollapsibleTab = ({
   children,
 }: CollapsibleTabProps) => {
   return (
-    <div className='rounded-xl shadow-sm mb-4 overflow-hidden bg-white/80 backdrop-blur-md dark:bg-gray-800/50 dark:ring-1 dark:ring-gray-700'>
+    <div className='admin-collapsible-tab rounded-xl mb-4 overflow-hidden bg-white/80 backdrop-blur-md dark:bg-gray-800/50'>
       <button
         onClick={onToggle}
         className='w-full px-6 py-4 flex items-center justify-between bg-gray-50/70 dark:bg-gray-800/60 hover:bg-gray-100/80 dark:hover:bg-gray-700/60 transition-colors'
@@ -661,6 +661,7 @@ const UserConfig = ({
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
   const [showAddUserGroupForm, setShowAddUserGroupForm] = useState(false);
   const [showEditUserGroupForm, setShowEditUserGroupForm] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
@@ -726,6 +727,28 @@ const UserConfig = ({
 
   // 获取用户组列表
   const userGroups = config?.UserConfig?.Tags || [];
+
+  // 过滤用户列表
+  const filteredUsers = useMemo(() => {
+    const users = config?.UserConfig?.Users || [];
+    if (!searchKeyword.trim()) {
+      return users;
+    }
+    const keyword = searchKeyword.toLowerCase().trim();
+    return users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(keyword) ||
+        (user.tags &&
+          user.tags.some((tag) => tag.toLowerCase().includes(keyword))) ||
+        (user.role === 'owner'
+          ? '站长'
+          : user.role === 'admin'
+          ? '管理员'
+          : '普通用户'
+        ).includes(keyword) ||
+        (!user.banned ? '正常' : '已封禁').includes(keyword)
+    );
+  }, [config?.UserConfig?.Users, searchKeyword]);
 
   // 处理用户组相关操作
   const handleUserGroupAction = async (
@@ -1250,11 +1273,24 @@ const UserConfig = ({
 
       {/* 用户列表 */}
       <div>
-        <div className='flex items-center justify-between mb-3'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3'>
           <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-            用户列表
+            用户列表 ({config?.UserConfig?.Users?.length || 0})
           </h4>
-          <div className='flex items-center space-x-2'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
+            {/* 搜索框 */}
+            <input
+              type='text'
+              placeholder='搜索用户名、用户组、角色或状态...'
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-64'
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onFocus={(e) => {
+                e.target.style.outline = 'none';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
             {/* 批量操作按钮 */}
             {selectedUsers.size > 0 && (
               <>
@@ -1515,8 +1551,8 @@ const UserConfig = ({
             </thead>
             {/* 按规则排序用户：自己 -> 站长(若非自己) -> 管理员 -> 其他 */}
             {(() => {
-              const sortedUsers = [...config.UserConfig.Users].sort((a, b) => {
-                type UserInfo = (typeof config.UserConfig.Users)[number];
+              const sortedUsers = [...filteredUsers].sort((a, b) => {
+                type UserInfo = (typeof filteredUsers)[number];
                 const priority = (u: UserInfo) => {
                   if (u.username === currentUsername) return 0;
                   if (u.role === 'owner') return 1;
@@ -1608,7 +1644,7 @@ const UserConfig = ({
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex items-center space-x-2'>
+                          <div className='flex items-center justify-between'>
                             <span className='text-sm text-gray-900 dark:text-gray-100'>
                               {user.tags && user.tags.length > 0
                                 ? user.tags.join(', ')
@@ -1629,7 +1665,7 @@ const UserConfig = ({
                           </div>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex items-center space-x-2'>
+                          <div className='flex items-center justify-between'>
                             <span className='text-sm text-gray-900 dark:text-gray-100'>
                               {user.enabledApis && user.enabledApis.length > 0
                                 ? `${user.enabledApis.length} 个源`
@@ -1756,6 +1792,18 @@ const UserConfig = ({
                       </tr>
                     );
                   })}
+                  {sortedUsers.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={9}
+                        className='px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400'
+                      >
+                        {searchKeyword.trim()
+                          ? '没有找到匹配的用户'
+                          : '暂无用户'}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               );
             })()}
@@ -3695,7 +3743,7 @@ const VideoSourceConfig = ({
       {/* 添加视频源表单 */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          视频源列表 ({filteredSources.length}/{sources.length})
+          视频源列表 ({sources.length})
         </h4>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
           {/* 批量操作按钮 */}
@@ -3711,7 +3759,12 @@ const VideoSourceConfig = ({
                   placeholder='搜索视频源...'
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  className='px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-600 w-48'
+                  className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-48'
+                  style={{ outline: 'none', boxShadow: 'none' }}
+                  onFocus={(e) => {
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
                 <button
                   onClick={() => handleBatchOperation('batch_enable')}
@@ -3763,7 +3816,12 @@ const VideoSourceConfig = ({
               placeholder='搜索视频源...'
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              className='px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-600 w-full sm:w-48'
+              className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-48'
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onFocus={(e) => {
+                e.target.style.outline = 'none';
+                e.target.style.boxShadow = 'none';
+              }}
             />
           )}
           <div className='flex items-center gap-2'>
@@ -4349,6 +4407,7 @@ const CategoryConfig = ({
   const [categories, setCategories] = useState<CustomCategory[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [orderChanged, setOrderChanged] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [newCategory, setNewCategory] = useState<CustomCategory>({
     name: '',
     type: 'movie',
@@ -4380,6 +4439,20 @@ const CategoryConfig = ({
       setOrderChanged(false);
     }
   }, [config]);
+
+  // 过滤分类
+  const filteredCategories = useMemo(() => {
+    if (!searchKeyword.trim()) {
+      return categories;
+    }
+    const keyword = searchKeyword.toLowerCase().trim();
+    return categories.filter(
+      (category) =>
+        (category.name && category.name.toLowerCase().includes(keyword)) ||
+        category.query.toLowerCase().includes(keyword) ||
+        (category.type === 'movie' ? '电影' : '电视剧').includes(keyword)
+    );
+  }, [categories, searchKeyword]);
 
   // 通用 API 请求
   const callCategoryApi = async (body: Record<string, any>) => {
@@ -4481,22 +4554,22 @@ const CategoryConfig = ({
     } as React.CSSProperties;
 
     return (
-      <tr
+      <div
         ref={setNodeRef}
         style={style}
-        className='hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
+        className='flex items-center px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
       >
-        <td
-          className='px-2 py-4 cursor-grab text-gray-400'
+        <div
+          className='w-6 flex-shrink-0 flex justify-center cursor-grab text-gray-400'
           style={{ touchAction: 'none' }}
           {...{ ...attributes, ...listeners }}
         >
           <GripVertical size={16} />
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+        <div className='w-32 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
           {category.name || '-'}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+        <div className='w-24 flex-shrink-0 px-2'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               category.type === 'movie'
@@ -4506,14 +4579,14 @@ const CategoryConfig = ({
           >
             {category.type === 'movie' ? '电影' : '电视剧'}
           </span>
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[12rem] truncate'
+        </div>
+        <div
+          className='flex-1 min-w-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={category.query}
         >
           {category.query}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        </div>
+        <div className='w-20 flex-shrink-0 px-2'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !category.disabled
@@ -4523,8 +4596,8 @@ const CategoryConfig = ({
           >
             {!category.disabled ? '启用中' : '已禁用'}
           </span>
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
+        </div>
+        <div className='w-48 flex-shrink-0 px-2 flex justify-end gap-2'>
           <button
             onClick={() => handleToggleEnable(category.query, category.type)}
             disabled={isLoading(
@@ -4557,8 +4630,8 @@ const CategoryConfig = ({
               删除
             </button>
           )}
-        </td>
-      </tr>
+        </div>
+      </div>
     );
   };
 
@@ -4572,19 +4645,33 @@ const CategoryConfig = ({
 
   return (
     <div className='space-y-6'>
-      {/* 添加分类表单 */}
-      <div className='flex items-center justify-between'>
+      {/* 标题和搜索栏 */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          自定义分类列表
+          自定义分类列表 ({categories.length})
         </h4>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-            showAddForm ? buttonStyles.secondary : buttonStyles.success
-          }`}
-        >
-          {showAddForm ? '取消' : '添加分类'}
-        </button>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
+          <input
+            type='text'
+            placeholder='搜索分类名称、关键词或类型...'
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-64'
+            style={{ outline: 'none', boxShadow: 'none' }}
+            onFocus={(e) => {
+              e.target.style.outline = 'none';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+              showAddForm ? buttonStyles.secondary : buttonStyles.success
+            }`}
+          >
+            {showAddForm ? '取消' : '添加分类'}
+          </button>
+        </div>
       </div>
 
       {showAddForm && (
@@ -4644,7 +4731,7 @@ const CategoryConfig = ({
         </div>
       )}
 
-      {/* 分类表格 */}
+      {/* 分类列表 */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -4652,42 +4739,39 @@ const CategoryConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'>
-          <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-            <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
-              <tr>
-                <th className='w-8' />
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  分类名称
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  类型
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  搜索关键词
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  状态
-                </th>
-                <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <SortableContext
-              items={categories.map((c) => `${c.query}:${c.type}`)}
-              strategy={verticalListSortingStrategy}
-            >
-              <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
-                {categories.map((category) => (
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'>
+          {/* 表头 */}
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+            <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+              <div className='w-6 flex-shrink-0 flex justify-center'></div>
+              <div className='w-32 flex-shrink-0 px-2'>分类名称</div>
+              <div className='w-24 flex-shrink-0 px-2'>类型</div>
+              <div className='flex-1 min-w-0 px-2'>搜索关键词</div>
+              <div className='w-20 flex-shrink-0 px-2'>状态</div>
+              <div className='w-48 flex-shrink-0 px-2 text-right'>操作</div>
+            </div>
+          </div>
+
+          {/* 内容 */}
+          <SortableContext
+            items={filteredCategories.map((c) => `${c.query}:${c.type}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+              {filteredCategories.length > 0 ? (
+                filteredCategories.map((category) => (
                   <DraggableRow
                     key={`${category.query}:${category.type}`}
                     category={category}
                   />
-                ))}
-              </tbody>
-            </SortableContext>
-          </table>
+                ))
+              ) : (
+                <div className='px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400'>
+                  {searchKeyword.trim() ? '没有找到匹配的分类' : '暂无分类'}
+                </div>
+              )}
+            </div>
+          </SortableContext>
         </div>
       </DndContext>
 
@@ -5580,6 +5664,7 @@ const LiveSourceConfig = ({
     useState<LiveDataSource | null>(null);
   const [orderChanged, setOrderChanged] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [newLiveSource, setNewLiveSource] = useState<LiveDataSource>({
     name: '',
     key: '',
@@ -5613,6 +5698,21 @@ const LiveSourceConfig = ({
       setOrderChanged(false);
     }
   }, [config]);
+
+  // 过滤直播源
+  const filteredLiveSources = useMemo(() => {
+    if (!searchKeyword.trim()) {
+      return liveSources;
+    }
+    const keyword = searchKeyword.toLowerCase().trim();
+    return liveSources.filter(
+      (source) =>
+        source.name.toLowerCase().includes(keyword) ||
+        source.key.toLowerCase().includes(keyword) ||
+        source.url.toLowerCase().includes(keyword) ||
+        (source.epg && source.epg.toLowerCase().includes(keyword))
+    );
+  }, [liveSources, searchKeyword]);
 
   // 通用 API 请求
   const callLiveSourceApi = async (body: Record<string, any>) => {
@@ -5770,49 +5870,49 @@ const LiveSourceConfig = ({
     } as React.CSSProperties;
 
     return (
-      <tr
+      <div
         ref={setNodeRef}
         style={style}
-        className='hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
+        className='flex items-center px-2 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors select-none'
       >
-        <td
-          className='px-2 py-4 cursor-grab text-gray-400'
+        <div
+          className='w-6 flex-shrink-0 flex justify-center cursor-grab text-gray-400'
           style={{ touchAction: 'none' }}
           {...attributes}
           {...listeners}
         >
           <GripVertical size={16} />
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+        <div className='w-24 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
           {liveSource.name}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100'>
+        </div>
+        <div className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
           {liveSource.key}
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[12rem] truncate'
+        </div>
+        <div
+          className='flex-1 min-w-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={liveSource.url}
         >
           {liveSource.url}
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[8rem] truncate'
+        </div>
+        <div
+          className='w-32 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={liveSource.epg || '-'}
         >
           {liveSource.epg || '-'}
-        </td>
-        <td
-          className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 max-w-[8rem] truncate'
+        </div>
+        <div
+          className='w-28 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={liveSource.ua || '-'}
         >
           {liveSource.ua || '-'}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-center'>
+        </div>
+        <div className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 text-center'>
           {liveSource.channelNumber && liveSource.channelNumber > 0
             ? liveSource.channelNumber
             : '-'}
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap max-w-[1rem]'>
+        </div>
+        <div className='w-20 flex-shrink-0 px-2'>
           <span
             className={`px-2 py-1 text-xs rounded-full ${
               !liveSource.disabled
@@ -5822,8 +5922,8 @@ const LiveSourceConfig = ({
           >
             {!liveSource.disabled ? '启用中' : '已禁用'}
           </span>
-        </td>
-        <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
+        </div>
+        <div className='w-64 flex-shrink-0 px-2 flex justify-end gap-2'>
           <button
             onClick={() => handleToggleEnable(liveSource.key)}
             disabled={isLoading(`toggleLiveSource_${liveSource.key}`)}
@@ -5865,8 +5965,8 @@ const LiveSourceConfig = ({
               </button>
             </>
           )}
-        </td>
-      </tr>
+        </div>
+      </div>
     );
   };
 
@@ -5880,12 +5980,24 @@ const LiveSourceConfig = ({
 
   return (
     <div className='space-y-6'>
-      {/* 添加直播源表单 */}
-      <div className='flex items-center justify-between'>
+      {/* 标题和搜索栏 */}
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-          直播源列表
+          直播源列表 ({liveSources.length})
         </h4>
-        <div className='flex items-center space-x-2'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
+          <input
+            type='text'
+            placeholder='搜索名称、KEY、地址...'
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-64'
+            style={{ outline: 'none', boxShadow: 'none' }}
+            onFocus={(e) => {
+              e.target.style.outline = 'none';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
           <button
             onClick={handleRefreshLiveSources}
             disabled={isRefreshing || isLoading('refreshLiveSources')}
@@ -6100,7 +6212,7 @@ const LiveSourceConfig = ({
         </div>
       )}
 
-      {/* 直播源表格 */}
+      {/* 直播源列表 */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -6108,51 +6220,55 @@ const LiveSourceConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div
-          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
-          data-table='live-source-list'
-        >
-          <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-            <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
-              <tr>
-                <th className='w-8' />
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  名称
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  Key
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  M3U 地址
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  节目单地址
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  自定义 UA
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  频道数
-                </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  状态
-                </th>
-                <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <SortableContext
-              items={liveSources.map((s) => s.key)}
-              strategy={verticalListSortingStrategy}
-            >
-              <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
-                {liveSources.map((liveSource) => (
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'>
+          {/* 表头 */}
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+            <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+              <div className='w-6 flex-shrink-0 flex justify-center'></div>
+              <div className='w-24 flex-shrink-0 px-2 whitespace-nowrap'>
+                名称
+              </div>
+              <div className='w-20 flex-shrink-0 px-2 whitespace-nowrap'>
+                KEY
+              </div>
+              <div className='flex-1 min-w-0 px-2 whitespace-nowrap'>
+                M3U地址
+              </div>
+              <div className='w-32 flex-shrink-0 px-2 whitespace-nowrap'>
+                节目单地址
+              </div>
+              <div className='w-28 flex-shrink-0 px-2 whitespace-nowrap'>
+                自定义UA
+              </div>
+              <div className='w-20 flex-shrink-0 px-2 text-center whitespace-nowrap'>
+                频道数
+              </div>
+              <div className='w-20 flex-shrink-0 px-2 whitespace-nowrap'>
+                状态
+              </div>
+              <div className='w-64 flex-shrink-0 px-2 text-right whitespace-nowrap'>
+                操作
+              </div>
+            </div>
+          </div>
+
+          {/* 内容 */}
+          <SortableContext
+            items={filteredLiveSources.map((s) => s.key)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+              {filteredLiveSources.length > 0 ? (
+                filteredLiveSources.map((liveSource) => (
                   <DraggableRow key={liveSource.key} liveSource={liveSource} />
-                ))}
-              </tbody>
-            </SortableContext>
-          </table>
+                ))
+              ) : (
+                <div className='px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400'>
+                  {searchKeyword.trim() ? '没有找到匹配的直播源' : '暂无直播源'}
+                </div>
+              )}
+            </div>
+          </SortableContext>
         </div>
       </DndContext>
 
@@ -6307,7 +6423,7 @@ function AdminPageClient() {
               管理员设置
             </h1>
             <div className='space-y-4'>
-              {Array.from({ length: 3 }).map((_, index) => (
+              {Array.from({ length: 8 }).map((_, index) => (
                 <div
                   key={index}
                   className='h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'
