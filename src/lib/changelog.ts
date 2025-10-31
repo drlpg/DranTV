@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.14",
+    date: "2025-10-31",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化 Docker 构建流程，确保所有静态资源正确复制",
+    "更新 manifest 生成脚本，使用现有 logo.png"
+    ],
+    fixed: [
+    "修复生产环境视频播放失败问题（chunk 文件 404）",
+    "修复 manifest.json 图标路径错误",
+    "修复 Dockerfile 构建产物复制不完整问题"
+    ]
+  },
+  {
     version: "1.0.13",
     date: "2025-10-31",
     added: [

@@ -45,7 +45,13 @@ RUN echo "=== 开始构建 ===" && \
     echo "目录内容:" && ls -la && \
     echo "package.json scripts:" && cat package.json | grep -A 10 "scripts" && \
     echo "=== 执行构建命令 ===" && \
-    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1)
+    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1) && \
+    echo "=== 构建完成，检查输出 ===" && \
+    ls -la .next/ && \
+    echo "=== 检查 chunks 目录 ===" && \
+    ls -la .next/static/chunks/ 2>/dev/null || echo "chunks 目录不存在" && \
+    echo "=== 检查 standalone 目录 ===" && \
+    ls -la .next/standalone/ 2>/dev/null || echo "standalone 目录不存在"
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
