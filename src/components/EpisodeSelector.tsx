@@ -200,13 +200,17 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     return true;
   });
 
+  // 添加标志防止重复测速
+  const isFetchingRef = useRef(false);
+
   // 当切换到换源tab并且有源数据时，异步获取视频信息 - 移除 attemptedSources 依赖避免循环触发
   useEffect(() => {
     const fetchVideoInfosInBatches = async () => {
       if (
         !optimizationEnabled || // 若关闭测速则直接退出
         activeTab !== 'sources' ||
-        availableSources.length === 0
+        availableSources.length === 0 ||
+        isFetchingRef.current // 防止重复执行
       )
         return;
 
@@ -218,11 +222,17 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
       if (pendingSources.length === 0) return;
 
-      const batchSize = Math.ceil(pendingSources.length / 2);
+      isFetchingRef.current = true;
 
-      for (let start = 0; start < pendingSources.length; start += batchSize) {
-        const batch = pendingSources.slice(start, start + batchSize);
-        await Promise.all(batch.map(getVideoInfo));
+      try {
+        const batchSize = Math.ceil(pendingSources.length / 2);
+
+        for (let start = 0; start < pendingSources.length; start += batchSize) {
+          const batch = pendingSources.slice(start, start + batchSize);
+          await Promise.all(batch.map(getVideoInfo));
+        }
+      } finally {
+        isFetchingRef.current = false;
       }
     };
 
@@ -249,85 +259,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     }
     return categoriesAsc.map(({ start, end }) => `${start}-${end}`);
   }, [categoriesAsc, descending]);
-
-  const categoryContainerRef = useRef<HTMLDivElement>(null);
-  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-
-  // 添加鼠标悬停状态管理
-  const [isCategoryHovered, setIsCategoryHovered] = useState(false);
-
-  // 阻止页面竖向滚动
-  const preventPageScroll = useCallback(
-    (e: WheelEvent) => {
-      if (isCategoryHovered) {
-        e.preventDefault();
-      }
-    },
-    [isCategoryHovered]
-  );
-
-  // 处理滚轮事件，实现横向滚动
-  const handleWheel = useCallback(
-    (e: WheelEvent) => {
-      if (isCategoryHovered && categoryContainerRef.current) {
-        e.preventDefault(); // 阻止默认的竖向滚动
-
-        const container = categoryContainerRef.current;
-        const scrollAmount = e.deltaY * 2; // 调整滚动速度
-
-        // 根据滚轮方向进行横向滚动
-        container.scrollBy({
-          left: scrollAmount,
-          behavior: 'smooth',
-        });
-      }
-    },
-    [isCategoryHovered]
-  );
-
-  // 添加全局wheel事件监听器
-  useEffect(() => {
-    if (isCategoryHovered) {
-      // 鼠标悬停时阻止页面滚动
-      document.addEventListener('wheel', preventPageScroll, { passive: false });
-      document.addEventListener('wheel', handleWheel, { passive: false });
-    } else {
-      // 鼠标离开时恢复页面滚动
-      document.removeEventListener('wheel', preventPageScroll);
-      document.removeEventListener('wheel', handleWheel);
-    }
-
-    return () => {
-      document.removeEventListener('wheel', preventPageScroll);
-      document.removeEventListener('wheel', handleWheel);
-    };
-  }, [isCategoryHovered, preventPageScroll, handleWheel]);
-
-  // 当分页切换时，将激活的分页标签滚动到视口中间
-  useEffect(() => {
-    const btn = buttonRefs.current[displayPage];
-    const container = categoryContainerRef.current;
-    if (btn && container) {
-      // 手动计算滚动位置，只滚动分页标签容器
-      const containerRect = container.getBoundingClientRect();
-      const btnRect = btn.getBoundingClientRect();
-      const scrollLeft = container.scrollLeft;
-
-      // 计算按钮相对于容器的位置
-      const btnLeft = btnRect.left - containerRect.left + scrollLeft;
-      const btnWidth = btnRect.width;
-      const containerWidth = containerRect.width;
-
-      // 计算目标滚动位置，使按钮居中
-      const targetScrollLeft = btnLeft - (containerWidth - btnWidth) / 2;
-
-      // 平滑滚动到目标位置
-      container.scrollTo({
-        left: targetScrollLeft,
-        behavior: 'smooth',
-      });
-    }
-  }, [displayPage, pageCount]);
 
   // 处理换源tab点击，只在点击时才搜索
   const handleSourceTabClick = () => {
@@ -401,39 +332,12 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {/* 选集 Tab 内容 */}
       {activeTab === 'episodes' && (
         <>
-          {/* 分类标签 */}
+          {/* 当前选集范围显示 */}
           <div className='grid grid-cols-2 border-b border-dashed border-gray-300 dark:border-gray-600 -ml-4 flex-shrink-0'>
-            <div
-              className='overflow-x-auto flex justify-center'
-              ref={categoryContainerRef}
-              onMouseEnter={() => setIsCategoryHovered(true)}
-              onMouseLeave={() => setIsCategoryHovered(false)}
-            >
-              <div className='flex gap-2 min-w-max'>
-                {categories.map((label, idx) => {
-                  const isActive = idx === displayPage;
-                  return (
-                    <button
-                      key={label}
-                      ref={(el) => {
-                        buttonRefs.current[idx] = el;
-                      }}
-                      onClick={() => handleCategoryClick(idx)}
-                      className={`w-20 relative py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-center 
-                        ${
-                          isActive
-                            ? 'text-blue-500 dark:text-blue-400'
-                            : 'text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400'
-                        }
-                      `.trim()}
-                    >
-                      {label}
-                      {isActive && (
-                        <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400' />
-                      )}
-                    </button>
-                  );
-                })}
+            <div className='flex justify-center items-center'>
+              <div className='relative py-2 text-sm font-medium text-blue-500 dark:text-blue-400'>
+                {categories[displayPage]}
+                <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400' />
               </div>
             </div>
             {/* 向上/向下按钮 */}
@@ -483,28 +387,60 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 border border-gray-300 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:border-white/20'
                     }`.trim()}
                 >
-                  {(() => {
-                    const title = episodes_titles?.[episodeNumber - 1];
-                    // 格式化为"第01集"、"第02集"等
-                    const episodeNum = episodeNumber
-                      .toString()
-                      .padStart(2, '0');
-
-                    if (!title) {
-                      return `第${episodeNum}集`;
-                    }
-                    // 如果匹配"第X集"、"第X话"、"X集"、"X话"格式，提取中间的数字并格式化
-                    const match = title.match(/(?:第)?(\d+)(?:集|话)/);
-                    if (match) {
-                      const num = match[1].padStart(2, '0');
-                      return `第${num}集`;
-                    }
-                    return title;
-                  })()}
+                  {`第${episodeNumber.toString().padStart(2, '0')}集`}
                 </button>
               );
             })}
           </div>
+
+          {/* 底部翻页按钮 - 仅在有多页时显示 */}
+          {pageCount > 1 && (
+            <div className='flex-shrink-0 border-t border-dashed border-gray-300 dark:border-gray-600 -ml-4 py-3'>
+              <div className='flex items-center gap-4 px-4'>
+                {/* 上一页按钮 */}
+                <button
+                  onClick={() => {
+                    if (descending) {
+                      setCurrentPage((prev) =>
+                        Math.min(prev + 1, pageCount - 1)
+                      );
+                    } else {
+                      setCurrentPage((prev) => Math.max(prev - 1, 0));
+                    }
+                  }}
+                  disabled={
+                    descending
+                      ? displayPage === pageCount - 1
+                      : displayPage === 0
+                  }
+                  className='flex-1 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+                >
+                  上一页
+                </button>
+
+                {/* 下一页按钮 */}
+                <button
+                  onClick={() => {
+                    if (descending) {
+                      setCurrentPage((prev) => Math.max(prev - 1, 0));
+                    } else {
+                      setCurrentPage((prev) =>
+                        Math.min(prev + 1, pageCount - 1)
+                      );
+                    }
+                  }}
+                  disabled={
+                    descending
+                      ? displayPage === 0
+                      : displayPage === pageCount - 1
+                  }
+                  className='flex-1 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-gray-200 text-gray-700 hover:bg-blue-500 hover:text-white dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -557,8 +493,42 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       const bIsCurrent =
                         b.source?.toString() === currentSource?.toString() &&
                         b.id?.toString() === currentId?.toString();
+
+                      // 当前源始终排在最前面
                       if (aIsCurrent && !bIsCurrent) return -1;
                       if (!aIsCurrent && bIsCurrent) return 1;
+
+                      // 其他源按延迟从低到高排序
+                      const aKey = `${a.source}-${a.id}`;
+                      const bKey = `${b.source}-${b.id}`;
+                      const aInfo = videoInfoMap.get(aKey);
+                      const bInfo = videoInfoMap.get(bKey);
+
+                      // 如果都有延迟信息，按延迟排序
+                      if (
+                        aInfo &&
+                        bInfo &&
+                        aInfo.pingTime > 0 &&
+                        bInfo.pingTime > 0
+                      ) {
+                        return aInfo.pingTime - bInfo.pingTime;
+                      }
+
+                      // 有延迟信息的排在没有的前面
+                      if (
+                        aInfo &&
+                        aInfo.pingTime > 0 &&
+                        (!bInfo || bInfo.pingTime <= 0)
+                      )
+                        return -1;
+                      if (
+                        bInfo &&
+                        bInfo.pingTime > 0 &&
+                        (!aInfo || aInfo.pingTime <= 0)
+                      )
+                        return 1;
+
+                      // 都没有延迟信息，保持原顺序
                       return 0;
                     })
                     .map((source, index) => {

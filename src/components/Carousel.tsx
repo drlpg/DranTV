@@ -128,7 +128,9 @@ export default function Carousel({
           <div
             key={item.id}
             className={`absolute inset-0 transition-opacity duration-500 ${
-              index === currentIndex ? 'opacity-100' : 'opacity-0'
+              index === currentIndex
+                ? 'opacity-100 z-10'
+                : 'opacity-0 pointer-events-none'
             } ${item.link ? 'cursor-pointer' : ''}`}
             onClick={() => handleItemClick(item)}
           >
@@ -197,7 +199,7 @@ export default function Carousel({
         <>
           <button
             onClick={goToPrevious}
-            className={`hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center transition-all hover:scale-105 ${
+            className={`hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center transition-all hover:scale-105 z-20 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
           >
@@ -205,7 +207,7 @@ export default function Carousel({
           </button>
           <button
             onClick={goToNext}
-            className={`hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center transition-all hover:scale-105 ${
+            className={`hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/50 hover:bg-blue-500/80 backdrop-blur-md rounded-full shadow-lg items-center justify-center transition-all hover:scale-105 z-20 ${
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
           >
@@ -216,7 +218,7 @@ export default function Carousel({
 
       {/* 指示器 */}
       {items.length > 1 && (
-        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2'>
+        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20'>
           {items.map((_, index) => (
             <button
               key={index}

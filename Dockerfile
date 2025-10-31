@@ -45,13 +45,7 @@ RUN echo "=== 开始构建 ===" && \
     echo "目录内容:" && ls -la && \
     echo "package.json scripts:" && cat package.json | grep -A 10 "scripts" && \
     echo "=== 执行构建命令 ===" && \
-    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1) && \
-    echo "=== 构建完成，检查输出 ===" && \
-    ls -la .next/ && \
-    echo "=== 检查 chunks 目录 ===" && \
-    ls -la .next/static/chunks/ 2>/dev/null || echo "chunks 目录不存在" && \
-    echo "=== 检查 standalone 目录 ===" && \
-    ls -la .next/standalone/ 2>/dev/null || echo "standalone 目录不存在"
+    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1)
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
@@ -75,9 +69,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/websocket.js ./websocket.js
 COPY --from=builder --chown=nextjs:nodejs /app/production.js ./production.js
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-# 从构建器中复制 public 目录
+# 从构建器中复制 public 和 .next/static 目录
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-# standalone 模式需要手动复制 static 文件到正确位置
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # 从构建器中复制 package.json 和 package-lock.json，用于安装额外依赖
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json

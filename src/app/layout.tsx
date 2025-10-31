@@ -31,6 +31,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: siteName,
     description: '影视聚合',
     manifest: '/manifest.json',
+    icons: {
+      icon: '/icon.ico',
+      apple: '/logo.png',
+    },
   };
 }
 
@@ -113,8 +117,6 @@ export default async function RootLayout({
           name='viewport'
           content='width=device-width, initial-scale=1.0, viewport-fit=cover'
         />
-        <link rel='icon' href='/icon.ico' />
-        <link rel='apple-touch-icon' href='/logo.png' />
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script

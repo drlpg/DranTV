@@ -314,7 +314,9 @@ function HomeClient() {
                     title: movie.title,
                     image: movie.backdrop || movie.poster,
                     rate: movie.rate,
-                    link: `/play?source=douban&id=${movie.id}`,
+                    link: `/play?title=${encodeURIComponent(
+                      movie.title.trim()
+                    )}${movie.year ? `&year=${movie.year}` : ''}&stype=movie`,
                   }))}
                 />
               </section>

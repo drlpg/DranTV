@@ -64,8 +64,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       // 本地测试环境
       return `${protocol}//${hostname}:${wsPort}/ws?_=${Date.now()}`;
     } else {
-      // 生产环境，通过nginx反向代理
-      // nginx配置将 /ws-api 映射到 localhost:3001
+      // 生产环境，可能通过nginx反向代理
+      // 如果使用反向代理，通常会将WebSocket映射到特定路径
+      // 例如: /ws -> localhost:3001
       return `${protocol}//${hostname}/ws-api?_=${Date.now()}`;
     }
   };

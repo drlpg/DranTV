@@ -282,15 +282,18 @@ function PlayPageClient() {
   ): Promise<SearchResult> => {
     if (sources.length === 1) return sources[0];
 
+    // 只测试前5个源，避免测速时间过长
+    const sourcesToTest = sources.slice(0, Math.min(5, sources.length));
+
     // 将播放源均分为两批，并发测速各批，避免一次性过多请求
-    const batchSize = Math.ceil(sources.length / 2);
+    const batchSize = Math.ceil(sourcesToTest.length / 2);
     const allResults: Array<{
       source: SearchResult;
       testResult: { quality: string; loadSpeed: string; pingTime: number };
     } | null> = [];
 
-    for (let start = 0; start < sources.length; start += batchSize) {
-      const batchSources = sources.slice(start, start + batchSize);
+    for (let start = 0; start < sourcesToTest.length; start += batchSize) {
+      const batchSources = sourcesToTest.slice(start, start + batchSize);
       const batchResults = await Promise.all(
         batchSources.map(async (source) => {
           try {
@@ -330,7 +333,7 @@ function PlayPageClient() {
       }
     >();
     allResults.forEach((result, index) => {
-      const source = sources[index];
+      const source = sourcesToTest[index];
       const sourceKey = `${source.source}-${source.id}`;
 
       if (result) {
@@ -938,6 +941,9 @@ function PlayPageClient() {
     };
   };
 
+  // 添加初始化标志，防止重复执行
+  const hasInitializedRef = useRef(false);
+
   // 当集数索引变化时自动更新视频地址
   useEffect(() => {
     updateVideoUrl(detail, currentEpisodeIndex);
@@ -945,6 +951,9 @@ function PlayPageClient() {
 
   // 进入页面时直接获取全部源信息
   useEffect(() => {
+    // 防止重复初始化
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
     const fetchSourceDetail = async (
       source: string,
       id: string
@@ -1035,10 +1044,8 @@ function PlayPageClient() {
           setLoadingStage('ready');
           setLoadingMessage('✨ 短剧准备就绪，即将开始播放...');
 
-          // 短暂延迟让用户看到完成状态
-          setTimeout(() => {
-            setLoading(false);
-          }, 1000);
+          // 立即开始播放，无需延迟
+          setLoading(false);
 
           return;
         } catch (error) {
@@ -1146,10 +1153,8 @@ function PlayPageClient() {
       setLoadingStage('ready');
       setLoadingMessage('✨ 准备就绪，即将开始播放...');
 
-      // 短暂延迟让用户看到完成状态
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      // 立即开始播放，无需延迟
+      setLoading(false);
     };
 
     initAll();

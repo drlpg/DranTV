@@ -4,12 +4,12 @@ import Hls from 'hls.js';
 
 function getDoubanImageProxyConfig(): {
   proxyType:
-  | 'direct'
-  | 'server'
-  | 'img3'
-  | 'cmliussss-cdn-tencent'
-  | 'cmliussss-cdn-ali'
-  | 'custom';
+    | 'direct'
+    | 'server'
+    | 'img3'
+    | 'cmliussss-cdn-tencent'
+    | 'cmliussss-cdn-ali'
+    | 'custom';
   proxyUrl: string;
 } {
   const doubanImageProxyType =
@@ -94,12 +94,12 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
       // 固定使用hls.js加载
       const hls = new Hls();
 
-      // 设置超时处理
+      // 设置超时处理 - 缩短超时时间以加快测速
       const timeout = setTimeout(() => {
         hls.destroy();
         video.remove();
         reject(new Error('Timeout loading video metadata'));
-      }, 4000);
+      }, 2500);
 
       video.onerror = () => {
         clearTimeout(timeout);
@@ -131,14 +131,14 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
               width >= 3840
                 ? '4K' // 4K: 3840x2160
                 : width >= 2560
-                  ? '2K' // 2K: 2560x1440
-                  : width >= 1920
-                    ? '1080p' // 1080p: 1920x1080
-                    : width >= 1280
-                      ? '720p' // 720p: 1280x720
-                      : width >= 854
-                        ? '480p'
-                        : 'SD'; // 480p: 854x480
+                ? '2K' // 2K: 2560x1440
+                : width >= 1920
+                ? '1080p' // 1080p: 1920x1080
+                : width >= 1280
+                ? '720p' // 720p: 1280x720
+                : width >= 854
+                ? '480p'
+                : 'SD'; // 480p: 854x480
 
             resolve({
               quality,
@@ -211,7 +211,8 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
     });
   } catch (error) {
     throw new Error(
-      `Error getting video resolution: ${error instanceof Error ? error.message : String(error)
+      `Error getting video resolution: ${
+        error instanceof Error ? error.message : String(error)
       }`
     );
   }
