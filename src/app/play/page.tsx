@@ -483,12 +483,8 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
-    // 如果是短剧且URL还没有经过代理处理，再次处理
-    if (
-      detailData.source === 'shortdrama' &&
-      newUrl &&
-      !newUrl.includes('/api/proxy/video')
-    ) {
+    // 对所有视频源应用代理处理（如果需要）
+    if (newUrl && !newUrl.includes('/api/proxy/video')) {
       newUrl = processShortDramaUrl(newUrl);
     }
 

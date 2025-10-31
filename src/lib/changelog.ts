@@ -11,6 +11,21 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.15",
+    date: "2025-11-01",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化视频代理逻辑，所有需要代理的视频源统一处理",
+    "更新 Nginx 配置，使用正确的域名和端口"
+    ],
+    fixed: [
+    "修复远程服务器视频无法播放的 CORS 错误",
+    "修复 Nginx 配置中的占位符问题"
+    ]
+  },
+  {
     version: "1.0.14",
     date: "2025-11-01",
     added: [
