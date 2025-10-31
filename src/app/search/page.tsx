@@ -19,6 +19,7 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { getCachedDoubanCategories } from '@/lib/cachedDoubanApi';
 import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
@@ -743,9 +744,6 @@ function SearchPageClient() {
     // 获取热门影视标题作为热门搜索关键词
     const fetchHotKeywords = async () => {
       try {
-        const { getCachedDoubanCategories } = await import(
-          '@/lib/cachedDoubanApi'
-        );
         const [moviesResult, tvShowsResult] = await Promise.all([
           getCachedDoubanCategories({
             kind: 'movie',
