@@ -69,9 +69,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/websocket.js ./websocket.js
 COPY --from=builder --chown=nextjs:nodejs /app/production.js ./production.js
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-# 从构建器中复制 public 和 .next/static 目录
+# 从构建器中复制 public 和完整的 .next 目录（包含所有 chunks）
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 # 从构建器中复制 package.json 和 package-lock.json，用于安装额外依赖
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
