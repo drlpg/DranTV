@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.15",
+    date: "2025-10-31",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化 Dockerfile 静态资源复制策略"
+    ],
+    fixed: [
+    "修复 standalone 模式下静态文件路径问题",
+    "修复 chunk 文件 404 错误"
+    ]
+  },
+  {
     version: "1.0.14",
     date: "2025-10-31",
     added: [
