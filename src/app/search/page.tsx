@@ -1321,16 +1321,15 @@ function SearchPageClient() {
                   type='text'
                   value={searchQuery}
                   onChange={handleInputChange}
-                  onFocus={handleInputFocus}
+                  onFocus={(e) => {
+                    handleInputFocus();
+                    e.target.style.outline = 'none';
+                    e.target.style.boxShadow = 'none';
+                  }}
                   placeholder='搜索电影、电视剧、短剧...'
                   autoComplete='off'
                   className='flex-1 h-full px-3 bg-transparent text-sm text-gray-700 placeholder-gray-400 dark:text-gray-300 dark:placeholder-gray-500 border-0'
                   style={{ outline: 'none', boxShadow: 'none' }}
-                  onFocus={(e) => {
-                    handleInputFocus(e);
-                    e.target.style.outline = 'none';
-                    e.target.style.boxShadow = 'none';
-                  }}
                 />
 
                 {/* 清除按钮 */}
