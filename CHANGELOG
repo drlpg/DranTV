@@ -1,3 +1,14 @@
+## [1.0.19] - 2025-11-01
+
+### Fixed
+
+- 修复视频源测速结果保存时的索引映射错误
+- 修复 Bangumi 番剧封面无法加载问题（http 转 https）
+
+### Changed
+
+- 优化视频源测速逻辑，使用 result.source 而非 sources[index]
+
 ## [1.0.18] - 2025-11-01
 
 ### Fixed

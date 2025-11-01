@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.19",
+    date: "2025-11-01",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化视频源测速逻辑，使用 result.source 而非 sources[index]"
+    ],
+    fixed: [
+    "修复视频源测速结果保存时的索引映射错误",
+    "修复 Bangumi 番剧封面无法加载问题（http 转 https）"
+    ]
+  },
+  {
     version: "1.0.18",
     date: "2025-11-01",
     added: [
