@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { API_CONFIG } from '@/lib/config';
 
 // 转换外部API数据格式到内部格式
-function transformExternalData(externalItem: any) {
+function transformExternalData(externalItem: unknown) {
   return {
     id: externalItem.id
       ? externalItem.id.toString()
@@ -24,7 +25,9 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get('page') || '1';
 
     // 使用 /vod/recommend 端点，请求更多数据
-    const apiUrl = `${API_CONFIG.shortdrama.baseUrl}/vod/recommend?page=${page}&size=25`;
+    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    console.log('[短剧最新API] 使用的baseUrl:', baseUrl);
+    const apiUrl = `${baseUrl}/vod/recommend?page=${page}&size=25`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);

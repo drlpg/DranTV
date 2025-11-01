@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiUrl = new URL(`${API_CONFIG.shortdrama.baseUrl}/vod/parse/all`);
+    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    console.log('[短剧解析API] 使用的baseUrl:', baseUrl);
+    const apiUrl = new URL(`${baseUrl}/vod/parse/all`);
     apiUrl.searchParams.append('id', id);
     apiUrl.searchParams.append('proxy', 'true');
 

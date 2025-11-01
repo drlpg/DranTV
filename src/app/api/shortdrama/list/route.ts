@@ -29,7 +29,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiUrl = new URL(`${API_CONFIG.shortdrama.baseUrl}/vod/list`);
+    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    console.log('[短剧列表API] 使用的baseUrl:', baseUrl);
+    const apiUrl = new URL(`${baseUrl}/vod/list`);
     apiUrl.searchParams.append('categoryId', categoryId);
     apiUrl.searchParams.append('page', page);
 
