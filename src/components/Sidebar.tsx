@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -51,7 +52,7 @@ declare global {
   }
 }
 
-const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
+const SidebarComponent = ({ onToggle, activePath = '/' }: SidebarProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
@@ -74,7 +75,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
   }, []);
 
   // 当折叠状态变化时，同步到 <html> data 属性和全局变量
-  useEffect(() => {
+  // 使用 useLayoutEffect 确保在浏览器绘制前完成，避免闪烁
+  useLayoutEffect(() => {
     if (isCollapsed) {
       document.documentElement.dataset.sidebarCollapsed = 'true';
     } else {
@@ -83,21 +85,11 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     window.__sidebarCollapsed = isCollapsed;
   }, [isCollapsed]);
 
-  const [active, setActive] = useState(activePath);
-
-  useEffect(() => {
-    // 优先使用传入的 activePath
-    if (activePath) {
-      setActive(activePath);
-    } else {
-      // 否则使用当前路径
-      const getCurrentFullPath = () => {
-        const queryString = searchParams.toString();
-        return queryString ? `${pathname}?${queryString}` : pathname;
-      };
-      const fullPath = getCurrentFullPath();
-      setActive(fullPath);
-    }
+  // 使用 useMemo 代替 useState + useEffect，减少重渲染
+  const active = useMemo(() => {
+    if (activePath) return activePath;
+    const queryString = searchParams.toString();
+    return queryString ? `${pathname}?${queryString}` : pathname;
   }, [activePath, pathname, searchParams]);
 
   const handleToggle = useCallback(() => {
@@ -116,9 +108,13 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     });
   }, [onToggle]);
 
-  const contextValue = {
-    isCollapsed,
-  };
+  // 使用 useMemo 缓存 context value，避免不必要的 context 更新
+  const contextValue = useMemo(
+    () => ({
+      isCollapsed,
+    }),
+    [isCollapsed]
+  );
 
   // 使用 useMemo 缓存菜单项，避免不必要的重渲染
   const menuItems = useMemo(() => {
@@ -155,7 +151,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
       },
     ];
 
-    if (typeof window !== 'undefined') {
+    // 延迟检查自定义分类，避免阻塞初始渲染
+    if (mounted && typeof window !== 'undefined') {
       const runtimeConfig = (window as any).RUNTIME_CONFIG;
       if (runtimeConfig?.CUSTOM_CATEGORIES?.length > 0) {
         baseItems.push({
@@ -167,7 +164,7 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     }
 
     return baseItems;
-  }, []);
+  }, [mounted]);
 
   return (
     <SidebarContext.Provider value={contextValue}>
@@ -191,12 +188,13 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 href='/'
                 data-active={active === '/'}
                 suppressHydrationWarning
-                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
+                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-colors duration-150 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
                 style={{
                   width: isCollapsed ? '40px' : '100%',
                   height: '40px',
                 }}
                 title={isCollapsed ? '首页' : undefined}
+                prefetch={true}
               >
                 <div
                   className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
@@ -224,12 +222,13 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
                 href='/search'
                 data-active={active === '/search'}
                 suppressHydrationWarning
-                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden mt-2'
+                className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-colors duration-150 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden mt-2'
                 style={{
                   width: isCollapsed ? '40px' : '100%',
                   height: '40px',
                 }}
                 title={isCollapsed ? '搜索' : undefined}
+                prefetch={true}
               >
                 <div
                   className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
@@ -259,32 +258,31 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
             <div className='flex-1 overflow-y-auto p-2'>
               <div className='space-y-2'>
                 {menuItems.map((item) => {
-                  // 检查当前路径是否匹配这个菜单项
-                  const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
-
-                  // 解码URL以进行正确的比较
-                  const decodedActive = decodeURIComponent(active);
-                  const decodedItemHref = decodeURIComponent(item.href);
-
-                  const isActive =
-                    decodedActive === decodedItemHref ||
-                    (decodedActive.startsWith('/douban') &&
-                      decodedActive.includes(`type=${typeMatch}`)) ||
-                    (item.href === '/shortdrama' &&
-                      decodedActive.startsWith('/shortdrama'));
                   const Icon = item.icon;
+
+                  // 优化：简化 active 状态判断，减少字符串操作
+                  let isActive = false;
+                  if (item.href === active) {
+                    isActive = true;
+                  } else if (item.href.includes('type=')) {
+                    const typeMatch = item.href.match(/type=([^&]+)/)?.[1];
+                    isActive = active.includes(`type=${typeMatch}`);
+                  } else if (item.href === '/shortdrama') {
+                    isActive = active.startsWith('/shortdrama');
+                  }
                   return (
                     <Link
                       key={item.label}
                       href={item.href}
                       data-active={isActive}
                       suppressHydrationWarning
-                      className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-all duration-300 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
+                      className='group relative flex items-center rounded-lg text-gray-700 hover:bg-gray-200/80 hover:text-blue-600 data-[active=true]:bg-blue-500/20 data-[active=true]:text-blue-700 font-medium transition-colors duration-150 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 dark:data-[active=true]:bg-blue-500/10 dark:data-[active=true]:text-blue-400 overflow-hidden'
                       style={{
                         width: isCollapsed ? '40px' : '100%',
                         height: '40px',
                       }}
                       title={isCollapsed ? item.label : undefined}
+                      prefetch={true}
                     >
                       <div
                         className='flex items-center justify-center flex-shrink-0 transition-all duration-300'
@@ -352,5 +350,8 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     </SidebarContext.Provider>
   );
 };
+
+// 使用 memo 优化，避免不必要的重渲染
+const Sidebar = memo(SidebarComponent);
 
 export default Sidebar;

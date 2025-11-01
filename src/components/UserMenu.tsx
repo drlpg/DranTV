@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import ReactCrop, { Crop, PercentCrop, PixelCrop } from 'react-image-crop';
 
@@ -174,27 +174,32 @@ export const UserMenu: React.FC = () => {
     };
   }, []);
 
-  // 获取认证信息、存储类型和头像
+  // 获取认证信息、存储类型和头像 - 优化加载顺序
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = getAuthInfoFromBrowserCookie();
       setAuthInfo(auth);
 
-      // 从API获取头像
-      if (auth?.username) {
-        fetchUserAvatar(auth.username);
-      }
-
       const type =
         (window as any).RUNTIME_CONFIG?.STORAGE_TYPE || 'localstorage';
       setStorageType(type);
+
+      // 延迟加载头像，避免阻塞初始渲染
+      if (auth?.username) {
+        setTimeout(() => {
+          fetchUserAvatar(auth.username);
+        }, 100);
+      }
     }
   }, []);
 
   // 设置读取逻辑已移至 useSettings Hook
 
-  // 版本检查 - 延迟执行，避免阻塞初始渲染
+  // 版本检查 - 仅在打开菜单时执行，避免阻塞初始渲染
   useEffect(() => {
+    // 只有在菜单打开时才执行版本检查
+    if (!isOpen || updateStatus !== null) return;
+
     const checkUpdate = async () => {
       try {
         const status = await checkForUpdates();
@@ -206,91 +211,82 @@ export const UserMenu: React.FC = () => {
       }
     };
 
-    // 延迟2秒执行版本检查，避免阻塞初始加载
+    // 延迟执行，避免阻塞菜单打开动画
     const timer = setTimeout(() => {
       checkUpdate();
-    }, 2000);
+    }, 300);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isOpen, updateStatus]);
 
-  // 点击外部区域关闭下拉框
+  // 合并所有点击外部关闭的逻辑到一个 useEffect，提升性能
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isDoubanDropdownOpen) {
-        const target = event.target as Element;
-        if (!target.closest('[data-dropdown="douban-datasource"]')) {
-          setIsDoubanDropdownOpen(false);
-        }
-      }
-    };
-
-    if (isDoubanDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () =>
-        document.removeEventListener('mousedown', handleClickOutside);
+    // 如果没有任何下拉框或菜单打开，不添加监听器
+    if (!isOpen && !isDoubanDropdownOpen && !isDoubanImageProxyDropdownOpen) {
+      return;
     }
-  }, [isDoubanDropdownOpen]);
 
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isDoubanImageProxyDropdownOpen) {
-        const target = event.target as Element;
-        if (!target.closest('[data-dropdown="douban-image-proxy"]')) {
-          setIsDoubanImageProxyDropdownOpen(false);
-        }
-      }
-    };
+      const target = event.target as Element;
 
-    if (isDoubanImageProxyDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () =>
-        document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isDoubanImageProxyDropdownOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-
-      // 检查点击是否在菜单按钮内
-      if (menuRef.current && menuRef.current.contains(target)) {
-        return;
+      // 检查豆瓣数据源下拉框
+      if (
+        isDoubanDropdownOpen &&
+        !target.closest('[data-dropdown="douban-datasource"]')
+      ) {
+        setIsDoubanDropdownOpen(false);
       }
 
-      // 检查点击是否在菜单面板内（通过检查是否点击了菜单面板或其子元素）
-      const menuPanel = document.querySelector('[data-menu-panel="user-menu"]');
-      if (menuPanel && menuPanel.contains(target)) {
-        return;
+      // 检查豆瓣图片代理下拉框
+      if (
+        isDoubanImageProxyDropdownOpen &&
+        !target.closest('[data-dropdown="douban-image-proxy"]')
+      ) {
+        setIsDoubanImageProxyDropdownOpen(false);
       }
 
-      // 如果点击在外部，关闭菜单
+      // 检查用户菜单
       if (isOpen) {
+        // 检查点击是否在菜单按钮内
+        if (menuRef.current && menuRef.current.contains(target as Node)) {
+          return;
+        }
+
+        // 检查点击是否在菜单面板内
+        const menuPanel = document.querySelector(
+          '[data-menu-panel="user-menu"]'
+        );
+        if (menuPanel && menuPanel.contains(target as Node)) {
+          return;
+        }
+
+        // 如果点击在外部，关闭菜单
         setIsOpen(false);
       }
     };
 
-    if (isOpen) {
-      // 使用 setTimeout 确保事件监听器在当前点击事件之后添加
-      setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      }, 0);
-    }
+    // 使用 setTimeout 确保事件监听器在当前点击事件之后添加
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside, {
+        passive: true,
+      });
+    }, 0);
 
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, isDoubanDropdownOpen, isDoubanImageProxyDropdownOpen]);
 
-  const handleMenuClick = () => {
-    setIsOpen(!isOpen);
-  };
+  const handleMenuClick = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
-  const handleCloseMenu = () => {
+  const handleCloseMenu = useCallback(() => {
     setIsOpen(false);
-  };
+  }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await fetch('/api/logout', {
         method: 'POST',
@@ -300,62 +296,82 @@ export const UserMenu: React.FC = () => {
       console.error('注销请求失败:', error);
     }
     window.location.href = '/';
-  };
+  }, []);
 
-  const handleAdminPanel = () => {
+  const handleAdminPanel = useCallback(() => {
     setIsOpen(false);
     // 立即跳转，不等待动画
     router.push('/admin');
-  };
+  }, [router]);
 
-  const handleChangePassword = () => {
+  const handleChangePassword = useCallback(() => {
     setIsOpen(false);
     setIsChangePasswordOpen(true);
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
-  };
+  }, []);
 
-  const handleCloseChangePassword = () => {
+  const handleCloseChangePassword = useCallback(() => {
     setIsChangePasswordOpen(false);
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
-  };
+  }, []);
 
-  // 头像相关处理函数
+  // 头像相关处理函数 - 添加缓存和超时控制
   const fetchUserAvatar = async (username: string) => {
+    // 检查内存缓存
+    const cacheKey = `avatar_${username}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setAvatarUrl(cached);
+      return;
+    }
+
     try {
+      // 添加超时控制，避免长时间等待
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       const response = await fetch(
-        `/api/avatar?user=${encodeURIComponent(username)}`
+        `/api/avatar?user=${encodeURIComponent(username)}`,
+        { signal: controller.signal }
       );
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const data = await response.json();
         if (data.avatar) {
           setAvatarUrl(data.avatar);
+          // 缓存到 sessionStorage
+          sessionStorage.setItem(cacheKey, data.avatar);
         }
       }
     } catch (error) {
-      console.error('获取头像失败:', error);
+      if ((error as Error).name !== 'AbortError') {
+        console.error('获取头像失败:', error);
+      }
     }
   };
 
-  const handleChangeAvatar = () => {
+  const handleChangeAvatar = useCallback(() => {
     setIsOpen(false);
     setIsChangeAvatarOpen(true);
     setSelectedImage('');
     setShowCropper(false);
-  };
+  }, []);
 
-  const handleCloseChangeAvatar = () => {
+  const handleCloseChangeAvatar = useCallback(() => {
     setIsChangeAvatarOpen(false);
     setSelectedImage('');
     setShowCropper(false);
-  };
+  }, []);
 
-  const handleOpenFileSelector = () => {
+  const handleOpenFileSelector = useCallback(() => {
     fileInputRef.current?.click();
-  };
+  }, []);
 
   const handleAvatarSelected = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -567,14 +583,14 @@ export const UserMenu: React.FC = () => {
     }
   };
 
-  const handleSettings = () => {
+  const handleSettings = useCallback(() => {
     setIsOpen(false);
     setIsSettingsOpen(true);
-  };
+  }, []);
 
-  const handleCloseSettings = () => {
+  const handleCloseSettings = useCallback(() => {
     setIsSettingsOpen(false);
-  };
+  }, []);
 
   // 设置相关的处理函数已移至 useSettings Hook
 

@@ -140,20 +140,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           clearInterval(keepAliveIntervalRef.current);
         }
 
-        // 设置保持活动的定期消息
+        // 设置保持活动的定期消息 - 与服务器心跳间隔匹配
         keepAliveIntervalRef.current = setInterval(() => {
           if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(
               JSON.stringify({ type: 'ping', timestamp: Date.now() })
             );
-            // console.log('已发送保持活动消息');
           } else {
             if (keepAliveIntervalRef.current) {
               clearInterval(keepAliveIntervalRef.current);
               keepAliveIntervalRef.current = null;
             }
           }
-        }, 25000); // 每25秒发送一次
+        }, 20000); // 改为20秒，确保在服务器30秒检测前发送
 
         optionsRef.current.onConnect?.();
       };
@@ -230,17 +229,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
         optionsRef.current.onDisconnect?.();
 
-        // 自动重连（除非是正常关闭）
+        // 自动重连（除非是正常关闭或页面离开）
         if (
           event.code !== 1000 &&
+          event.code !== 1001 &&
           reconnectAttemptsRef.current < maxReconnectAttempts
         ) {
           // 增加最小延迟时间，避免太频繁的重连
-          const baseDelay = 2000; // 最小2秒
+          const baseDelay = 3000; // 最小3秒，避免过于频繁
           const delay = Math.max(
             baseDelay,
             Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)
-          ); // 指数退避，最少2秒，最多30秒
+          ); // 指数退避，最少3秒，最多30秒
 
           // 清除之前的重连定时器
           if (reconnectTimeoutRef.current) {
@@ -249,7 +249,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
-
             connect();
           }, delay);
         }
@@ -322,7 +321,38 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       disconnect();
     }
 
+    // 页面可见性变化处理 - 避免后台页面保持连接
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // 页面隐藏时，清理心跳定时器，但保持连接
+        if (keepAliveIntervalRef.current) {
+          clearInterval(keepAliveIntervalRef.current);
+          keepAliveIntervalRef.current = null;
+        }
+      } else {
+        // 页面重新可见时，重新建立心跳
+        if (
+          wsRef.current?.readyState === WebSocket.OPEN &&
+          !keepAliveIntervalRef.current
+        ) {
+          keepAliveIntervalRef.current = setInterval(() => {
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(
+                JSON.stringify({ type: 'ping', timestamp: Date.now() })
+              );
+            }
+          }, 20000);
+        } else if (wsRef.current?.readyState !== WebSocket.OPEN) {
+          // 如果连接已断开，尝试重连
+          connect();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       disconnect();
     };
   }, [options.enabled, connect]); // 监听 enabled 状态变化

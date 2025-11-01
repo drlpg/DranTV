@@ -639,18 +639,18 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                 if (videoInfo) {
                                   if (!videoInfo.hasError) {
                                     return (
-                                      <div className='flex items-end gap-3 text-xs'>
-                                        <div className='text-blue-600 dark:text-blue-400 font-medium text-xs'>
+                                      <div className='flex items-end gap-3 text-xs whitespace-nowrap'>
+                                        <div className='text-blue-600 dark:text-blue-400 font-medium text-xs whitespace-nowrap'>
                                           {videoInfo.loadSpeed}
                                         </div>
-                                        <div className='text-orange-600 dark:text-orange-400 font-medium text-xs'>
+                                        <div className='text-orange-600 dark:text-orange-400 font-medium text-xs whitespace-nowrap'>
                                           {videoInfo.pingTime}ms
                                         </div>
                                       </div>
                                     );
                                   } else {
                                     return (
-                                      <div className='text-red-500/90 dark:text-red-400 font-medium text-xs'>
+                                      <div className='text-red-500/90 dark:text-red-400 font-medium text-xs whitespace-nowrap'>
                                         无测速数据
                                       </div>
                                     ); // 占位div

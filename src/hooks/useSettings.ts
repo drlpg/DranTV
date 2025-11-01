@@ -2,88 +2,72 @@
 import { useEffect, useState } from 'react';
 
 export function useSettings() {
-  const [defaultAggregateSearch, setDefaultAggregateSearch] = useState(true);
-  const [doubanProxyUrl, setDoubanProxyUrl] = useState('');
-  const [enableOptimization, setEnableOptimization] = useState(true);
-  const [fluidSearch, setFluidSearch] = useState(true);
-  const [liveDirectConnect, setLiveDirectConnect] = useState(false);
-  const [doubanDataSource, setDoubanDataSource] = useState(
-    'cmliussss-cdn-tencent'
-  );
-  const [doubanImageProxyType, setDoubanImageProxyType] = useState(
-    'cmliussss-cdn-tencent'
-  );
-  const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
+  // 使用 lazy initialization 优化初始加载性能
+  const [defaultAggregateSearch, setDefaultAggregateSearch] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('defaultAggregateSearch');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
+  const [doubanProxyUrl, setDoubanProxyUrl] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const saved = localStorage.getItem('doubanProxyUrl');
+    const defaultValue = (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
+    return saved !== null ? saved : defaultValue;
+  });
+
+  const [enableOptimization, setEnableOptimization] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('enableOptimization');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const [fluidSearch, setFluidSearch] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('fluidSearch');
+    const defaultValue = (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
+    return saved !== null ? JSON.parse(saved) : defaultValue;
+  });
+
+  const [liveDirectConnect, setLiveDirectConnect] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('liveDirectConnect');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+
+  const [doubanDataSource, setDoubanDataSource] = useState(() => {
+    if (typeof window === 'undefined') return 'cmliussss-cdn-tencent';
+    const saved = localStorage.getItem('doubanDataSource');
+    const defaultValue =
+      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
+      'cmliussss-cdn-tencent';
+    return saved !== null ? saved : defaultValue;
+  });
+
+  const [doubanImageProxyType, setDoubanImageProxyType] = useState(() => {
+    if (typeof window === 'undefined') return 'cmliussss-cdn-tencent';
+    const saved = localStorage.getItem('doubanImageProxyType');
+    const defaultValue =
+      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
+      'cmliussss-cdn-tencent';
+    return saved !== null ? saved : defaultValue;
+  });
+
+  const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const saved = localStorage.getItem('doubanImageProxyUrl');
+    const defaultValue =
+      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
+    return saved !== null ? saved : defaultValue;
+  });
+
+  // 移除 useEffect，因为已经使用 lazy initialization
   // 从 localStorage 读取设置
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const savedAggregateSearch = localStorage.getItem('defaultAggregateSearch');
-    if (savedAggregateSearch !== null) {
-      setDefaultAggregateSearch(JSON.parse(savedAggregateSearch));
-    }
-
-    const savedDoubanDataSource = localStorage.getItem('doubanDataSource');
-    const defaultDoubanProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY_TYPE ||
-      'cmliussss-cdn-tencent';
-    if (savedDoubanDataSource !== null) {
-      setDoubanDataSource(savedDoubanDataSource);
-    } else if (defaultDoubanProxyType) {
-      setDoubanDataSource(defaultDoubanProxyType);
-    }
-
-    const savedDoubanProxyUrl = localStorage.getItem('doubanProxyUrl');
-    const defaultDoubanProxy =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_PROXY || '';
-    if (savedDoubanProxyUrl !== null) {
-      setDoubanProxyUrl(savedDoubanProxyUrl);
-    } else if (defaultDoubanProxy) {
-      setDoubanProxyUrl(defaultDoubanProxy);
-    }
-
-    const savedDoubanImageProxyType = localStorage.getItem(
-      'doubanImageProxyType'
-    );
-    const defaultDoubanImageProxyType =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY_TYPE ||
-      'cmliussss-cdn-tencent';
-    if (savedDoubanImageProxyType !== null) {
-      setDoubanImageProxyType(savedDoubanImageProxyType);
-    } else if (defaultDoubanImageProxyType) {
-      setDoubanImageProxyType(defaultDoubanImageProxyType);
-    }
-
-    const savedDoubanImageProxyUrl = localStorage.getItem(
-      'doubanImageProxyUrl'
-    );
-    const defaultDoubanImageProxyUrl =
-      (window as any).RUNTIME_CONFIG?.DOUBAN_IMAGE_PROXY || '';
-    if (savedDoubanImageProxyUrl !== null) {
-      setDoubanImageProxyUrl(savedDoubanImageProxyUrl);
-    } else if (defaultDoubanImageProxyUrl) {
-      setDoubanImageProxyUrl(defaultDoubanImageProxyUrl);
-    }
-
-    const savedEnableOptimization = localStorage.getItem('enableOptimization');
-    if (savedEnableOptimization !== null) {
-      setEnableOptimization(JSON.parse(savedEnableOptimization));
-    }
-
-    const savedFluidSearch = localStorage.getItem('fluidSearch');
-    const defaultFluidSearch =
-      (window as any).RUNTIME_CONFIG?.FLUID_SEARCH !== false;
-    if (savedFluidSearch !== null) {
-      setFluidSearch(JSON.parse(savedFluidSearch));
-    } else if (defaultFluidSearch !== undefined) {
-      setFluidSearch(defaultFluidSearch);
-    }
-
-    const savedLiveDirectConnect = localStorage.getItem('liveDirectConnect');
-    if (savedLiveDirectConnect !== null) {
-      setLiveDirectConnect(JSON.parse(savedLiveDirectConnect));
-    }
+    // 空的 useEffect，保持代码结构
+    // 所有初始化已移至 lazy initialization
   }, []);
 
   const handleAggregateToggle = (value: boolean) => {

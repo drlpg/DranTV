@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     apiUrl.searchParams.append('page', page);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch(apiUrl.toString(), {
       method: 'GET',
@@ -45,6 +45,10 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `[短剧列表API] 请求失败: ${response.status} - ${errorText}`
+      );
       throw new Error(`API request failed: ${response.status}`);
     }
 
@@ -63,44 +67,17 @@ export async function GET(request: NextRequest) {
       throw new Error('Invalid response format from external API');
     }
   } catch (error) {
-    console.error('Short drama list API error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[短剧列表API] 错误:', errorMessage);
 
-    // 返回默认列表数据作为备用（格式与真实分类热搜API一致）
-    const mockDataRaw = Array.from({ length: 25 }, (_, index) => {
-      const classOptions = [
-        '都市情感',
-        '古装宫廷',
-        '现代言情',
-        '豪门世家',
-        '职场励志',
-      ];
-      const tagOptions = [
-        '甜宠,霸总,现代',
-        '穿越,古装,宫斗',
-        '复仇,虐渣,打脸',
-        '重生,逆袭,强者归来',
-        '家庭,伦理,现实',
-      ];
-
-      return {
-        id: index + 1000,
-        name: '',
-        cover: '',
-        update_time: '',
-        score: 0,
-        vod_class: '',
-        vod_tag: '',
-      };
-    });
-
-    // 转换mock数据格式，确保与真实API返回格式一致
-    const mockData = mockDataRaw.map(transformExternalData);
-
-    return NextResponse.json({
-      total: 100,
-      totalPages: 4,
-      currentPage: parseInt(request.nextUrl.searchParams.get('page') || '1'),
-      list: mockData,
-    });
+    // 返回错误信息
+    return NextResponse.json(
+      {
+        error: '短剧列表加载失败',
+        message: errorMessage,
+        categoryId: request.nextUrl.searchParams.get('categoryId'),
+      },
+      { status: 500 }
+    );
   }
 }

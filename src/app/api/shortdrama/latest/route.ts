@@ -23,11 +23,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = searchParams.get('page') || '1';
 
-    // 使用 /vod/recommend 端点
-    const apiUrl = `${API_CONFIG.shortdrama.baseUrl}/vod/recommend?page=${page}`;
+    // 使用 /vod/recommend 端点，请求更多数据
+    const apiUrl = `${API_CONFIG.shortdrama.baseUrl}/vod/recommend?page=${page}&size=25`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -38,7 +38,12 @@ export async function GET(request: NextRequest) {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[短剧API] 请求失败: ${response.status} - ${errorText}`);
+      return NextResponse.json(
+        { error: `API请求失败: ${response.status}`, details: errorText },
+        { status: response.status }
+      );
     }
 
     const externalData = await response.json();
@@ -53,26 +58,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(transformedData);
     }
 
-    throw new Error('Invalid response format from external API');
+    console.error('[短剧最新API] 响应格式无效');
+    return NextResponse.json(
+      { error: '短剧API响应格式无效', data: externalData },
+      { status: 500 }
+    );
   } catch (error) {
-    console.error('Short drama latest API error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[短剧最新API] 错误:', errorMessage);
 
-    // 返回空数据作为备用
-    const mockDataRaw = Array.from({ length: 25 }, (_, index) => {
-      return {
-        id: `mock_id_${index + 100}`,
-        vod_id: index + 100,
-        vod_name: '',
-        vod_pic: '',
-        vod_time: '',
-        vod_score: 0,
-        vod_total: '',
-        vod_class: '',
-        vod_tag: '',
-      };
-    });
-
-    const mockData = mockDataRaw.map(transformExternalData);
-    return NextResponse.json(mockData);
+    return NextResponse.json(
+      {
+        error: '短剧数据加载失败',
+        message: errorMessage,
+      },
+      { status: 500 }
+    );
   }
 }

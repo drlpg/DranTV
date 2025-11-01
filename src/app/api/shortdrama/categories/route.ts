@@ -3,11 +3,13 @@ import { API_CONFIG } from '@/lib/config';
 
 export async function GET(_request: NextRequest) {
   try {
-    // 先尝试调用外部API
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+    const apiUrl = `${API_CONFIG.shortdrama.baseUrl}/vod/categories`;
+    console.log(`[短剧分类API] 请求地址: ${apiUrl}`);
 
-    const response = await fetch(`${API_CONFIG.shortdrama.baseUrl}/vod/categories`, {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 增加到15秒
+
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: API_CONFIG.shortdrama.headers,
       signal: controller.signal,
@@ -15,14 +17,22 @@ export async function GET(_request: NextRequest) {
 
     clearTimeout(timeoutId);
 
+    console.log(`[短剧分类API] 响应状态: ${response.status}`);
+
     if (response.ok) {
       const data = await response.json();
+      console.log(`[短剧分类API] 成功返回数据`);
       return NextResponse.json(data);
     } else {
+      const errorText = await response.text();
+      console.error(
+        `[短剧分类API] 请求失败: ${response.status} - ${errorText}`
+      );
       throw new Error(`External API failed: ${response.status}`);
     }
   } catch (error) {
-    console.error('Short drama categories API error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[短剧分类API] 错误:', errorMessage);
 
     // 如果外部API失败，返回默认分类数据作为备用
     return NextResponse.json({

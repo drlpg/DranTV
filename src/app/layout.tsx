@@ -13,10 +13,18 @@ import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { ToastProvider } from '../components/Toast';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap', // 优化字体加载
+  preload: true,
+});
+
+// 开发环境优化配置
+const isDev = process.env.NODE_ENV !== 'production';
+
 export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-cache';
-export const revalidate = 3600; // 1小时
+export const fetchCache = isDev ? 'default-no-store' : 'force-cache'; // 开发环境禁用缓存
+export const revalidate = isDev ? 0 : 3600; // 开发环境不缓存，生产环境1小时
 
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {

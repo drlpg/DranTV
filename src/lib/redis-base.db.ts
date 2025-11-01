@@ -3,7 +3,16 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { Favorite, IStorage, PlayRecord, SkipConfig, ChatMessage, Conversation, Friend, FriendRequest } from './types';
+import {
+  Favorite,
+  IStorage,
+  PlayRecord,
+  SkipConfig,
+  ChatMessage,
+  Conversation,
+  Friend,
+  FriendRequest,
+} from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -24,7 +33,13 @@ export interface RedisConnectionConfig {
 }
 
 // 添加Redis操作重试包装器
-function createRetryWrapper(clientName: string, getClient: () => RedisClientType) {
+function createRetryWrapper(
+  clientName: string,
+  getClient: () => RedisClientType
+) {
+  // 判断是否为开发环境
+  const isDev = process.env.NODE_ENV !== 'production';
+
   return async function withRetry<T>(
     operation: () => Promise<T>,
     maxRetries = 3
@@ -43,12 +58,15 @@ function createRetryWrapper(clientName: string, getClient: () => RedisClientType
 
         if (isConnectionError && !isLastAttempt) {
           console.log(
-            `${clientName} operation failed, retrying... (${i + 1}/${maxRetries})`
+            `${clientName} operation failed, retrying... (${
+              i + 1
+            }/${maxRetries})`
           );
           console.error('Error:', err.message);
 
-          // 等待一段时间后重试
-          await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+          // 开发环境使用更短的重试间隔
+          const retryDelay = isDev ? 300 * (i + 1) : 1000 * (i + 1);
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
           // 尝试重新连接
           try {
@@ -72,7 +90,10 @@ function createRetryWrapper(clientName: string, getClient: () => RedisClientType
 }
 
 // 创建客户端的工厂函数
-export function createRedisClient(config: RedisConnectionConfig, globalSymbol: symbol): RedisClientType {
+export function createRedisClient(
+  config: RedisConnectionConfig,
+  globalSymbol: symbol
+): RedisClientType {
   let client: RedisClientType | undefined = (global as any)[globalSymbol];
 
   if (!client) {
@@ -80,25 +101,38 @@ export function createRedisClient(config: RedisConnectionConfig, globalSymbol: s
       throw new Error(`${config.clientName}_URL env variable not set`);
     }
 
+    // 判断是否为开发环境
+    const isDev = process.env.NODE_ENV !== 'production';
+
     // 创建客户端配置
     const clientConfig: any = {
       url: config.url,
       socket: {
-        // 重连策略：指数退避，最大30秒
+        // 重连策略：开发环境使用更短的重试间隔和次数
         reconnectStrategy: (retries: number) => {
-          console.log(`${config.clientName} reconnection attempt ${retries + 1}`);
-          if (retries > 10) {
-            console.error(`${config.clientName} max reconnection attempts exceeded`);
+          console.log(
+            `${config.clientName} reconnection attempt ${retries + 1}`
+          );
+          const maxRetries = isDev ? 3 : 10;
+          if (retries > maxRetries) {
+            console.error(
+              `${config.clientName} max reconnection attempts exceeded`
+            );
             return false; // 停止重连
           }
-          return Math.min(1000 * Math.pow(2, retries), 30000); // 指数退避，最大30秒
+          // 开发环境：最大5秒，生产环境：最大30秒
+          const maxDelay = isDev ? 5000 : 30000;
+          const baseDelay = isDev ? 500 : 1000;
+          return Math.min(baseDelay * Math.pow(2, retries), maxDelay);
         },
-        connectTimeout: 10000, // 10秒连接超时
+        connectTimeout: isDev ? 3000 : 10000, // 开发环境3秒，生产环境10秒
         // 设置no delay，减少延迟
         noDelay: true,
+        // 保持连接活跃
+        keepAlive: isDev ? 5000 : 30000,
       },
       // 添加其他配置
-      pingInterval: 30000, // 30秒ping一次，保持连接活跃
+      pingInterval: isDev ? 10000 : 30000, // 开发环境10秒，生产环境30秒
     };
 
     client = createClient(clientConfig);
@@ -143,7 +177,10 @@ export function createRedisClient(config: RedisConnectionConfig, globalSymbol: s
 // 抽象基类，包含所有通用的Redis操作逻辑
 export abstract class BaseRedisStorage implements IStorage {
   protected client: RedisClientType;
-  protected withRetry: <T>(operation: () => Promise<T>, maxRetries?: number) => Promise<T>;
+  protected withRetry: <T>(
+    operation: () => Promise<T>,
+    maxRetries?: number
+  ) => Promise<T>;
 
   constructor(config: RedisConnectionConfig, globalSymbol: symbol) {
     this.client = createRedisClient(config, globalSymbol);
@@ -179,7 +216,9 @@ export abstract class BaseRedisStorage implements IStorage {
     userName: string
   ): Promise<Record<string, PlayRecord>> {
     const pattern = `u:${userName}:pr:*`;
-    const keys: string[] = await this.withRetry(() => this.client.keys(pattern));
+    const keys: string[] = await this.withRetry(() =>
+      this.client.keys(pattern)
+    );
     if (keys.length === 0) return {};
     const values = await this.withRetry(() => this.client.mGet(keys));
     const result: Record<string, PlayRecord> = {};
@@ -223,7 +262,9 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async getAllFavorites(userName: string): Promise<Record<string, Favorite>> {
     const pattern = `u:${userName}:fav:*`;
-    const keys: string[] = await this.withRetry(() => this.client.keys(pattern));
+    const keys: string[] = await this.withRetry(() =>
+      this.client.keys(pattern)
+    );
     if (keys.length === 0) return {};
     const values = await this.withRetry(() => this.client.mGet(keys));
     const result: Record<string, Favorite> = {};
@@ -249,7 +290,9 @@ export abstract class BaseRedisStorage implements IStorage {
 
   async registerUser(userName: string, password: string): Promise<void> {
     // 简单存储明文密码，生产环境应加密
-    await this.withRetry(() => this.client.set(this.userPwdKey(userName), password));
+    await this.withRetry(() =>
+      this.client.set(this.userPwdKey(userName), password)
+    );
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
@@ -334,13 +377,17 @@ export abstract class BaseRedisStorage implements IStorage {
     // 插入到最前
     await this.withRetry(() => this.client.lPush(key, ensureString(keyword)));
     // 限制最大长度
-    await this.withRetry(() => this.client.lTrim(key, 0, SEARCH_HISTORY_LIMIT - 1));
+    await this.withRetry(() =>
+      this.client.lTrim(key, 0, SEARCH_HISTORY_LIMIT - 1)
+    );
   }
 
   async deleteSearchHistory(userName: string, keyword?: string): Promise<void> {
     const key = this.shKey(userName);
     if (keyword) {
-      await this.withRetry(() => this.client.lRem(key, 0, ensureString(keyword)));
+      await this.withRetry(() =>
+        this.client.lRem(key, 0, ensureString(keyword))
+      );
     } else {
       await this.withRetry(() => this.client.del(key));
     }
@@ -363,7 +410,9 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async getAdminConfig(): Promise<AdminConfig | null> {
-    const val = await this.withRetry(() => this.client.get(this.adminConfigKey()));
+    const val = await this.withRetry(() =>
+      this.client.get(this.adminConfigKey())
+    );
     return val ? (JSON.parse(val) as AdminConfig) : null;
   }
 
@@ -449,7 +498,9 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async getUserAvatar(userName: string): Promise<string | null> {
-    const val = await this.withRetry(() => this.client.get(this.avatarKey(userName)));
+    const val = await this.withRetry(() =>
+      this.client.get(this.avatarKey(userName))
+    );
     return val ? ensureString(val) : null;
   }
 
@@ -460,9 +511,7 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async deleteUserAvatar(userName: string): Promise<void> {
-    await this.withRetry(() =>
-      this.client.del(this.avatarKey(userName))
-    );
+    await this.withRetry(() => this.client.del(this.avatarKey(userName)));
   }
 
   // ---------- 弹幕管理 ----------
@@ -471,21 +520,27 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async getDanmu(videoId: string): Promise<any[]> {
-    const val = await this.withRetry(() => this.client.lRange(this.danmuKey(videoId), 0, -1));
-    return val ? val.map(item => JSON.parse(ensureString(item))) : [];
+    const val = await this.withRetry(() =>
+      this.client.lRange(this.danmuKey(videoId), 0, -1)
+    );
+    return val ? val.map((item) => JSON.parse(ensureString(item))) : [];
   }
 
-  async saveDanmu(videoId: string, userName: string, danmu: {
-    text: string;
-    color: string;
-    mode: number;
-    time: number;
-    timestamp: number;
-  }): Promise<void> {
+  async saveDanmu(
+    videoId: string,
+    userName: string,
+    danmu: {
+      text: string;
+      color: string;
+      mode: number;
+      time: number;
+      timestamp: number;
+    }
+  ): Promise<void> {
     const danmuData = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       userName,
-      ...danmu
+      ...danmu,
     };
     await this.withRetry(() =>
       this.client.rPush(this.danmuKey(videoId), JSON.stringify(danmuData))
@@ -496,14 +551,14 @@ export abstract class BaseRedisStorage implements IStorage {
     // 获取所有弹幕
     const danmuList = await this.getDanmu(videoId);
     // 过滤掉要删除的弹幕
-    const filteredList = danmuList.filter(item => item.id !== danmuId);
+    const filteredList = danmuList.filter((item) => item.id !== danmuId);
 
     // 清除原有弹幕列表
     await this.withRetry(() => this.client.del(this.danmuKey(videoId)));
 
     // 重新插入过滤后的弹幕
     if (filteredList.length > 0) {
-      const danmuStrings = filteredList.map(item => JSON.stringify(item));
+      const danmuStrings = filteredList.map((item) => JSON.stringify(item));
       await this.withRetry(() =>
         this.client.rPush(this.danmuKey(videoId), danmuStrings)
       );
@@ -520,7 +575,9 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async getUserMachineCode(userName: string): Promise<string | null> {
-    const val = await this.withRetry(() => this.client.get(this.machineCodeKey(userName)));
+    const val = await this.withRetry(() =>
+      this.client.get(this.machineCodeKey(userName))
+    );
     if (!val) return null;
 
     try {
@@ -531,11 +588,15 @@ export abstract class BaseRedisStorage implements IStorage {
     }
   }
 
-  async setUserMachineCode(userName: string, machineCode: string, deviceInfo?: string): Promise<void> {
+  async setUserMachineCode(
+    userName: string,
+    machineCode: string,
+    deviceInfo?: string
+  ): Promise<void> {
     const data = {
       machineCode,
       deviceInfo: deviceInfo || '',
-      bindTime: Date.now()
+      bindTime: Date.now(),
     };
 
     // 保存用户的机器码
@@ -554,9 +615,7 @@ export abstract class BaseRedisStorage implements IStorage {
     const userMachineCode = await this.getUserMachineCode(userName);
 
     // 删除用户的机器码记录
-    await this.withRetry(() =>
-      this.client.del(this.machineCodeKey(userName))
-    );
+    await this.withRetry(() => this.client.del(this.machineCodeKey(userName)));
 
     // 从机器码列表中删除绑定关系
     if (userMachineCode) {
@@ -566,8 +625,16 @@ export abstract class BaseRedisStorage implements IStorage {
     }
   }
 
-  async getMachineCodeUsers(): Promise<Record<string, { machineCode: string; deviceInfo?: string; bindTime: number }>> {
-    const result: Record<string, { machineCode: string; deviceInfo?: string; bindTime: number }> = {};
+  async getMachineCodeUsers(): Promise<
+    Record<
+      string,
+      { machineCode: string; deviceInfo?: string; bindTime: number }
+    >
+  > {
+    const result: Record<
+      string,
+      { machineCode: string; deviceInfo?: string; bindTime: number }
+    > = {};
 
     try {
       // 获取所有用户的机器码信息
@@ -595,7 +662,9 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async isMachineCodeBound(machineCode: string): Promise<string | null> {
-    const val = await this.withRetry(() => this.client.hGet(this.machineCodeListKey(), machineCode));
+    const val = await this.withRetry(() =>
+      this.client.hGet(this.machineCodeListKey(), machineCode)
+    );
     return val ? ensureString(val) : null;
   }
 
@@ -644,20 +713,31 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() =>
       this.client.zAdd(this.conversationMessagesKey(message.conversation_id), {
         score: message.timestamp,
-        value: message.id
+        value: message.id,
       })
     );
   }
 
-  async getMessages(conversationId: string, limit = 50, offset = 0): Promise<ChatMessage[]> {
+  async getMessages(
+    conversationId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<ChatMessage[]> {
     // 从有序集合中获取消息ID列表（按时间倒序）
     const messageIds = await this.withRetry(() =>
-      this.client.zRange(this.conversationMessagesKey(conversationId), offset, offset + limit - 1, { REV: true })
+      this.client.zRange(
+        this.conversationMessagesKey(conversationId),
+        offset,
+        offset + limit - 1,
+        { REV: true }
+      )
     );
 
     const messages: ChatMessage[] = [];
     for (const messageId of messageIds) {
-      const messageData = await this.withRetry(() => this.client.get(this.messageKey(messageId)));
+      const messageData = await this.withRetry(() =>
+        this.client.get(this.messageKey(messageId))
+      );
       if (messageData) {
         try {
           messages.push(JSON.parse(ensureString(messageData)));
@@ -671,7 +751,9 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async markMessageAsRead(messageId: string): Promise<void> {
-    const messageData = await this.withRetry(() => this.client.get(this.messageKey(messageId)));
+    const messageData = await this.withRetry(() =>
+      this.client.get(this.messageKey(messageId))
+    );
     if (messageData) {
       try {
         const message = JSON.parse(ensureString(messageData));
@@ -721,23 +803,35 @@ export abstract class BaseRedisStorage implements IStorage {
   async createConversation(conversation: Conversation): Promise<void> {
     // 保存对话详情
     await this.withRetry(() =>
-      this.client.set(this.conversationKey(conversation.id), JSON.stringify(conversation))
+      this.client.set(
+        this.conversationKey(conversation.id),
+        JSON.stringify(conversation)
+      )
     );
 
     // 将对话ID添加到每个参与者的对话列表中
     for (const participant of conversation.participants) {
       await this.withRetry(() =>
-        this.client.sAdd(this.userConversationsKey(participant), conversation.id)
+        this.client.sAdd(
+          this.userConversationsKey(participant),
+          conversation.id
+        )
       );
     }
   }
 
-  async updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<void> {
+  async updateConversation(
+    conversationId: string,
+    updates: Partial<Conversation>
+  ): Promise<void> {
     const conversation = await this.getConversation(conversationId);
     if (conversation) {
       Object.assign(conversation, updates);
       await this.withRetry(() =>
-        this.client.set(this.conversationKey(conversationId), JSON.stringify(conversation))
+        this.client.set(
+          this.conversationKey(conversationId),
+          JSON.stringify(conversation)
+        )
       );
     }
   }
@@ -748,15 +842,22 @@ export abstract class BaseRedisStorage implements IStorage {
       // 从每个参与者的对话列表中移除
       for (const participant of conversation.participants) {
         await this.withRetry(() =>
-          this.client.sRem(this.userConversationsKey(participant), conversationId)
+          this.client.sRem(
+            this.userConversationsKey(participant),
+            conversationId
+          )
         );
       }
 
       // 删除对话详情
-      await this.withRetry(() => this.client.del(this.conversationKey(conversationId)));
+      await this.withRetry(() =>
+        this.client.del(this.conversationKey(conversationId))
+      );
 
       // 删除对话的消息列表
-      await this.withRetry(() => this.client.del(this.conversationMessagesKey(conversationId)));
+      await this.withRetry(() =>
+        this.client.del(this.conversationMessagesKey(conversationId))
+      );
     }
   }
 
@@ -768,7 +869,9 @@ export abstract class BaseRedisStorage implements IStorage {
 
     const friends: Friend[] = [];
     for (const friendId of friendIds) {
-      const friendData = await this.withRetry(() => this.client.get(this.friendKey(friendId)));
+      const friendData = await this.withRetry(() =>
+        this.client.get(this.friendKey(friendId))
+      );
       if (friendData) {
         try {
           friends.push(JSON.parse(ensureString(friendData)));
@@ -803,8 +906,13 @@ export abstract class BaseRedisStorage implements IStorage {
     await this.withRetry(() => this.client.del(this.friendKey(friendId)));
   }
 
-  async updateFriendStatus(friendId: string, status: Friend['status']): Promise<void> {
-    const friendData = await this.withRetry(() => this.client.get(this.friendKey(friendId)));
+  async updateFriendStatus(
+    friendId: string,
+    status: Friend['status']
+  ): Promise<void> {
+    const friendData = await this.withRetry(() =>
+      this.client.get(this.friendKey(friendId))
+    );
     if (friendData) {
       try {
         const friend = JSON.parse(ensureString(friendData));
@@ -826,7 +934,9 @@ export abstract class BaseRedisStorage implements IStorage {
 
     const requests: FriendRequest[] = [];
     for (const requestId of requestIds) {
-      const requestData = await this.withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+      const requestData = await this.withRetry(() =>
+        this.client.get(this.friendRequestKey(requestId))
+      );
       if (requestData) {
         try {
           const request = JSON.parse(ensureString(requestData));
@@ -846,27 +956,41 @@ export abstract class BaseRedisStorage implements IStorage {
   async createFriendRequest(request: FriendRequest): Promise<void> {
     // 保存申请详情
     await this.withRetry(() =>
-      this.client.set(this.friendRequestKey(request.id), JSON.stringify(request))
+      this.client.set(
+        this.friendRequestKey(request.id),
+        JSON.stringify(request)
+      )
     );
 
     // 将申请ID添加到双方的申请列表中
     await this.withRetry(() =>
-      this.client.sAdd(this.userFriendRequestsKey(request.from_user), request.id)
+      this.client.sAdd(
+        this.userFriendRequestsKey(request.from_user),
+        request.id
+      )
     );
     await this.withRetry(() =>
       this.client.sAdd(this.userFriendRequestsKey(request.to_user), request.id)
     );
   }
 
-  async updateFriendRequest(requestId: string, status: FriendRequest['status']): Promise<void> {
-    const requestData = await this.withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+  async updateFriendRequest(
+    requestId: string,
+    status: FriendRequest['status']
+  ): Promise<void> {
+    const requestData = await this.withRetry(() =>
+      this.client.get(this.friendRequestKey(requestId))
+    );
     if (requestData) {
       try {
         const request = JSON.parse(ensureString(requestData));
         request.status = status;
         request.updated_at = Date.now();
         await this.withRetry(() =>
-          this.client.set(this.friendRequestKey(requestId), JSON.stringify(request))
+          this.client.set(
+            this.friendRequestKey(requestId),
+            JSON.stringify(request)
+          )
         );
       } catch (error) {
         console.error('Error updating friend request:', error);
@@ -875,17 +999,25 @@ export abstract class BaseRedisStorage implements IStorage {
   }
 
   async deleteFriendRequest(requestId: string): Promise<void> {
-    const requestData = await this.withRetry(() => this.client.get(this.friendRequestKey(requestId)));
+    const requestData = await this.withRetry(() =>
+      this.client.get(this.friendRequestKey(requestId))
+    );
     if (requestData) {
       try {
         const request = JSON.parse(ensureString(requestData));
 
         // 从双方的申请列表中移除
         await this.withRetry(() =>
-          this.client.sRem(this.userFriendRequestsKey(request.from_user), requestId)
+          this.client.sRem(
+            this.userFriendRequestsKey(request.from_user),
+            requestId
+          )
         );
         await this.withRetry(() =>
-          this.client.sRem(this.userFriendRequestsKey(request.to_user), requestId)
+          this.client.sRem(
+            this.userFriendRequestsKey(request.to_user),
+            requestId
+          )
         );
       } catch (error) {
         console.error('Error deleting friend request:', error);
@@ -893,18 +1025,20 @@ export abstract class BaseRedisStorage implements IStorage {
     }
 
     // 删除申请详情
-    await this.withRetry(() => this.client.del(this.friendRequestKey(requestId)));
+    await this.withRetry(() =>
+      this.client.del(this.friendRequestKey(requestId))
+    );
   }
 
   // 用户搜索
   async searchUsers(query: string): Promise<Friend[]> {
     const allUsers = await this.getAllUsers();
-    const matchedUsers = allUsers.filter(username =>
+    const matchedUsers = allUsers.filter((username) =>
       username.toLowerCase().includes(query.toLowerCase())
     );
 
     // 转换为Friend格式返回
-    return matchedUsers.map(username => ({
+    return matchedUsers.map((username) => ({
       id: username,
       username,
       status: 'offline' as const,

@@ -114,7 +114,11 @@ function ShortDramaPageClient() {
       }
     } catch (err) {
       console.error('加载短剧数据失败:', err);
-      setLoading(false); // 发生错误时总是停止loading状态
+      const errorMessage = err instanceof Error ? err.message : '未知错误';
+      console.error('错误详情:', errorMessage);
+      setShortDramaData([]);
+      setLoading(false);
+      setHasMore(false);
     }
   }, [selectedCategory, isSnapshotEqual]);
 

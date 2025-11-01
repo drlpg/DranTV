@@ -407,10 +407,10 @@ export function ChatModal({
     [selectedConversation, preloadUserAvatars]
   );
 
-  // WebSocket 连接 - 始终保持连接以接收实时消息
+  // WebSocket 连接 - 仅在模态框打开时连接，优化性能
   const { isConnected, sendMessage: sendWebSocketMessage } = useWebSocket({
     onMessage: handleWebSocketMessage,
-    enabled: true, // 始终启用WebSocket以接收实时消息
+    enabled: isOpen, // 仅在聊天模态框打开时启用WebSocket
   });
 
   useEffect(() => {
