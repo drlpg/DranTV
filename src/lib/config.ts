@@ -53,9 +53,10 @@ export const API_CONFIG = {
   },
   shortdrama: {
     // 支持通过环境变量配置代理URL（如Cloudflare Workers）
-    // 如果设置了 SHORTDRAMA_API_URL，则使用该地址
-    // 否则使用默认的API地址
-    baseUrl: process.env.SHORTDRAMA_API_URL || 'https://api.r2afosne.dpdns.org',
+    // 使用 getter 在运行时读取环境变量，避免构建时固化
+    get baseUrl() {
+      return process.env.SHORTDRAMA_API_URL || 'https://api.r2afosne.dpdns.org';
+    },
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
