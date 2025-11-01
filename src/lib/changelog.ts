@@ -11,6 +11,28 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.16",
+    date: "2025-11-01",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化 HLS 自定义加载器，始终使用代理解决 CORS 问题",
+    "优化视频代理 API，完善 CORS 响应头设置",
+    "更新 Next.js 配置，为所有 API 路由添加 CORS 头",
+    "更新 Nginx 配置，添加 CORS 头和 OPTIONS 预检请求处理",
+    "**部署后需要清除浏览器缓存和 Service Worker 缓存**",
+    "建议使用 Ctrl+Shift+R (Windows) 或 Cmd+Shift+R (Mac) 强制刷新",
+    "或在浏览器开发者工具中清除站点数据"
+    ],
+    fixed: [
+    "修复 Docker 容器中视频无法播放的 CORS 问题",
+    "所有外部视频请求（m3u8 清单和 ts 分片）强制通过服务器代理",
+    "处理 m3u8 文件中的相对路径，自动转换为代理 URL",
+    "添加 Referer 和 Origin 头以绕过防盗链检测"
+    ]
+  },
+  {
     version: "1.0.15",
     date: "2025-11-01",
     added: [
@@ -18,12 +40,14 @@ export const changelog: ChangelogEntry[] = [
     ],
     changed: [
     "简化视频代理逻辑，所有外部视频源统一通过代理处理",
-    "更新 Nginx 配置，使用正确的域名和端口"
+    "更新 Nginx 配置，使用正确的域名和端口",
+    "更新 manifest.json 图标路径，使用现有的 logo.png"
     ],
     fixed: [
     "修复远程服务器视频无法播放的 CORS 错误",
     "修复 Nginx 配置中的占位符问题",
-    "修复视频代理逻辑判断错误，导致视频仍直接访问源站"
+    "修复视频代理逻辑判断错误，导致视频仍直接访问源站",
+    "修复 PWA manifest 图标路径 404 错误"
     ]
   },
   {
