@@ -186,8 +186,9 @@ export const UserMenu: React.FC = () => {
 
       // 延迟加载头像，避免阻塞初始渲染
       if (auth?.username) {
+        const username = auth.username;
         setTimeout(() => {
-          fetchUserAvatar(auth.username);
+          fetchUserAvatar(username);
         }, 100);
       }
     }
