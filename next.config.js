@@ -74,6 +74,27 @@ const nextConfig = {
   // 优化字体加载
   optimizeFonts: true,
 
+  // 添加响应头以支持视频播放和CORS
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, HEAD, OPTIONS' },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Range, Origin, Accept',
+          },
+          {
+            key: 'Access-Control-Expose-Headers',
+            value: 'Content-Length, Content-Range, Accept-Ranges, Content-Type',
+          },
+        ],
+      },
+    ];
+  },
+
   webpack(config, { dev, isServer }) {
     // 启用持久化缓存以加快构建速度
     if (!isServer) {

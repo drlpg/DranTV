@@ -4,13 +4,22 @@ import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-function buildCorsHeaders(contentType?: string, extra?: Record<string, string>) {
+function buildCorsHeaders(
+  contentType?: string,
+  extra?: Record<string, string>
+) {
   const headers = new Headers();
   if (contentType) headers.set('Content-Type', contentType);
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  headers.set('Access-Control-Allow-Headers', 'Content-Type, Range, Origin, Accept');
-  headers.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges, Content-Type');
+  headers.set(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Range, Origin, Accept'
+  );
+  headers.set(
+    'Access-Control-Expose-Headers',
+    'Content-Length, Content-Range, Accept-Ranges, Content-Type'
+  );
   headers.set('Cache-Control', 'no-cache');
   if (extra) {
     Object.entries(extra).forEach(([k, v]) => headers.set(k, v));
@@ -18,7 +27,11 @@ function buildCorsHeaders(contentType?: string, extra?: Record<string, string>) 
   return headers;
 }
 
-async function forwardRequest(url: string, method: 'GET' | 'HEAD', reqHeaders: Headers) {
+async function forwardRequest(
+  url: string,
+  method: 'GET' | 'HEAD',
+  reqHeaders: Headers
+) {
   const decodedUrl = decodeURIComponent(url);
 
   // 透传范围请求和必要请求头
@@ -32,6 +45,15 @@ async function forwardRequest(url: string, method: 'GET' | 'HEAD', reqHeaders: H
   fetchHeaders['User-Agent'] =
     reqHeaders.get('User-Agent') ||
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+
+  // 添加 Referer 和 Origin 以绕过某些防盗链
+  try {
+    const urlObj = new URL(decodedUrl);
+    fetchHeaders['Referer'] = `${urlObj.protocol}//${urlObj.host}/`;
+    fetchHeaders['Origin'] = `${urlObj.protocol}//${urlObj.host}`;
+  } catch (e) {
+    // 忽略 URL 解析错误
+  }
 
   const upstream = await fetch(decodedUrl, {
     method,
@@ -47,14 +69,18 @@ export async function HEAD(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get('url');
-    if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+    if (!url)
+      return NextResponse.json({ error: 'Missing url' }, { status: 400 });
 
     const upstream = await forwardRequest(url, 'HEAD', request.headers);
-    const headers = buildCorsHeaders(upstream.headers.get('Content-Type') || undefined, {
-      'Accept-Ranges': upstream.headers.get('Accept-Ranges') || 'bytes',
-      'Content-Length': upstream.headers.get('Content-Length') || '',
-      'Content-Range': upstream.headers.get('Content-Range') || '',
-    });
+    const headers = buildCorsHeaders(
+      upstream.headers.get('Content-Type') || undefined,
+      {
+        'Accept-Ranges': upstream.headers.get('Accept-Ranges') || 'bytes',
+        'Content-Length': upstream.headers.get('Content-Length') || '',
+        'Content-Range': upstream.headers.get('Content-Range') || '',
+      }
+    );
     const status = upstream.status === 206 ? 206 : upstream.status;
     return new Response(null, { status, headers });
   } catch (e) {
@@ -66,14 +92,19 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get('url');
-    if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+    if (!url)
+      return NextResponse.json({ error: 'Missing url' }, { status: 400 });
 
     const upstream = await forwardRequest(url, 'GET', request.headers);
     if (!upstream.ok && upstream.status !== 206) {
-      return NextResponse.json({ error: `Upstream error ${upstream.status}` }, { status: upstream.status });
+      return NextResponse.json(
+        { error: `Upstream error ${upstream.status}` },
+        { status: upstream.status }
+      );
     }
 
-    const contentType = upstream.headers.get('Content-Type') || 'application/octet-stream';
+    const contentType =
+      upstream.headers.get('Content-Type') || 'application/octet-stream';
     const extra: Record<string, string> = {
       'Accept-Ranges': upstream.headers.get('Accept-Ranges') || 'bytes',
     };
@@ -94,5 +125,3 @@ export async function GET(request: Request) {
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: buildCorsHeaders() });
 }
-
-

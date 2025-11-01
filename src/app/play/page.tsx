@@ -903,7 +903,22 @@ function PlayPageClient() {
         super(config);
         const load = this.load.bind(this);
         this.load = function (context: any, config: any, callbacks: any) {
-          // 拦截manifest和level请求
+          // 通过代理处理所有外部请求以解决CORS问题
+          const originalUrl = context.url;
+
+          // 如果URL不是本地代理地址，则通过代理转发
+          if (
+            originalUrl &&
+            !originalUrl.startsWith('/api/proxy/video') &&
+            !originalUrl.startsWith('blob:')
+          ) {
+            // 对于m3u8清单和ts分片都使用代理
+            context.url = `/api/proxy/video?url=${encodeURIComponent(
+              originalUrl
+            )}`;
+          }
+
+          // 拦截manifest和level请求处理m3u8内容
           if (
             (context as any).type === 'manifest' ||
             (context as any).type === 'level'
@@ -914,10 +929,60 @@ function PlayPageClient() {
               stats: any,
               context: any
             ) {
-              // 如果是m3u8文件，处理内容以移除广告分段
+              // 如果是m3u8文件，处理内容
               if (response.data && typeof response.data === 'string') {
-                // 过滤掉广告段 - 实现更精确的广告过滤逻辑
-                response.data = filterAdsFromM3U8(response.data);
+                // 如果开启去广告，过滤掉广告段
+                if (blockAdEnabledRef.current) {
+                  response.data = filterAdsFromM3U8(response.data);
+                }
+
+                // 处理m3u8中的相对URL，将其转换为通过代理的绝对URL
+                // 从代理URL中提取原始URL
+                const proxyUrl = context.url;
+                if (proxyUrl && proxyUrl.includes('/api/proxy/video?url=')) {
+                  try {
+                    const urlMatch = proxyUrl.match(/url=([^&]+)/);
+                    if (urlMatch) {
+                      const decodedOriginalUrl = decodeURIComponent(
+                        urlMatch[1]
+                      );
+                      const baseUrl = new URL(decodedOriginalUrl);
+                      const basePath =
+                        baseUrl.origin +
+                        baseUrl.pathname.substring(
+                          0,
+                          baseUrl.pathname.lastIndexOf('/') + 1
+                        );
+
+                      // 处理m3u8中的相对路径
+                      const lines = response.data.split('\n');
+                      const processedLines = lines.map((line: string) => {
+                        // 跳过注释行和空行
+                        if (line.startsWith('#') || !line.trim()) {
+                          return line;
+                        }
+
+                        // 如果是相对路径，转换为绝对路径并通过代理
+                        if (
+                          !line.startsWith('http://') &&
+                          !line.startsWith('https://') &&
+                          !line.startsWith('/api/proxy/video')
+                        ) {
+                          const absoluteUrl = basePath + line.trim();
+                          return `/api/proxy/video?url=${encodeURIComponent(
+                            absoluteUrl
+                          )}`;
+                        }
+
+                        return line;
+                      });
+
+                      response.data = processedLines.join('\n');
+                    }
+                  } catch (e) {
+                    console.warn('处理m3u8相对URL失败:', e);
+                  }
+                }
               }
               return onSuccess(response, stats, context, null);
             };
@@ -1738,10 +1803,8 @@ function PlayPageClient() {
               fragLoadingTimeOut: isShortDrama ? 30000 : 20000,
               fragLoadingMaxRetry: isShortDrama ? 6 : 3,
 
-              /* 自定义loader */
-              loader: blockAdEnabledRef.current
-                ? CustomHlsJsLoader
-                : Hls.DefaultConfig.loader,
+              /* 自定义loader - 始终使用以解决CORS问题 */
+              loader: CustomHlsJsLoader,
             };
 
             const hls = new Hls(hlsConfig);
