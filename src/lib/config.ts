@@ -52,11 +52,8 @@ export const API_CONFIG = {
     },
   },
   shortdrama: {
-    // 支持通过环境变量配置代理URL（如Cloudflare Workers）
-    // 使用 getter 在运行时读取环境变量，避免构建时固化
-    get baseUrl() {
-      return process.env.SHORTDRAMA_API_URL || 'https://api.r2afosne.dpdns.org';
-    },
+    // 使用 Cloudflare Workers 代理解决403问题
+    baseUrl: 'https://shortdrama.lblog.ggff.net',
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
