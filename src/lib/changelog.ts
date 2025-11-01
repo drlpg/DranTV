@@ -14,21 +14,25 @@ export const changelog: ChangelogEntry[] = [
     version: "1.0.16",
     date: "2025-11-01",
     added: [
-      // 无新增内容
+    "新增 `/api/proxy/m3u8` 代理 API，处理 m3u8 清单并重写内容",
+    "新增 `/api/proxy/segment` 代理 API，处理 ts 视频分片",
+    "新增 `/api/proxy/key` 代理 API，处理加密密钥"
     ],
     changed: [
-    "优化 HLS 自定义加载器，始终使用代理解决 CORS 问题",
-    "优化视频代理 API，完善 CORS 响应头设置",
-    "更新 Next.js 配置，为所有 API 路由添加 CORS 头",
-    "更新 Nginx 配置，添加 CORS 头和 OPTIONS 预检请求处理",
+    "移除客户端 HLS 自定义加载器的 URL 拦截逻辑",
+    "简化去广告功能，仅在 HLS 加载器中过滤广告段",
+    "优化代理 API，使用流式传输减少内存占用",
+    "更新视频 URL 处理逻辑，使用 m3u8 代理而非 video 代理",
+    "移除 `/api/proxy/video` 代理 API（已被 m3u8/segment 代理替代）",
+    "移除客户端复杂的 URL 重写逻辑",
     "**部署后需要清除浏览器缓存和 Service Worker 缓存**",
     "建议使用 Ctrl+Shift+R (Windows) 或 Cmd+Shift+R (Mac) 强制刷新",
     "或在浏览器开发者工具中清除站点数据"
     ],
     fixed: [
     "修复 Docker 容器中视频无法播放的 CORS 问题",
-    "所有外部视频请求（m3u8 清单和 ts 分片）强制通过服务器代理",
-    "处理 m3u8 文件中的相对路径，自动转换为代理 URL",
+    "采用原始项目 OrangeTV 的代理方案，服务器端重写 m3u8 内容",
+    "所有 ts 分片 URL 在服务器端替换为代理 URL",
     "添加 Referer 和 Origin 头以绕过防盗链检测"
     ]
   },

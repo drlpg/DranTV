@@ -484,7 +484,7 @@ function PlayPageClient() {
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
     // 对所有视频源应用代理处理
-    if (newUrl && !newUrl.includes('/api/proxy/video')) {
+    if (newUrl && !newUrl.includes('/api/proxy/')) {
       newUrl = processShortDramaUrl(newUrl);
     }
 
@@ -727,7 +727,7 @@ function PlayPageClient() {
     }
   };
 
-  // 视频播放地址处理函数 - 所有外部视频源都通过代理
+  // 视频播放地址处理函数 - 所有外部视频源都通过 m3u8 代理
   const processShortDramaUrl = (originalUrl: string): string => {
     if (!originalUrl) {
       return originalUrl;
@@ -747,8 +747,8 @@ function PlayPageClient() {
       return originalUrl;
     }
 
-    // 所有外部视频源都通过代理处理
-    const proxyUrl = `/api/proxy/video?url=${encodeURIComponent(originalUrl)}`;
+    // 所有外部视频源都通过 m3u8 代理处理
+    const proxyUrl = `/api/proxy/m3u8?url=${encodeURIComponent(originalUrl)}`;
     return proxyUrl;
   };
 
@@ -897,31 +897,18 @@ function PlayPageClient() {
     }
   };
 
+  // 去广告过滤器 - 仅在 HLS 加载时使用
   const createCustomHlsJsLoader = (Hls: any) => {
     return class extends Hls.DefaultConfig.loader {
       constructor(config: any) {
         super(config);
         const load = this.load.bind(this);
         this.load = function (context: any, config: any, callbacks: any) {
-          // 通过代理处理所有外部请求以解决CORS问题
-          const originalUrl = context.url;
-
-          // 如果URL不是本地代理地址，则通过代理转发
+          // 拦截 manifest 和 level 请求进行广告过滤
           if (
-            originalUrl &&
-            !originalUrl.startsWith('/api/proxy/video') &&
-            !originalUrl.startsWith('blob:')
-          ) {
-            // 对于m3u8清单和ts分片都使用代理
-            context.url = `/api/proxy/video?url=${encodeURIComponent(
-              originalUrl
-            )}`;
-          }
-
-          // 拦截manifest和level请求处理m3u8内容
-          if (
-            (context as any).type === 'manifest' ||
-            (context as any).type === 'level'
+            blockAdEnabledRef.current &&
+            ((context as any).type === 'manifest' ||
+              (context as any).type === 'level')
           ) {
             const onSuccess = callbacks.onSuccess;
             callbacks.onSuccess = function (
@@ -929,65 +916,14 @@ function PlayPageClient() {
               stats: any,
               context: any
             ) {
-              // 如果是m3u8文件，处理内容
+              // 如果是 m3u8 文件，过滤掉广告段
               if (response.data && typeof response.data === 'string') {
-                // 如果开启去广告，过滤掉广告段
-                if (blockAdEnabledRef.current) {
-                  response.data = filterAdsFromM3U8(response.data);
-                }
-
-                // 处理m3u8中的相对URL，将其转换为通过代理的绝对URL
-                // 从代理URL中提取原始URL
-                const proxyUrl = context.url;
-                if (proxyUrl && proxyUrl.includes('/api/proxy/video?url=')) {
-                  try {
-                    const urlMatch = proxyUrl.match(/url=([^&]+)/);
-                    if (urlMatch) {
-                      const decodedOriginalUrl = decodeURIComponent(
-                        urlMatch[1]
-                      );
-                      const baseUrl = new URL(decodedOriginalUrl);
-                      const basePath =
-                        baseUrl.origin +
-                        baseUrl.pathname.substring(
-                          0,
-                          baseUrl.pathname.lastIndexOf('/') + 1
-                        );
-
-                      // 处理m3u8中的相对路径
-                      const lines = response.data.split('\n');
-                      const processedLines = lines.map((line: string) => {
-                        // 跳过注释行和空行
-                        if (line.startsWith('#') || !line.trim()) {
-                          return line;
-                        }
-
-                        // 如果是相对路径，转换为绝对路径并通过代理
-                        if (
-                          !line.startsWith('http://') &&
-                          !line.startsWith('https://') &&
-                          !line.startsWith('/api/proxy/video')
-                        ) {
-                          const absoluteUrl = basePath + line.trim();
-                          return `/api/proxy/video?url=${encodeURIComponent(
-                            absoluteUrl
-                          )}`;
-                        }
-
-                        return line;
-                      });
-
-                      response.data = processedLines.join('\n');
-                    }
-                  } catch (e) {
-                    console.warn('处理m3u8相对URL失败:', e);
-                  }
-                }
+                response.data = filterAdsFromM3U8(response.data);
               }
               return onSuccess(response, stats, context, null);
             };
           }
-          // 执行原始load方法
+          // 执行原始 load 方法
           load(context, config, callbacks);
         };
       }
@@ -1735,9 +1671,19 @@ function PlayPageClient() {
         currentEpisodeIndex
       );
 
+      // 确保 URL 通过代理 - v1.0.16
+      const finalUrl = videoUrl.includes('/api/proxy/')
+        ? videoUrl
+        : processShortDramaUrl(videoUrl);
+
+      // 在页面上显示版本信息，确认代码已更新
+      if (typeof window !== 'undefined') {
+        (window as any).__VIDEO_PROXY_VERSION__ = '1.0.16';
+      }
+
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
-        url: videoUrl,
+        url: finalUrl,
         poster: videoCover,
         volume: 0.7,
         isLive: false,
@@ -1781,31 +1727,32 @@ function PlayPageClient() {
               video.hls.destroy();
             }
 
-            const CustomHlsJsLoader = createCustomHlsJsLoader(Hls);
-
             // 针对短剧的特殊配置
             const isShortDrama = currentSourceRef.current === 'shortdrama';
-            const hlsConfig = {
-              debug: false, // 关闭日志
-              enableWorker: true, // WebWorker 解码，降低主线程压力
-              lowLatencyMode: !isShortDrama, // 短剧关闭低延迟模式，提高兼容性
+            const hlsConfig: any = {
+              debug: false,
+              enableWorker: true,
+              lowLatencyMode: !isShortDrama,
 
-              /* 缓冲/内存相关 - 短剧使用更保守的设置 */
-              maxBufferLength: isShortDrama ? 20 : 30, // 短剧使用较小缓冲
-              backBufferLength: isShortDrama ? 15 : 30, // 短剧保留更少已播放内容
-              maxBufferSize: isShortDrama ? 40 * 1000 * 1000 : 60 * 1000 * 1000, // 短剧使用更小缓冲区
+              /* 缓冲/内存相关 */
+              maxBufferLength: isShortDrama ? 20 : 30,
+              backBufferLength: isShortDrama ? 15 : 30,
+              maxBufferSize: isShortDrama ? 40 * 1000 * 1000 : 60 * 1000 * 1000,
 
-              /* 网络相关 - 短剧更宽松的超时设置 */
+              /* 网络相关 */
               manifestLoadingTimeOut: isShortDrama ? 20000 : 10000,
               manifestLoadingMaxRetry: isShortDrama ? 4 : 1,
               levelLoadingTimeOut: isShortDrama ? 20000 : 10000,
               levelLoadingMaxRetry: isShortDrama ? 4 : 3,
               fragLoadingTimeOut: isShortDrama ? 30000 : 20000,
               fragLoadingMaxRetry: isShortDrama ? 6 : 3,
-
-              /* 自定义loader - 始终使用以解决CORS问题 */
-              loader: CustomHlsJsLoader,
             };
+
+            // 如果开启去广告，使用自定义加载器
+            if (blockAdEnabledRef.current) {
+              const CustomHlsJsLoader = createCustomHlsJsLoader(Hls);
+              hlsConfig.loader = CustomHlsJsLoader;
+            }
 
             const hls = new Hls(hlsConfig);
 
@@ -1821,7 +1768,7 @@ function PlayPageClient() {
                 details: data.details,
                 fatal: data.fatal,
                 isShortDrama,
-                url: url.includes('/api/proxy/video') ? '代理地址' : '原始地址',
+                url: url.includes('/api/proxy/m3u8') ? '代理地址' : '原始地址',
               };
               console.error('HLS播放错误:', errorInfo);
 
@@ -2263,9 +2210,7 @@ function PlayPageClient() {
           error: err,
           isShortDrama,
           currentTime: artPlayerRef.current?.currentTime || 0,
-          videoUrl: videoUrl.includes('/api/proxy/video')
-            ? '代理地址'
-            : '原始地址',
+          videoUrl: videoUrl.includes('/api/proxy/') ? '代理地址' : '原始地址',
           episode: currentEpisodeIndex + 1,
         };
 
