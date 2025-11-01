@@ -31,11 +31,21 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(apiUrl, {
       method: 'GET',
-      headers: API_CONFIG.shortdrama.headers,
+      headers: {
+        ...API_CONFIG.shortdrama.headers,
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
+
+    if (response.status === 403) {
+      console.error('[短剧最新API] 403错误 - 可能被防火墙阻止');
+      throw new Error('访问被拒绝，请检查服务器网络配置');
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

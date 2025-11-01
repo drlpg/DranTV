@@ -6,6 +6,7 @@
 - 修复短剧播放地址API错误处理不完善的问题
 - 修复短剧API超时时间过短导致的加载失败
 - 修复短剧最新剧集API返回数据量不足的问题
+- 修复UserMenu组件TypeScript类型错误导致构建失败
 
 ### Changed
 
@@ -13,12 +14,22 @@
 - 优化短剧最新剧集API，添加size参数请求更多数据
 - 优化短剧API错误处理，返回明确的错误信息而非mock数据
 - 优化短剧播放地址API，正确处理外部API的错误格式
-- 添加详细的API请求和响应日志，便于问题诊断
+- 简化API日志输出，只保留关键信息
+- 添加更多HTTP请求头提高API兼容性
+- 特殊处理403错误，提供明确的诊断信息
 
 ### Added
 
 - 添加短剧API错误格式检查（code !== 0）
-- 添加短剧API诊断脚本和修复总结文档
+- 添加Cloudflare Workers代理支持
+- 添加环境变量SHORTDRAMA_API_URL配置代理地址
+- 添加Cloudflare Workers配置指南和代码
+- 添加.env.example环境变量示例文件
+
+### Removed
+
+- 移除parse/all API中的备用mock数据
+- 移除过于详细的调试日志
 
 ## [1.0.19] - 2025-11-01
 
