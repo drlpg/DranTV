@@ -32,6 +32,11 @@ function getDoubanImageProxyConfig(): {
 export function processImageUrl(originalUrl: string): string {
   if (!originalUrl) return originalUrl;
 
+  // 处理 Bangumi 图片 URL，将 http 转为 https
+  if (originalUrl.includes('lain.bgm.tv')) {
+    return originalUrl.replace('http://', 'https://');
+  }
+
   // 仅处理豆瓣图片代理
   if (!originalUrl.includes('doubanio.com')) {
     return originalUrl;

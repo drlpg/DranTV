@@ -329,12 +329,10 @@ function PlayPageClient() {
         hasError?: boolean;
       }
     >();
-    allResults.forEach((result, index) => {
-      const source = sources[index];
-      const sourceKey = `${source.source}-${source.id}`;
-
+    allResults.forEach((result) => {
       if (result) {
         // 成功的结果
+        const sourceKey = `${result.source.source}-${result.source.id}`;
         newVideoInfoMap.set(sourceKey, result.testResult);
       }
     });

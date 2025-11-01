@@ -11,6 +11,26 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.18",
+    date: "2025-11-01",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "播放器初始化直接使用 videoUrl，移除重复的 URL 处理逻辑",
+    "恢复与原始项目 OrangeTV-main 完全一致的播放逻辑",
+    "优化视频源测速，确保选择可用且速度最快的源",
+    "初始加载现在可以正常播放视频",
+    "所有代码逻辑与原始项目保持一致，确保稳定性"
+    ],
+    fixed: [
+    "修复初始加载时视频无法播放的问题（需手动切换源才能播放）",
+    "修复播放器初始化时重复处理 videoUrl 导致的播放失败",
+    "修复视频源优选逻辑，测试所有可用源而非仅前5个",
+    "修复测速结果保存时的索引错误"
+    ]
+  },
+  {
     version: "1.0.17",
     date: "2025-11-01",
     added: [
