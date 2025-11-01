@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    const baseUrl = 'https://shortdrama.lblog.ggff.net';
     console.log('[短剧解析API] 使用的baseUrl:', baseUrl);
     const apiUrl = new URL(`${baseUrl}/vod/parse/all`);
     apiUrl.searchParams.append('id', id);

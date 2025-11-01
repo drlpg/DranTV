@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = searchParams.get('page') || '1';
 
-    // 使用 /vod/recommend 端点，请求更多数据
-    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    // 直接使用 Cloudflare Workers 代理地址
+    const baseUrl = 'https://shortdrama.lblog.ggff.net';
     console.log('[短剧最新API] 使用的baseUrl:', baseUrl);
     const apiUrl = `${baseUrl}/vod/recommend?page=${page}&size=25`;
 

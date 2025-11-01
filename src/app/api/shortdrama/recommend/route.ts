@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const size = searchParams.get('size') || '25';
 
   try {
-    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    const baseUrl = 'https://shortdrama.lblog.ggff.net';
     console.log('[短剧推荐API] 使用的baseUrl:', baseUrl);
     const apiUrl = new URL(`${baseUrl}/vod/recommend`);
     if (categoryId) apiUrl.searchParams.append('categoryId', categoryId);

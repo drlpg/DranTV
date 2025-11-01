@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = API_CONFIG.shortdrama.baseUrl;
+    const baseUrl = 'https://shortdrama.lblog.ggff.net';
     console.log('[短剧列表API] 使用的baseUrl:', baseUrl);
     const apiUrl = new URL(`${baseUrl}/vod/list`);
     apiUrl.searchParams.append('categoryId', categoryId);
