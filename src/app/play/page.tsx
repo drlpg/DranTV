@@ -282,18 +282,15 @@ function PlayPageClient() {
   ): Promise<SearchResult> => {
     if (sources.length === 1) return sources[0];
 
-    // 只测试前5个源，避免测速时间过长
-    const sourcesToTest = sources.slice(0, Math.min(5, sources.length));
-
     // 将播放源均分为两批，并发测速各批，避免一次性过多请求
-    const batchSize = Math.ceil(sourcesToTest.length / 2);
+    const batchSize = Math.ceil(sources.length / 2);
     const allResults: Array<{
       source: SearchResult;
       testResult: { quality: string; loadSpeed: string; pingTime: number };
     } | null> = [];
 
-    for (let start = 0; start < sourcesToTest.length; start += batchSize) {
-      const batchSources = sourcesToTest.slice(start, start + batchSize);
+    for (let start = 0; start < sources.length; start += batchSize) {
+      const batchSources = sources.slice(start, start + batchSize);
       const batchResults = await Promise.all(
         batchSources.map(async (source) => {
           try {
@@ -333,7 +330,7 @@ function PlayPageClient() {
       }
     >();
     allResults.forEach((result, index) => {
-      const source = sourcesToTest[index];
+      const source = sources[index];
       const sourceKey = `${source.source}-${source.id}`;
 
       if (result) {
@@ -1684,19 +1681,9 @@ function PlayPageClient() {
         currentEpisodeIndex
       );
 
-      // 确保 URL 通过代理 - v1.0.16
-      const finalUrl = videoUrl.includes('/api/proxy/')
-        ? videoUrl
-        : processShortDramaUrl(videoUrl);
-
-      // 在页面上显示版本信息，确认代码已更新
-      if (typeof window !== 'undefined') {
-        (window as any).__VIDEO_PROXY_VERSION__ = '1.0.16';
-      }
-
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
-        url: finalUrl,
+        url: videoUrl,
         poster: videoCover,
         volume: 0.7,
         isLive: false,
