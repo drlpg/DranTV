@@ -117,10 +117,9 @@ export async function GET(request: Request) {
         }
 
         function cleanup() {
-          const currentReader = reader;
-          if (currentReader) {
+          if (reader) {
             try {
-              currentReader.releaseLock();
+              (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
             } catch {
               // ignore
             }
@@ -131,10 +130,9 @@ export async function GET(request: Request) {
         pump();
       },
       cancel() {
-        const currentReader = reader;
-        if (currentReader) {
+        if (reader) {
           try {
-            currentReader.releaseLock();
+            (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
           } catch {
             // ignore
           }
@@ -156,10 +154,9 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('[Segment Proxy] Error:', error);
 
-    const currentReader = reader;
-    if (currentReader) {
+    if (reader) {
       try {
-        currentReader.releaseLock();
+        (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
       } catch {
         // ignore
       }
