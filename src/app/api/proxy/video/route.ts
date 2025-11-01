@@ -46,6 +46,15 @@ async function forwardRequest(
     reqHeaders.get('User-Agent') ||
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
+  // 添加 Referer 和 Origin 以绕过某些防盗链
+  try {
+    const urlObj = new URL(decodedUrl);
+    fetchHeaders['Referer'] = urlObj.origin + '/';
+    fetchHeaders['Origin'] = urlObj.origin;
+  } catch {
+    // ignore
+  }
+
   const upstream = await fetch(decodedUrl, {
     method,
     headers: fetchHeaders,

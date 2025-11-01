@@ -11,6 +11,28 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.17",
+    date: "2025-11-01",
+    added: [
+    "新增 `/api/proxy/video` 路由，支持视频文件代理",
+    "新增智能代理检查逻辑，根据视频源特征判断是否需要代理"
+    ],
+    changed: [
+    "简化 Next.js 配置，移除可能导致问题的优化选项",
+    "优化视频 URL 处理逻辑，只对特定视频源（quark、m3u8 等）使用代理",
+    "优化 `processShortDramaUrl` 函数，添加详细的代理检查规则",
+    "更新 `updateVideoUrl` 函数，只对短剧视频应用代理处理",
+    "重新构建并部署后视频播放功能将恢复正常",
+    "普通视频源直接播放，特殊视频源通过代理访问"
+    ],
+    fixed: [
+    "修复远程容器部署后视频无法播放的问题",
+    "修复视频代理逻辑错误，避免对所有视频源使用 m3u8 代理",
+    "修复视频代理请求头缺失 Referer 和 Origin 导致的 403/404 错误",
+    "修复 Next.js 配置过度优化导致的构建和运行时问题"
+    ]
+  },
+  {
     version: "1.0.16",
     date: "2025-11-01",
     added: [

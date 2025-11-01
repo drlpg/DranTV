@@ -483,8 +483,12 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
-    // 对所有视频源应用代理处理
-    if (newUrl && !newUrl.includes('/api/proxy/')) {
+    // 如果是短剧且URL还没有经过代理处理，再次处理
+    if (
+      detailData.source === 'shortdrama' &&
+      newUrl &&
+      !newUrl.includes('/api/proxy/video')
+    ) {
       newUrl = processShortDramaUrl(newUrl);
     }
 
@@ -733,23 +737,32 @@ function PlayPageClient() {
       return originalUrl;
     }
 
-    // 如果已经是代理地址，直接返回
-    if (originalUrl.includes('/api/proxy/')) {
-      return originalUrl;
+    // 检查是否需要使用代理
+    const proxyChecks = {
+      'quark.cn': originalUrl.includes('quark.cn'),
+      'drive.quark.cn': originalUrl.includes('drive.quark.cn'),
+      'dl-c-zb-': originalUrl.includes('dl-c-zb-'),
+      'dl-c-': originalUrl.includes('dl-c-'),
+      'drive pattern': !!originalUrl.match(/https?:\/\/[^/]*\.drive\./),
+      'ffzy-online': originalUrl.includes('ffzy-online'),
+      'bfikuncdn.com': originalUrl.includes('bfikuncdn.com'),
+      'vip.': originalUrl.includes('vip.'),
+      m3u8: originalUrl.includes('m3u8'),
+      'not localhost':
+        !originalUrl.includes('localhost') &&
+        !originalUrl.includes('127.0.0.1'),
+    };
+
+    const needsProxy = Object.values(proxyChecks).some((check) => check);
+
+    if (needsProxy) {
+      const proxyUrl = `/api/proxy/video?url=${encodeURIComponent(
+        originalUrl
+      )}`;
+      return proxyUrl;
     }
 
-    // 本地地址不需要代理
-    if (
-      originalUrl.includes('localhost') ||
-      originalUrl.includes('127.0.0.1') ||
-      originalUrl.startsWith('/')
-    ) {
-      return originalUrl;
-    }
-
-    // 所有外部视频源都通过 m3u8 代理处理
-    const proxyUrl = `/api/proxy/m3u8?url=${encodeURIComponent(originalUrl)}`;
-    return proxyUrl;
+    return originalUrl;
   };
 
   // 短剧数据获取和转换函数
