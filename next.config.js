@@ -9,46 +9,15 @@ const nextConfig = {
   },
 
   reactStrictMode: false,
-  swcMinify: true,
-
-  // 禁用图片警告
-  logging: {
-    fetches: {
-      fullUrl: false,
-    },
-  },
+  swcMinify: false,
 
   experimental: {
     instrumentationHook: process.env.NODE_ENV === 'production',
-    optimizePackageImports: [
-      'lucide-react',
-      '@dnd-kit/core',
-      '@dnd-kit/sortable',
-      'framer-motion',
-      'react-icons',
-    ],
-    // optimizeCss 需要 critters 依赖，暂时禁用
-    // optimizeCss: true,
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
   },
 
-  // 启用编译器优化
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-
-  // 图片优化配置
+  // Uncoment to add domain whitelist
   images: {
-    unoptimized: false, // 启用图片优化
-    formats: ['image/webp', 'image/avif'], // 支持现代图片格式
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840], // 响应式图片尺寸
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384], // 图标等小图片尺寸
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 缓存30天
-    dangerouslyAllowSVG: true, // 允许SVG
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -61,51 +30,7 @@ const nextConfig = {
     ],
   },
 
-  // 优化开发环境性能
-  onDemandEntries: {
-    maxInactiveAge: 60 * 1000,
-    pagesBufferLength: 5,
-  },
-
-  // 优化生产构建
-  productionBrowserSourceMaps: false,
-  poweredByHeader: false,
-
-  // 优化字体加载
-  optimizeFonts: true,
-
-  // 添加响应头以支持视频播放和CORS
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, HEAD, OPTIONS' },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Range, Origin, Accept',
-          },
-          {
-            key: 'Access-Control-Expose-Headers',
-            value: 'Content-Length, Content-Range, Accept-Ranges, Content-Type',
-          },
-        ],
-      },
-    ];
-  },
-
-  webpack(config, { dev, isServer }) {
-    // 启用持久化缓存以加快构建速度
-    if (!isServer) {
-      config.cache = {
-        type: 'filesystem',
-        buildDependencies: {
-          config: [__filename],
-        },
-      };
-    }
-
+  webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg')
