@@ -4,9 +4,9 @@ import { getAuthInfoFromCookie } from '../../../../lib/auth';
 // 从全局对象获取WebSocket实例相关方法
 function getOnlineUsers(): string[] {
   try {
-    if ((global as any).wss) {
-      // 假设websocket.js中导出了getOnlineUsers方法并附加到了wss对象上
-      return require('../../../../../websocket').getOnlineUsers();
+    // 使用全局函数（由 production-final.js 设置）
+    if (typeof (global as any).getOnlineUsers === 'function') {
+      return (global as any).getOnlineUsers();
     }
     return [];
   } catch (error) {

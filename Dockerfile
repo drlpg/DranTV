@@ -64,9 +64,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 # 从构建器中复制 scripts 目录
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 # 从构建器中复制启动脚本和WebSocket相关文件
-COPY --from=builder --chown=nextjs:nodejs /app/start.js ./start.js
-COPY --from=builder --chown=nextjs:nodejs /app/websocket.js ./websocket.js
-COPY --from=builder --chown=nextjs:nodejs /app/production.js ./production.js
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
 # 从构建器中复制 public 和 .next/static 目录

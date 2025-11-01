@@ -44,13 +44,19 @@ global.sendMessageToUsers = sendMessageToUsers;
 console.log('Starting Next.js production server...');
 const nextServerPath = path.join(__dirname, 'server.js');
 
-// 检查是否存在standalone server.js
+// 检查是否存在standalone server.js（Docker构建生成）
 const fs = require('fs');
 if (fs.existsSync(nextServerPath)) {
   // Docker环境，使用standalone server
+  console.log('Using standalone server from Docker build');
   require(nextServerPath);
+  // 延迟启动任务，等待服务器完全启动
+  setTimeout(() => {
+    setupServerTasks();
+  }, 5000);
 } else {
   // 非Docker环境，使用标准Next.js启动
+  console.log('Using standard Next.js server');
   const { createServer } = require('http');
   const { parse } = require('url');
   const next = require('next');
@@ -188,11 +194,3 @@ const cleanup = () => {
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
-
-// 如果直接运行此文件，设置任务
-if (require.main === module) {
-  // 延迟启动任务，等待服务器完全启动
-  setTimeout(() => {
-    setupServerTasks();
-  }, 5000);
-}

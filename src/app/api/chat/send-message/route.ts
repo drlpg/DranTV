@@ -3,11 +3,14 @@ import { getAuthInfoFromCookie } from '../../../../lib/auth';
 import { WebSocketMessage } from '../../../../lib/types';
 
 // 从全局对象获取WebSocket实例相关方法
-function sendMessageToUsers(userIds: string[], message: WebSocketMessage): boolean {
+function sendMessageToUsers(
+  userIds: string[],
+  message: WebSocketMessage
+): boolean {
   try {
-    if ((global as any).wss) {
-      // 假设websocket.js中导出了sendMessageToUsers方法并附加到了wss对象上
-      return require('../../../../../websocket').sendMessageToUsers(userIds, message);
+    // 使用全局函数（由 production-final.js 设置）
+    if (typeof (global as any).sendMessageToUsers === 'function') {
+      return (global as any).sendMessageToUsers(userIds, message);
     }
     return false;
   } catch (error) {
@@ -52,7 +55,10 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        return NextResponse.json({ error: '不支持的消息类型' }, { status: 400 });
+        return NextResponse.json(
+          { error: '不支持的消息类型' },
+          { status: 400 }
+        );
     }
 
     // 通过 WebSocket 发送消息
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      delivered: sent
+      delivered: sent,
     });
   } catch (error) {
     console.error('通过 API 发送消息失败:', error);

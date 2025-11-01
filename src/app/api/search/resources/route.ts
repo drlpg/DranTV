@@ -8,7 +8,6 @@ export const runtime = 'nodejs';
 
 // OrionTV 兼容接口
 export async function GET(request: NextRequest) {
-  console.log('request', request.url);
   try {
     const apiSites = await getAvailableApiSites();
 
