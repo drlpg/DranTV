@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { API_CONFIG } from '@/lib/config';
 
 // 转换外部API数据格式到内部格式
-function transformExternalData(externalItem: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformExternalData(externalItem: any) {
   return {
     id: externalItem.id
       ? externalItem.id.toString()
