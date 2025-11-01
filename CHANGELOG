@@ -1,3 +1,25 @@
+## [1.0.16] - 2025-11-01
+
+### Fixed
+
+- 修复 Docker 容器中视频无法播放的 CORS 问题
+- 所有外部视频请求（m3u8 清单和 ts 分片）强制通过服务器代理
+- 处理 m3u8 文件中的相对路径，自动转换为代理 URL
+- 添加 Referer 和 Origin 头以绕过防盗链检测
+
+### Changed
+
+- 优化 HLS 自定义加载器，始终使用代理解决 CORS 问题
+- 优化视频代理 API，完善 CORS 响应头设置
+- 更新 Next.js 配置，为所有 API 路由添加 CORS 头
+- 更新 Nginx 配置，添加 CORS 头和 OPTIONS 预检请求处理
+
+### Important
+
+- **部署后需要清除浏览器缓存和 Service Worker 缓存**
+- 建议使用 Ctrl+Shift+R (Windows) 或 Cmd+Shift+R (Mac) 强制刷新
+- 或在浏览器开发者工具中清除站点数据
+
 ## [1.0.15] - 2025-11-01
 
 ### Fixed
