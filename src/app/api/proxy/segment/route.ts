@@ -117,9 +117,10 @@ export async function GET(request: Request) {
         }
 
         function cleanup() {
-          if (reader) {
+          const currentReader = reader;
+          if (currentReader) {
             try {
-              reader.releaseLock();
+              currentReader.releaseLock();
             } catch {
               // ignore
             }
@@ -130,9 +131,10 @@ export async function GET(request: Request) {
         pump();
       },
       cancel() {
-        if (reader) {
+        const currentReader = reader;
+        if (currentReader) {
           try {
-            reader.releaseLock();
+            currentReader.releaseLock();
           } catch {
             // ignore
           }
@@ -154,9 +156,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('[Segment Proxy] Error:', error);
 
-    if (reader) {
+    const currentReader = reader;
+    if (currentReader) {
       try {
-        reader.releaseLock();
+        currentReader.releaseLock();
       } catch {
         // ignore
       }
