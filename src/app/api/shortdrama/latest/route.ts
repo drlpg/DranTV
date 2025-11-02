@@ -25,9 +25,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = searchParams.get('page') || '1';
 
-    // 直接使用 Cloudflare Workers 代理地址
-    const baseUrl = 'https://shortdrama.lblog.ggff.net';
-    console.log('[短剧最新API] 使用的baseUrl:', baseUrl);
+    // 使用 Cloudflare Workers 代理
+    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = `${baseUrl}/vod/recommend?page=${page}&size=25`;
 
     const controller = new AbortController();
@@ -46,14 +45,8 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    if (response.status === 403) {
-      console.error('[短剧最新API] 403错误 - 可能被防火墙阻止');
-      throw new Error('访问被拒绝，请检查服务器网络配置');
-    }
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[短剧API] 请求失败: ${response.status} - ${errorText}`);
       return NextResponse.json(
         { error: `API请求失败: ${response.status}`, details: errorText },
         { status: response.status }
@@ -72,14 +65,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(transformedData);
     }
 
-    console.error('[短剧最新API] 响应格式无效');
     return NextResponse.json(
       { error: '短剧API响应格式无效', data: externalData },
       { status: 500 }
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[短剧最新API] 错误:', errorMessage);
 
     return NextResponse.json(
       {

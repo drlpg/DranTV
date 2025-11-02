@@ -24,8 +24,7 @@ export async function GET(request: NextRequest) {
   const size = searchParams.get('size') || '25';
 
   try {
-    const baseUrl = 'https://shortdrama.lblog.ggff.net';
-    console.log('[短剧推荐API] 使用的baseUrl:', baseUrl);
+    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = new URL(`${baseUrl}/vod/recommend`);
     if (categoryId) apiUrl.searchParams.append('categoryId', categoryId);
     apiUrl.searchParams.append('size', size);
@@ -46,16 +45,7 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    if (response.status === 403) {
-      console.error('[短剧推荐API] 403错误 - 可能被防火墙阻止');
-      throw new Error('访问被拒绝，请检查服务器网络配置');
-    }
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `[短剧推荐API] 请求失败: ${response.status} - ${errorText}`
-      );
       throw new Error(`API request failed: ${response.status}`);
     }
 
@@ -81,9 +71,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[短剧推荐API] 错误:', errorMessage);
 
-    // 返回错误信息
     return NextResponse.json(
       {
         error: '短剧推荐加载失败',

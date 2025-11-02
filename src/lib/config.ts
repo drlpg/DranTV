@@ -53,7 +53,7 @@ export const API_CONFIG = {
   },
   shortdrama: {
     // 使用 Cloudflare Workers 代理解决403问题
-    baseUrl: 'https://shortdrama.lblog.ggff.net',
+    baseUrl: 'https://shortdrama-proxy.danranlpg.workers.dev',
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',

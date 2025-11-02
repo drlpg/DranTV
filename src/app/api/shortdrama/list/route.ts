@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { API_CONFIG } from '@/lib/config';
 
 // 转换外部API数据格式到内部格式 - 分类热搜API直接使用id作为视频ID
-function transformExternalData(externalItem: any) {
+function transformExternalData(externalItem: unknown) {
   return {
     id: externalItem.id ? externalItem.id.toString() : '', // 分类热搜API返回的id就是唯一标识
     vod_id: externalItem.id, // 分类热搜API返回的id就是视频ID，用于获取全集地址
@@ -29,8 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = 'https://shortdrama.lblog.ggff.net';
-    console.log('[短剧列表API] 使用的baseUrl:', baseUrl);
+    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = new URL(`${baseUrl}/vod/list`);
     apiUrl.searchParams.append('categoryId', categoryId);
     apiUrl.searchParams.append('page', page);
@@ -51,16 +51,7 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    if (response.status === 403) {
-      console.error('[短剧列表API] 403错误 - 可能被防火墙阻止');
-      throw new Error('访问被拒绝，请检查服务器网络配置');
-    }
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(
-        `[短剧列表API] 请求失败: ${response.status} - ${errorText}`
-      );
       throw new Error(`API request failed: ${response.status}`);
     }
 
@@ -80,9 +71,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[短剧列表API] 错误:', errorMessage);
 
-    // 返回错误信息
     return NextResponse.json(
       {
         error: '短剧列表加载失败',

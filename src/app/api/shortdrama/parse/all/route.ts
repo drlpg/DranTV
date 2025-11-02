@@ -13,8 +13,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = 'https://shortdrama.lblog.ggff.net';
-    console.log('[短剧解析API] 使用的baseUrl:', baseUrl);
+    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = new URL(`${baseUrl}/vod/parse/all`);
     apiUrl.searchParams.append('id', id);
     apiUrl.searchParams.append('proxy', 'true');
@@ -37,11 +36,6 @@ export async function GET(request: NextRequest) {
 
     clearTimeout(timeoutId);
 
-    if (response.status === 403) {
-      console.error('[短剧解析API] 403错误 - 可能被防火墙阻止');
-      throw new Error('访问被拒绝，请检查服务器网络配置');
-    }
-
     if (!response.ok) {
       throw new Error(
         `API request failed: ${response.status} - ${response.statusText}`
@@ -52,20 +46,11 @@ export async function GET(request: NextRequest) {
 
     // 检查API返回的错误格式
     if (data.code && data.code !== 0) {
-      console.error(`[短剧解析API] API错误: ${data.msg} (ID: ${id})`);
       throw new Error(data.msg || '获取视频详情失败');
     }
 
-    console.log(`[短剧解析API] 响应数据:`, {
-      videoId: data?.videoId,
-      videoName: data?.videoName,
-      totalEpisodes: data?.totalEpisodes,
-      resultsLength: data?.results?.length || 0,
-    });
-
     // 验证返回的数据格式
     if (!data || !data.results || !Array.isArray(data.results)) {
-      console.error('[短剧解析API] 数据格式无效');
       throw new Error('外部API返回的数据格式不正确');
     }
 
@@ -78,12 +63,7 @@ export async function GET(request: NextRequest) {
         item.parsedUrl.trim().length > 0
     );
 
-    console.log(
-      `[短剧解析API] 有效播放源: ${validResults.length}/${data.results.length}`
-    );
-
     if (validResults.length === 0) {
-      console.error('[短剧解析API] 没有找到任何有效的播放地址');
       throw new Error('所有播放源都无效');
     }
 
@@ -98,19 +78,10 @@ export async function GET(request: NextRequest) {
       filteredCount: data.results.length - validResults.length,
     };
 
-    console.log(
-      `[短剧解析API] 成功返回: ${processedData.videoName}, ${processedData.totalEpisodes}集`
-    );
-
     return NextResponse.json(processedData);
   } catch (error) {
     const { searchParams: errorSearchParams } = new URL(request.url);
     const errorId = errorSearchParams.get('id');
-
-    console.error('[短剧解析API] 错误:', {
-      id: errorId,
-      message: error instanceof Error ? error.message : String(error),
-    });
 
     // 分析错误类型
     let errorCategory = '未知错误';
