@@ -168,6 +168,8 @@ export function ThemeToggleButton() {
     localStorage.setItem('manualThemePeriod', currentPeriod);
 
     setThemeColor(targetTheme);
+
+    // 使用 View Transition API 实现从上到下或从下到上的过渡
     if (!(document as any).startViewTransition) {
       setTheme(targetTheme);
       return;

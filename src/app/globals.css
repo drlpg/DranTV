@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* View Transition API - 圆形扩散动画 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 为不支持 View Transition API 的浏览器提供降级方案 */
+@supports not (view-transition-name: none) {
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
