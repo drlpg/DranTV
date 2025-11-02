@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { API_CONFIG } from '@/lib/config';
 
 // 转换外部API数据格式到内部格式 - 分类热搜API直接使用id作为视频ID
-function transformExternalData(externalItem: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformExternalData(externalItem: any) {
   return {
     id: externalItem.id ? externalItem.id.toString() : '', // 分类热搜API返回的id就是唯一标识
     vod_id: externalItem.id, // 分类热搜API返回的id就是视频ID，用于获取全集地址
