@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SHORTDRAMA_API_URL ||
+      'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = new URL(`${baseUrl}/vod/parse/all`);
     apiUrl.searchParams.append('id', id);
     apiUrl.searchParams.append('proxy', 'true');

@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get('page') || '1';
 
     // 使用 Cloudflare Workers 代理
-    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SHORTDRAMA_API_URL ||
+      'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = `${baseUrl}/vod/recommend?page=${page}&size=25`;
 
     const controller = new AbortController();

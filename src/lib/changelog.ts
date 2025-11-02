@@ -14,21 +14,19 @@ export const changelog: ChangelogEntry[] = [
     version: "1.0.20",
     date: "2025-11-02",
     added: [
-    "添加短剧API错误格式检查（code !== 0）",
-    "添加短剧API诊断脚本和修复总结文档"
+    "添加Cloudflare Workers代理支持解决IP封禁问题",
+    "添加环境变量NEXT_PUBLIC_SHORTDRAMA_API_URL支持自定义Worker地址"
     ],
     changed: [
-    "优化短剧API超时时间从5秒增加到15秒",
-    "优化短剧最新剧集API，添加size参数请求更多数据",
-    "优化短剧API错误处理，返回明确的错误信息而非mock数据",
-    "优化短剧播放地址API，正确处理外部API的错误格式",
-    "添加详细的API请求和响应日志，便于问题诊断"
+    "使用workers.dev域名避免Cloudflare安全检查",
+    "优化短剧API超时时间到15秒",
+    "清理调试日志，提升代码质量"
     ],
     fixed: [
-    "修复远程服务器短剧页面无法加载视频数据的问题",
-    "修复短剧播放地址API错误处理不完善的问题",
-    "修复短剧API超时时间过短导致的加载失败",
-    "修复短剧最新剧集API返回数据量不足的问题"
+    "修复远程服务器短剧页面403错误无法加载数据",
+    "修复Cloudflare安全检查导致的Worker访问被拦截",
+    "修复短剧API超时和错误处理问题",
+    "修复TypeScript类型错误导致的构建失败"
     ]
   },
   {

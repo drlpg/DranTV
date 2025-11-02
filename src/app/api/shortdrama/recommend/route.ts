@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
   const size = searchParams.get('size') || '25';
 
   try {
-    const baseUrl = 'https://shortdrama-proxy.danranlpg.workers.dev';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SHORTDRAMA_API_URL ||
+      'https://shortdrama-proxy.danranlpg.workers.dev';
     const apiUrl = new URL(`${baseUrl}/vod/recommend`);
     if (categoryId) apiUrl.searchParams.append('categoryId', categoryId);
     apiUrl.searchParams.append('size', size);
