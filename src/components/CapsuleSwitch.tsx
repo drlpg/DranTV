@@ -20,7 +20,7 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
   const [indicatorStyle, setIndicatorStyle] = useState<{
     left: number;
     width: number;
-  }>({ left: 0, width: 0 });
+  } | null>(null);
 
   const activeIndex = options.findIndex((opt) => opt.value === active);
 
@@ -49,14 +49,26 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
 
   // 组件挂载时立即计算初始位置
   useEffect(() => {
-    const timeoutId = setTimeout(updateIndicatorPosition, 0);
-    return () => clearTimeout(timeoutId);
+    // 多次尝试计算位置，确保在内容加载完成后正确定位
+    const timeouts: NodeJS.Timeout[] = [];
+
+    // 立即计算一次
+    updateIndicatorPosition();
+
+    // 在不同时间点重新计算，确保捕获到正确的位置
+    [0, 50, 100, 200, 500].forEach((delay) => {
+      const timeoutId = setTimeout(updateIndicatorPosition, delay);
+      timeouts.push(timeoutId);
+    });
+
+    return () => {
+      timeouts.forEach((id) => clearTimeout(id));
+    };
   }, []);
 
   // 监听选中项变化
   useEffect(() => {
-    const timeoutId = setTimeout(updateIndicatorPosition, 0);
-    return () => clearTimeout(timeoutId);
+    updateIndicatorPosition();
   }, [activeIndex]);
 
   return (
@@ -67,7 +79,7 @@ const CapsuleSwitch: React.FC<CapsuleSwitchProps> = ({
       }`}
     >
       {/* 滑动的白色背景指示器 */}
-      {indicatorStyle.width > 0 && (
+      {indicatorStyle && (
         <div
           className='absolute top-1 bottom-1 bg-white dark:bg-gray-500 rounded-full shadow-sm transition-all duration-300 ease-out'
           style={{

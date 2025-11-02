@@ -248,14 +248,18 @@ function HomeClient() {
 
           {/* 中间Tab切换 */}
           <div className='flex-1 md:flex-none flex justify-center'>
-            <CapsuleSwitch
-              options={[
-                { label: '首页', value: 'home' },
-                { label: '收藏夹', value: 'favorites' },
-              ]}
-              active={activeTab}
-              onChange={(value) => setActiveTab(value as 'home' | 'favorites')}
-            />
+            {!loading && (
+              <CapsuleSwitch
+                options={[
+                  { label: '首页', value: 'home' },
+                  { label: '收藏夹', value: 'favorites' },
+                ]}
+                active={activeTab}
+                onChange={(value) =>
+                  setActiveTab(value as 'home' | 'favorites')
+                }
+              />
+            )}
           </div>
 
           {/* 桌面端右侧功能按钮 */}

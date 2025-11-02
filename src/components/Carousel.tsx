@@ -216,8 +216,8 @@ export default function Carousel({
         </>
       )}
 
-      {/* 指示器 */}
-      {items.length > 1 && (
+      {/* 指示器 - 只在当前图片加载完成后显示 */}
+      {items.length > 1 && imageLoaded.has(currentIndex) && (
         <div className='absolute bottom-[10px] md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-20'>
           {items.map((_, index) => (
             <button
