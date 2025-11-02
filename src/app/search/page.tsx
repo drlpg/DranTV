@@ -1608,7 +1608,7 @@ function SearchPageClient() {
         </div>
       </div>
 
-      {/* 返回顶部悬浮按钮 - 科技风格 */}
+      {/* 返回顶部悬浮按钮 - 简约风格 */}
       <div
         className={`fixed bottom-20 md:bottom-6 right-6 z-[500] transition-all duration-300 ease-in-out ${
           showBackToTop
@@ -1618,70 +1618,38 @@ function SearchPageClient() {
       >
         <button
           onClick={scrollToTop}
-          className='relative w-14 h-14 bg-gradient-to-br from-blue-500/20 via-cyan-500/20 to-purple-500/20 backdrop-blur-xl rounded-full shadow-2xl transition-all duration-300 ease-out group hover:scale-110 hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 border border-white/20'
-          aria-label={`返回顶部 (${Math.round(scrollProgress)}%)`}
-          style={{
-            background: `conic-gradient(from 0deg, #3b82f6 ${
-              scrollProgress * 3.6
-            }deg, rgba(59, 130, 246, 0.1) ${scrollProgress * 3.6}deg)`,
-          }}
+          className='relative w-12 h-12 bg-gray-900/80 backdrop-blur-md rounded-full shadow-lg transition-all duration-200 ease-out hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-white/30 group'
+          aria-label='返回顶部'
         >
-          {/* 内部发光圆圈 */}
-          <div className='absolute inset-1 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-full backdrop-blur-sm flex items-center justify-center transition-all duration-300 group-hover:from-blue-400/40 group-hover:to-cyan-400/40'>
-            <ChevronUp className='w-6 h-6 text-white/90 transition-all duration-300 group-hover:scale-110 group-hover:text-white drop-shadow-lg' />
+          {/* 进度数值 - 默认显示，悬停时隐藏 */}
+          <div className='absolute inset-0 flex items-center justify-center opacity-100 group-hover:opacity-0 transition-opacity duration-200'>
+            <span className='text-white text-xs font-medium'>
+              {Math.round(scrollProgress)}%
+            </span>
           </div>
 
-          {/* 进度环 */}
+          {/* 图标 - 默认隐藏，悬停时显示 */}
+          <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+            <ChevronUp className='w-5 h-5 text-white' />
+          </div>
+
+          {/* 简约进度环 */}
           <svg
             className='absolute inset-0 w-full h-full -rotate-90'
-            viewBox='0 0 56 56'
+            viewBox='0 0 48 48'
           >
             <circle
-              cx='28'
-              cy='28'
-              r='25'
+              cx='24'
+              cy='24'
+              r='22'
               fill='none'
-              stroke='rgba(255, 255, 255, 0.1)'
-              strokeWidth='2'
-            />
-            <circle
-              cx='28'
-              cy='28'
-              r='25'
-              fill='none'
-              stroke='url(#progressGradient)'
+              stroke='currentColor'
               strokeWidth='2'
               strokeLinecap='round'
-              strokeDasharray={`${(scrollProgress / 100) * 157} 157`}
-              className='transition-all duration-300 ease-out'
+              strokeDasharray={`${(scrollProgress / 100) * 138} 138`}
+              className='text-white transition-all duration-300 ease-out'
             />
-            <defs>
-              <linearGradient
-                id='progressGradient'
-                x1='0%'
-                y1='0%'
-                x2='100%'
-                y2='100%'
-              >
-                <stop offset='0%' stopColor='#3b82f6' />
-                <stop offset='50%' stopColor='#06b6d4' />
-                <stop offset='100%' stopColor='#8b5cf6' />
-              </linearGradient>
-            </defs>
           </svg>
-
-          {/* 悬停时的进度提示 */}
-          <div className='absolute -top-12 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none'>
-            <div className='bg-gray-900/90 text-white text-xs px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/10 shadow-xl'>
-              <div className='text-center font-medium'>
-                {Math.round(scrollProgress)}%
-              </div>
-              <div className='w-2 h-2 bg-gray-900/90 rotate-45 absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-r border-b border-white/10'></div>
-            </div>
-          </div>
-
-          {/* 脉冲动画 */}
-          <div className='absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-400/20 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300'></div>
         </button>
       </div>
     </PageLayout>

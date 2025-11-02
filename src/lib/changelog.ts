@@ -11,6 +11,23 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.22",
+    date: "2025-11-02",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化搜索页面进度指示器为简约风格",
+    "优化移动端顶部和底部导航栏添加圆角效果",
+    "优化移动端底部导航栏图标和文字间距",
+    "优化轮播图指示器移动端尺寸和位置",
+    "使用dvh单位替代vh适配移动端动态视口"
+    ],
+    fixed: [
+    "修复真实移动端设备页面高度显示不完整问题"
+    ]
+  },
+  {
     version: "1.0.21",
     date: "2025-11-02",
     added: [

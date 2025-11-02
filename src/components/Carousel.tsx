@@ -218,15 +218,15 @@ export default function Carousel({
 
       {/* 指示器 */}
       {items.length > 1 && (
-        <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20'>
+        <div className='absolute bottom-[10px] md:bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-20'>
           {items.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all ${
+              className={`h-1.5 md:h-2 rounded-full transition-all ${
                 index === currentIndex
-                  ? 'w-8 bg-white'
-                  : 'w-2 bg-white/50 hover:bg-white/75'
+                  ? 'w-6 md:w-8 bg-white'
+                  : 'w-1.5 md:w-2 bg-white/50 hover:bg-white/75'
               }`}
               aria-label={`跳转到第 ${index + 1} 张`}
             />
