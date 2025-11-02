@@ -25,8 +25,10 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
         {/* 主内容区域 */}
         <div className='relative min-w-0 flex-1 transition-all duration-300'>
           {/* 主内容 */}
-          <main className='md:min-h-[calc(100dvh-4rem)] pt-12 md:pt-0 pb-24 md:pb-0'>
+          <main className='md:min-h-[calc(100dvh-4rem)] pt-12 md:pt-0'>
             {children}
+            {/* 移动端底部占位空间 - 确保内容不被底部导航遮挡 */}
+            <div className='h-24 md:hidden' aria-hidden='true' />
           </main>
         </div>
       </div>
