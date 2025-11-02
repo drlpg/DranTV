@@ -28,7 +28,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           <main className='md:min-h-[calc(100dvh-4rem)] pt-12 md:pt-0'>
             {children}
             {/* 移动端底部占位空间 - 确保内容不被底部导航遮挡 */}
-            <div className='h-24 md:hidden' aria-hidden='true' />
+            <div className='h-32 md:hidden' aria-hidden='true' />
           </main>
         </div>
       </div>
