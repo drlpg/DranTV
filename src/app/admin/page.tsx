@@ -4187,7 +4187,7 @@ const VideoSourceConfig = ({
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
         <div
-          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'
+          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'
           data-table='source-list'
         >
           {/* 表头 */}
@@ -4739,7 +4739,7 @@ const CategoryConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'>
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'>
           {/* 表头 */}
           <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
@@ -6220,7 +6220,7 @@ const LiveSourceConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-hidden relative'>
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'>
           {/* 表头 */}
           <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>

@@ -31,7 +31,7 @@ async function forwardRequest(
   url: string,
   method: 'GET' | 'HEAD',
   reqHeaders: Headers
-) {
+): Promise<Response> {
   const decodedUrl = decodeURIComponent(url);
 
   // 透传范围请求和必要请求头
@@ -55,14 +55,24 @@ async function forwardRequest(
     // ignore
   }
 
-  const upstream = await fetch(decodedUrl, {
-    method,
-    headers: fetchHeaders,
-    redirect: 'follow',
-    cache: 'no-store',
-  });
+  // 添加超时控制
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
-  return upstream;
+  try {
+    const upstream = await fetch(decodedUrl, {
+      method,
+      headers: fetchHeaders,
+      redirect: 'follow',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return upstream;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 export async function HEAD(request: Request) {

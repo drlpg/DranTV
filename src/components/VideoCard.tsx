@@ -962,7 +962,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
             {actualEpisodes && actualEpisodes > 1 && (
               <div
-                className='absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
+                className={`absolute top-2 right-2 bg-blue-500 text-white font-semibold rounded-md transition-all duration-300 ease-out group-hover:scale-110 ${
+                  from === 'playrecord'
+                    ? 'text-[10px] px-1.5 py-0.5 sm:text-xs sm:px-2 sm:py-1'
+                    : 'text-xs px-2 py-1'
+                }`}
                 style={
                   {
                     WebkitUserSelect: 'none',

@@ -45,30 +45,31 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostname = window.location.hostname;
 
-    // 在生产环境中，WebSocket运行在不同的端口
-    // 可以通过环境变量或配置来设置
-    let wsPort = '3001'; // 默认WebSocket端口
+    // 优先使用环境变量配置的 WebSocket URL
+    if (
+      typeof window !== 'undefined' &&
+      (window as any).RUNTIME_CONFIG?.WS_URL
+    ) {
+      return `${(window as any).RUNTIME_CONFIG.WS_URL}?_=${Date.now()}`;
+    }
 
-    // 如果在开发环境，WebSocket运行在3001端口
+    // 开发环境
     if (process.env.NODE_ENV === 'development') {
       return `${protocol}//${hostname}:3001/ws?_=${Date.now()}`;
     }
 
-    // 生产环境，使用独立的WebSocket端口
-    // 如果通过反向代理，可能需要特殊的路径
+    // 生产环境 - 尝试多种可能的配置
+    // 1. 如果有自定义端口，使用端口3001
     if (
       window.location.port &&
       window.location.port !== '80' &&
       window.location.port !== '443'
     ) {
-      // 本地测试环境
-      return `${protocol}//${hostname}:${wsPort}/ws?_=${Date.now()}`;
-    } else {
-      // 生产环境，可能通过nginx反向代理
-      // 如果使用反向代理，通常会将WebSocket映射到特定路径
-      // 例如: /ws -> localhost:3001
-      return `${protocol}//${hostname}/ws-api?_=${Date.now()}`;
+      return `${protocol}//${hostname}:3001/ws?_=${Date.now()}`;
     }
+
+    // 2. 生产环境默认使用同域名的 /ws 路径（需要反向代理配置）
+    return `${protocol}//${hostname}/ws?_=${Date.now()}`;
   };
 
   // 连接WebSocket
