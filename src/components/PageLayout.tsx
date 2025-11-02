@@ -11,21 +11,21 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
   return (
-    <div className='w-full h-dvh flex flex-col md:min-h-dvh md:h-auto'>
+    <div className='w-full h-dvh flex flex-col overflow-hidden md:min-h-dvh md:h-auto md:overflow-visible'>
       {/* 顶部头部 - 仅移动端显示，固定定位 */}
       <MobileHeader showBackButton={['/play', '/live'].includes(activePath)} />
 
       {/* 主要布局容器 */}
-      <div className='flex md:grid md:grid-cols-[auto_1fr] w-full flex-1 min-h-0'>
+      <div className='flex md:grid md:grid-cols-[auto_1fr] w-full flex-1 min-h-0 overflow-hidden md:overflow-visible'>
         {/* 侧边栏 - 桌面端显示，移动端隐藏 */}
         <div className='hidden md:block'>
           <Sidebar activePath={activePath} />
         </div>
 
         {/* 主内容区域 - 移动端固定高度可滚动，桌面端正常流 */}
-        <div className='relative min-w-0 flex-1 transition-all duration-300 h-full overflow-y-auto md:h-auto md:overflow-visible'>
+        <div className='relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden overflow-y-auto md:h-auto md:overflow-visible'>
           {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间 */}
-          <main className='min-h-full pt-12 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px)+1rem)] md:min-h-[calc(100dvh-4rem)] md:pt-0 md:pb-0'>
+          <main className='pt-12 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100dvh-4rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>
