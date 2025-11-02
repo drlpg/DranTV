@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.21",
+    date: "2025-11-02",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化管理面板移动端体验，三个列表支持横向滚动",
+    "优化WebSocket连接配置，支持多种环境适配",
+    "视频代理添加30秒超时控制"
+    ],
+    fixed: [
+    "修复移动端继续观看板块选集徽章尺寸过大问题",
+    "修复视频代理超时导致的连接失败"
+    ]
+  },
+  {
     version: "1.0.20",
     date: "2025-11-02",
     added: [
