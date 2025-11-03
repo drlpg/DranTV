@@ -1132,7 +1132,7 @@ function LivePageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/live'>
-        <div className='flex items-center justify-center h-full'>
+        <div className='flex items-center justify-center min-h-full'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画加载图标 - 缩小30% */}
             <div className='relative mb-4'>
@@ -1197,7 +1197,7 @@ function LivePageClient() {
   if (error) {
     return (
       <PageLayout activePath='/live'>
-        <div className='flex items-center justify-center h-full'>
+        <div className='flex items-center justify-center min-h-full'>
           <div className='text-center w-full md:w-[30vw] mx-auto px-6'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
