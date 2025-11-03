@@ -1480,11 +1480,11 @@ function SearchPageClient() {
               </div>
               {searchResults.length === 0 ? (
                 isLoading ? (
-                  <div className='flex justify-center items-center h-40'>
+                  <div className='flex justify-center items-center min-h-[calc(100dvh-3rem-3.5rem-env(safe-area-inset-bottom,0px)-12rem)] md:min-h-[calc(100vh-4rem-12rem)]'>
                     <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500'></div>
                   </div>
                 ) : (
-                  <div className='text-center text-gray-500 py-8 dark:text-gray-400'>
+                  <div className='flex justify-center items-center min-h-[calc(100dvh-3rem-3.5rem-env(safe-area-inset-bottom,0px)-12rem)] md:min-h-[calc(100vh-4rem-12rem)] text-gray-500 dark:text-gray-400'>
                     未找到相关结果
                   </div>
                 )
