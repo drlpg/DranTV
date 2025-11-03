@@ -43,9 +43,17 @@ const PageLayout = ({
           <main
             className={`${
               noPadding
-                ? 'h-full overflow-hidden md:min-h-[calc(100vh-3rem)] md:overflow-visible md:pt-0 md:pb-0'
+                ? 'overflow-hidden md:min-h-[calc(100vh-3rem)] md:overflow-visible md:pt-0 md:pb-0'
                 : 'min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
             }`}
+            style={
+              noPadding
+                ? {
+                    height:
+                      'calc(100dvh - 3rem - 4rem - env(safe-area-inset-bottom, 0px))',
+                  }
+                : undefined
+            }
           >
             {children}
           </main>
