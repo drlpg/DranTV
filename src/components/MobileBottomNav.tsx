@@ -104,7 +104,7 @@ const MobileBottomNav = memo(({ activePath }: MobileBottomNavProps) => {
         /* 紧贴视口底部，同时在内部留出安全区高度 */
         bottom: 0,
         paddingBottom: 'env(safe-area-inset-bottom)',
-        minHeight: 'calc(3.5rem + env(safe-area-inset-bottom))',
+        minHeight: 'calc(4rem + env(safe-area-inset-bottom))',
       }}
     >
       <ul className='flex items-center overflow-x-auto scrollbar-hide'>
@@ -118,7 +118,7 @@ const MobileBottomNav = memo(({ activePath }: MobileBottomNavProps) => {
             >
               <Link
                 href={item.href}
-                className='flex flex-col items-center justify-center w-full h-14 gap-1 text-xs py-1.5'
+                className='flex flex-col items-center justify-center w-full h-16 gap-1 text-xs py-1.5'
               >
                 <item.icon
                   className={`h-6 w-6 ${
