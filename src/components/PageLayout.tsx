@@ -45,21 +45,7 @@ const PageLayout = ({
           }}
         >
           {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间 */}
-          <main
-            className={
-              disableMobileScroll
-                ? 'md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
-                : 'min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
-            }
-            style={
-              disableMobileScroll
-                ? {
-                    height:
-                      'calc(100dvh - 3rem - 4rem - env(safe-area-inset-bottom, 0px))',
-                  }
-                : undefined
-            }
-          >
+          <main className='min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>
