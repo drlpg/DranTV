@@ -181,7 +181,7 @@ function LoginPageClient() {
         className='relative z-10 w-full max-w-sm sm:max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-9'
         data-scrollable='true'
       >
-        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-lg sm:text-2xl font-normal mb-5 sm:mb-6'>
+        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-xl sm:text-2xl font-normal mb-5 sm:mb-6'>
           登录或注册
         </h1>
         <form onSubmit={handleSubmit} className='space-y-5'>
