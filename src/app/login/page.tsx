@@ -12,6 +12,7 @@ import MachineCode from '@/lib/machine-code';
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import GlobalThemeLoader from '@/components/GlobalThemeLoader';
+import { usePreventScroll } from '@/hooks/usePreventScroll';
 
 // 版本显示组件
 function VersionDisplay() {
@@ -42,6 +43,9 @@ function LoginPageClient() {
   const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true); // 站点是否启用设备码功能
 
   const { siteName } = useSite();
+
+  // 禁用移动端滚动和橡皮筋效果
+  usePreventScroll(true);
 
   // 在客户端挂载后设置配置并生成机器码
   useEffect(() => {
@@ -155,14 +159,26 @@ function LoginPageClient() {
   };
 
   return (
-    <div className='relative h-screen flex items-center justify-center px-4 overflow-hidden'>
+    <div className='fixed inset-0 flex flex-col items-center justify-center px-4 overflow-hidden md:relative md:h-screen'>
       <GlobalThemeLoader />
-      <div className='absolute top-4 right-4'>
+      <div className='absolute top-4 right-4 z-20'>
         <ThemeToggle />
       </div>
-      <div className='relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-10'>
-        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-2xl sm:text-3xl font-extrabold mb-6 sm:mb-8'>
+
+      {/* Logo 和标题 - 移动端居中，桌面端左上角 */}
+      <div className='flex items-center justify-center gap-2 mb-6 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
+        <img src='/logo.png' alt='Logo' className='h-7 w-auto object-contain' />
+        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-xl sm:text-2xl font-normal'>
           {siteName}
+        </h1>
+      </div>
+
+      <div
+        className='relative z-10 w-full max-w-sm sm:max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-9'
+        data-scrollable='true'
+      >
+        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-lg sm:text-xl font-normal mb-5 sm:mb-6'>
+          登录或注册
         </h1>
         <form onSubmit={handleSubmit} className='space-y-5'>
           {shouldAskUsername && (
