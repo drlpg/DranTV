@@ -1132,7 +1132,7 @@ function LivePageClient() {
   if (loading) {
     return (
       <PageLayout activePath='/live' disableMobileScroll={true}>
-        <div className='flex items-center justify-center h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:h-auto md:mt-0 md:mb-0'>
+        <div className='flex items-center justify-center h-full md:min-h-[calc(100vh-3rem)]'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画加载图标 - 缩小30% */}
             <div className='relative mb-4'>
@@ -1197,7 +1197,7 @@ function LivePageClient() {
   if (error) {
     return (
       <PageLayout activePath='/live' disableMobileScroll={true}>
-        <div className='flex items-center justify-center h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:h-auto md:mt-0 md:mb-0'>
+        <div className='flex items-center justify-center h-full md:min-h-[calc(100vh-3rem)]'>
           <div className='text-center w-full md:w-[30vw] mx-auto px-6'>
             {/* 错误图标 */}
             <div className='relative mb-8'>
