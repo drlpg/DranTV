@@ -1289,7 +1289,10 @@ function SearchPageClient() {
   };
 
   return (
-    <PageLayout activePath='/search'>
+    <PageLayout
+      activePath='/search'
+      disableMobileScroll={!showResults && searchHistory.length === 0}
+    >
       <div
         className={`px-4 sm:px-10 transition-all duration-500 ${
           !showResults && searchHistory.length === 0

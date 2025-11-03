@@ -1131,7 +1131,7 @@ function LivePageClient() {
 
   if (loading) {
     return (
-      <PageLayout activePath='/live'>
+      <PageLayout activePath='/live' disableMobileScroll={true}>
         <div className='flex items-center justify-center min-h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] overflow-hidden md:min-h-[calc(100vh-3rem)] md:mt-0 md:mb-0 md:overflow-visible'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画加载图标 - 缩小30% */}
@@ -1196,7 +1196,7 @@ function LivePageClient() {
 
   if (error) {
     return (
-      <PageLayout activePath='/live'>
+      <PageLayout activePath='/live' disableMobileScroll={true}>
         <div className='flex items-center justify-center min-h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] overflow-hidden md:min-h-[calc(100vh-3rem)] md:mt-0 md:mb-0 md:overflow-visible'>
           <div className='text-center w-full md:w-[30vw] mx-auto px-6'>
             {/* 错误图标 */}

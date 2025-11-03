@@ -7,9 +7,14 @@ import Sidebar from './Sidebar';
 interface PageLayoutProps {
   children: React.ReactNode;
   activePath?: string;
+  disableMobileScroll?: boolean; // 新增：禁用移动端滚动
 }
 
-const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
+const PageLayout = ({
+  children,
+  activePath = '/',
+  disableMobileScroll = false,
+}: PageLayoutProps) => {
   return (
     <div className='w-full h-dvh flex flex-col overflow-hidden md:min-h-dvh md:h-auto md:overflow-visible'>
       {/* 顶部头部 - 仅移动端显示，固定定位 */}
@@ -24,7 +29,9 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
 
         {/* 主内容区域 - 移动端固定高度可滚动，桌面端正常流 */}
         <div
-          className='relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden overflow-y-auto md:h-auto md:overflow-visible'
+          className={`relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden ${
+            disableMobileScroll ? 'overflow-y-hidden' : 'overflow-y-auto'
+          } md:h-auto md:overflow-visible`}
           style={{
             overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
