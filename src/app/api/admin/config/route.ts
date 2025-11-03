@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     let userRole = 'guest'; // 未登录用户为 guest
     let isAdmin = false;
 
-    if (username === process.env.USERNAME) {
+    if (username === process.env.LOGIN_USERNAME) {
       userRole = 'owner';
       isAdmin = true;
     } else if (username) {

@@ -16,7 +16,7 @@ import GlobalThemeLoader from '@/components/GlobalThemeLoader';
 // 版本显示组件
 function VersionDisplay() {
   return (
-    <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400'>
+    <div className='absolute bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400'>
       <span className='font-mono'>v{CURRENT_VERSION}</span>
     </div>
   );
@@ -155,23 +155,23 @@ function LoginPageClient() {
   };
 
   return (
-    <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
+    <div className='relative h-screen flex items-center justify-center px-4 overflow-hidden'>
       <GlobalThemeLoader />
       <div className='absolute top-4 right-4'>
         <ThemeToggle />
       </div>
-      <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
-        <h1 className='text-blue-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
+      <div className='relative z-10 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-10'>
+        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-2xl sm:text-3xl font-extrabold mb-6 sm:mb-8'>
           {siteName}
         </h1>
-        <form onSubmit={handleSubmit} className='space-y-8'>
+        <form onSubmit={handleSubmit} className='space-y-5'>
           {shouldAskUsername && (
             <div className='relative'>
               <input
                 id='username'
                 type='text'
                 autoComplete='username'
-                className='peer block w-full rounded-lg border-0 py-4 px-4 pt-6 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent'
+                className='peer block w-full rounded-lg border border-gray-200 dark:border-gray-700 pt-6 pb-1.5 px-4 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent transition-colors'
                 placeholder='用户名'
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -180,9 +180,9 @@ function LoginPageClient() {
                 htmlFor='username'
                 className={`absolute left-4 transition-all duration-200 pointer-events-none ${
                   username
-                    ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
-                    : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
-                }`}
+                    ? 'top-2 text-xs text-blue-600 dark:text-blue-400'
+                    : 'top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400'
+                } peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400`}
               >
                 用户名
               </label>
@@ -194,7 +194,7 @@ function LoginPageClient() {
               id='password'
               type='password'
               autoComplete='current-password'
-              className='peer block w-full rounded-lg border-0 py-4 px-4 pt-6 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-white/60 dark:ring-white/20 focus:ring-2 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent'
+              className='peer block w-full rounded-lg border border-gray-200 dark:border-gray-700 pt-6 pb-1.5 px-4 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent transition-colors'
               placeholder='密码'
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -203,9 +203,9 @@ function LoginPageClient() {
               htmlFor='password'
               className={`absolute left-4 transition-all duration-200 pointer-events-none ${
                 password
-                  ? 'top-1 text-xs text-blue-600 dark:text-blue-400'
-                  : 'top-4 text-base text-gray-500 dark:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400'
-              }`}
+                  ? 'top-2 text-xs text-blue-600 dark:text-blue-400'
+                  : 'top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400'
+              } peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400`}
             >
               密码
             </label>
@@ -274,7 +274,7 @@ function LoginPageClient() {
                 !requireMachineCode &&
                 !bindMachineCode)
             }
-            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
+            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
           >
             {loading ? '登录中...' : '登录'}
           </button>

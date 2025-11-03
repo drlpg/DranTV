@@ -1293,7 +1293,7 @@ function SearchPageClient() {
       <div
         className={`px-4 sm:px-10 py-4 sm:py-8 overflow-visible transition-all duration-500 ${
           !showResults && searchHistory.length === 0
-            ? 'min-h-[calc(100vh-80px)] flex items-center justify-center mb-0'
+            ? 'h-full flex items-center justify-center mb-0'
             : 'mb-10'
         }`}
       >

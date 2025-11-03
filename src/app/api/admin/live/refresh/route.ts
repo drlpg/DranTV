@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const authInfo = getAuthInfoFromCookie(request);
     const username = authInfo?.username;
     const config = await getConfig();
-    if (username !== process.env.USERNAME) {
+    if (username !== process.env.LOGIN_USERNAME) {
       // 管理员
       const user = config.UserConfig.Users.find(
         (u) => u.username === username

@@ -30,8 +30,8 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间 */}
-          <main className='pt-12 pb-14 md:min-h-[calc(100dvh-4rem)] md:pt-0 md:pb-0'>
+          {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间；桌面端减去Footer高度 */}
+          <main className='h-full pt-12 pb-14 md:min-h-[calc(100dvh-6rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>

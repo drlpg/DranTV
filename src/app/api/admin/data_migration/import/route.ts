@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 检查用户权限（只有站长可以导入数据）
-    if (authInfo.username !== process.env.USERNAME) {
+    if (authInfo.username !== process.env.LOGIN_USERNAME) {
       return NextResponse.json({ error: '权限不足，只有站长可以导入数据' }, { status: 401 });
     }
 

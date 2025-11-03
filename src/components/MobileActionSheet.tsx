@@ -1,6 +1,7 @@
 import { Radio, X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ActionItem {
   id: string;
@@ -160,7 +161,9 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
     }
   };
 
-  return (
+  if (!isVisible) return null;
+
+  return createPortal(
     <div
       className='fixed inset-0 z-[9999] flex items-end justify-center'
       onTouchMove={(e) => {
@@ -212,7 +215,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
         }}
       >
         {/* 头部 */}
-        <div className='flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800'>
+        <div className='flex items-center justify-between p-4 border-b border-dashed border-gray-200 dark:border-gray-700'>
           <div className='flex items-center gap-3 flex-1 min-w-0'>
             {poster && (
               <div className='relative w-12 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0'>
@@ -329,7 +332,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
 
               {/* 分割线 - 最后一项不显示 */}
               {index < actions.length - 1 && (
-                <div className='border-b border-gray-100 dark:border-gray-800 ml-10'></div>
+                <div className='border-b border-dashed border-gray-200 dark:border-gray-700'></div>
               )}
             </div>
           ))}
@@ -367,7 +370,8 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
