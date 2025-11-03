@@ -1293,7 +1293,7 @@ function SearchPageClient() {
       <div
         className={`px-4 sm:px-10 overflow-visible transition-all duration-500 ${
           !showResults && searchHistory.length === 0
-            ? 'h-full md:min-h-[calc(100vh-3rem)] flex items-center justify-center'
+            ? 'min-h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:mt-0 md:mb-0 flex items-center justify-center'
             : 'py-4 sm:py-8 mb-10'
         }`}
       >
