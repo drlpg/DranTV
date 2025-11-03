@@ -1291,10 +1291,10 @@ function SearchPageClient() {
   return (
     <PageLayout activePath='/search'>
       <div
-        className={`px-4 sm:px-10 py-4 sm:py-8 overflow-visible transition-all duration-500 ${
+        className={`px-4 sm:px-10 overflow-visible transition-all duration-500 ${
           !showResults && searchHistory.length === 0
-            ? 'h-full flex items-center justify-center mb-0'
-            : 'mb-10'
+            ? 'min-h-full -mt-12 -mb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:mt-0 md:mb-0 flex items-center justify-center'
+            : 'py-4 sm:py-8 mb-10'
         }`}
       >
         {/* 搜索框容器 - 根据是否有内容决定位置 */}
@@ -1480,11 +1480,11 @@ function SearchPageClient() {
               </div>
               {searchResults.length === 0 ? (
                 isLoading ? (
-                  <div className='flex justify-center items-center min-h-[calc(100dvh-3rem-3.5rem-env(safe-area-inset-bottom,0px)-15rem)] md:min-h-[calc(100vh-3.5rem-15rem)]'>
+                  <div className='flex justify-center items-center py-20'>
                     <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500'></div>
                   </div>
                 ) : (
-                  <div className='flex justify-center items-center min-h-[calc(100dvh-3rem-3.5rem-env(safe-area-inset-bottom,0px)-15rem)] md:min-h-[calc(100vh-3.5rem-15rem)] text-gray-500 dark:text-gray-400'>
+                  <div className='flex justify-center items-center py-20 text-gray-500 dark:text-gray-400'>
                     未找到相关结果
                   </div>
                 )
