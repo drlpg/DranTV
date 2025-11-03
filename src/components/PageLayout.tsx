@@ -8,14 +8,12 @@ interface PageLayoutProps {
   children: React.ReactNode;
   activePath?: string;
   disableMobileScroll?: boolean; // 新增：禁用移动端滚动
-  noPadding?: boolean; // 新增：移除移动端的padding（用于全屏居中页面）
 }
 
 const PageLayout = ({
   children,
   activePath = '/',
   disableMobileScroll = false,
-  noPadding = false,
 }: PageLayoutProps) => {
   return (
     <div className='w-full h-dvh flex flex-col overflow-hidden md:min-h-dvh md:h-auto md:overflow-visible'>
@@ -32,7 +30,7 @@ const PageLayout = ({
         {/* 主内容区域 - 移动端固定高度可滚动，桌面端正常流 */}
         <div
           className={`relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden ${
-            disableMobileScroll ? 'overflow-y-hidden' : 'overflow-y-auto'
+            disableMobileScroll ? 'overflow-hidden' : 'overflow-y-auto'
           } md:h-auto md:overflow-visible`}
           style={{
             overscrollBehavior: disableMobileScroll ? 'none' : 'contain',
@@ -40,21 +38,7 @@ const PageLayout = ({
           }}
         >
           {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间 */}
-          <main
-            className={`${
-              noPadding
-                ? 'overflow-hidden md:min-h-[calc(100vh-3rem)] md:overflow-visible md:pt-0 md:pb-0'
-                : 'min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
-            }`}
-            style={
-              noPadding
-                ? {
-                    height:
-                      'calc(100dvh - 3rem - 4rem - env(safe-area-inset-bottom, 0px))',
-                  }
-                : undefined
-            }
-          >
+          <main className='min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>
