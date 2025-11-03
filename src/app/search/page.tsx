@@ -1291,10 +1291,10 @@ function SearchPageClient() {
   return (
     <PageLayout activePath='/search'>
       <div
-        className={`px-4 sm:px-10 overflow-visible transition-all duration-500 ${
+        className={`px-4 sm:px-10 transition-all duration-500 ${
           !showResults && searchHistory.length === 0
-            ? 'min-h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:mt-0 md:mb-0 flex items-center justify-center'
-            : 'py-4 sm:py-8 mb-10'
+            ? 'min-h-[calc(100dvh-3rem-4rem-env(safe-area-inset-bottom,0px))] -mt-12 -mb-[calc(4rem+env(safe-area-inset-bottom,0px))] overflow-hidden md:min-h-[calc(100vh-3rem)] md:mt-0 md:mb-0 md:overflow-visible flex items-center justify-center'
+            : 'py-4 sm:py-8 mb-10 overflow-visible'
         }`}
       >
         {/* 搜索框容器 - 根据是否有内容决定位置 */}
