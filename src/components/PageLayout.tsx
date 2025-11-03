@@ -23,9 +23,15 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
         </div>
 
         {/* 主内容区域 - 移动端固定高度可滚动，桌面端正常流 */}
-        <div className='relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden overflow-y-auto md:h-auto md:overflow-visible'>
+        <div
+          className='relative min-w-0 flex-1 transition-all duration-300 h-full overflow-x-hidden overflow-y-auto md:h-auto md:overflow-visible'
+          style={{
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间 */}
-          <main className='pt-12 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100dvh-4rem)] md:pt-0 md:pb-0'>
+          <main className='pt-12 pb-14 md:min-h-[calc(100dvh-4rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>
