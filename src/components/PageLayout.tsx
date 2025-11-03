@@ -35,7 +35,7 @@ const PageLayout = ({
             disableMobileScroll ? 'overflow-y-hidden' : 'overflow-y-auto'
           } md:h-auto md:overflow-visible`}
           style={{
-            overscrollBehavior: 'contain',
+            overscrollBehavior: disableMobileScroll ? 'none' : 'contain',
             WebkitOverflowScrolling: 'touch',
           }}
         >
@@ -43,7 +43,7 @@ const PageLayout = ({
           <main
             className={`${
               noPadding
-                ? 'h-full md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
+                ? 'h-full overflow-hidden md:min-h-[calc(100vh-3rem)] md:overflow-visible md:pt-0 md:pb-0'
                 : 'min-h-full pt-12 pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100vh-3rem)] md:pt-0 md:pb-0'
             }`}
           >
