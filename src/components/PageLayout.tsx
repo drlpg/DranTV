@@ -1,3 +1,7 @@
+'use client';
+
+import { usePreventScroll } from '@/hooks/usePreventScroll';
+
 import { BackButton } from './BackButton';
 import { Footer } from './Footer';
 import MobileBottomNav from './MobileBottomNav';
@@ -15,6 +19,9 @@ const PageLayout = ({
   activePath = '/',
   disableMobileScroll = false,
 }: PageLayoutProps) => {
+  // 使用 hook 阻止移动端滚动
+  usePreventScroll(disableMobileScroll);
+
   return (
     <div className='w-full h-dvh flex flex-col overflow-hidden md:min-h-dvh md:h-auto md:overflow-visible'>
       {/* 顶部头部 - 仅移动端显示，固定定位 */}
