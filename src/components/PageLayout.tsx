@@ -31,17 +31,7 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           }}
         >
           {/* 主内容 - 移动端顶部留出header空间，底部留出导航栏空间；桌面端减去Footer高度 */}
-          <main className='h-full pt-12 md:min-h-[calc(100dvh-6rem)] md:pt-0 md:pb-0'>
-            <style jsx>{`
-              main {
-                padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-              }
-              @media (min-width: 768px) {
-                main {
-                  padding-bottom: 0;
-                }
-              }
-            `}</style>
+          <main className='min-h-full pt-12 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:min-h-[calc(100dvh-6rem)] md:pt-0 md:pb-0'>
             {children}
           </main>
         </div>
