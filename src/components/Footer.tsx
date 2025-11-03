@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className='w-full py-4 text-center border-t border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm'>
+    <footer className='w-full h-12 flex items-center justify-center text-center border-t border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm'>
       <div className='text-xs text-gray-500 dark:text-gray-400 px-4'>
         <span>本站基于 </span>
         <button
