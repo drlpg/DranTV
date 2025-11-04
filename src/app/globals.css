@@ -2,40 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* View Transition API - 圆形扩散动画 */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.4s;
-  animation-timing-function: ease-in-out;
-}
-
-::view-transition-old(root) {
-  animation-name: theme-fade-out;
-}
-
-::view-transition-new(root) {
-  animation-name: theme-fade-in;
-}
-
-@keyframes theme-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes theme-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-/* 为不支持 View Transition API 的浏览器提供降级方案 */
-@supports not (view-transition-name: none) {
-  html {
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-}
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none; /* IE and Edge */
@@ -48,11 +14,11 @@
 
   /* 侧边栏初始状态 - 通过 data 属性控制，避免 hydration 不匹配 */
   html[data-sidebar-collapsed='true'] aside[data-sidebar] {
-    width: 3.5rem !important;
+    width: 3rem !important;
   }
 
   html[data-sidebar-collapsed='true'] .sidebar-offset {
-    width: 3.5rem !important;
+    width: 3rem !important;
   }
 
   /* 底部按钮布局 - 收起状态为纵向 */
@@ -1575,50 +1541,6 @@ html:not(.dark) body {
 
 /* 默认显示滚动条，使用前面定义的自定义样式 */
 /* 如果需要隐藏滚动条，请使用 .scrollbar-hide 类 */
-
-/* View Transitions API 动画 */
-@keyframes slide-from-top {
-  from {
-    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
-  }
-  to {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-}
-
-@keyframes slide-from-bottom {
-  from {
-    clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
-  }
-  to {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-}
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.8s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  animation-fill-mode: both;
-}
-
-/*
-  切换时，旧的视图不应该有动画，它应该在下面，等待被新的视图覆盖。
-  这可以防止在动画完成前，页面底部提前变色。
-*/
-::view-transition-old(root) {
-  animation: none;
-}
-
-/* 从浅色到深色：新内容（深色）从顶部滑入 */
-html.dark::view-transition-new(root) {
-  animation-name: slide-from-top;
-}
-
-/* 从深色到浅色：新内容（浅色）从底部滑入 */
-html:not(.dark)::view-transition-new(root) {
-  animation-name: slide-from-bottom;
-}
 
 /* 确保自定义主题色类在所有主题下正确显示 */
 .bg-theme-accent {

@@ -39,8 +39,7 @@ export function ThemeToggleButton() {
     if (!manualTheme) return false;
 
     try {
-      const { theme, timestamp } = JSON.parse(manualTheme);
-      const now = Date.now();
+      JSON.parse(manualTheme);
       // 手动切换记录在下一个时间段切换前有效
       const hour = new Date().getHours();
       const currentPeriod =
@@ -141,7 +140,7 @@ export function ThemeToggleButton() {
   if (!mounted) {
     return (
       <button
-        className='group w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
+        className='group w-8 h-8 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
         aria-label='Toggle theme'
         disabled
       >
@@ -153,7 +152,7 @@ export function ThemeToggleButton() {
   const toggleTheme = () => {
     const targetTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
 
-    // 记录手动切换
+    // 先更新 localStorage，让 next-themes 读取
     const hour = new Date().getHours();
     const currentPeriod =
       hour >= LIGHT_MODE_START && hour < LIGHT_MODE_END ? 'light' : 'dark';
@@ -167,23 +166,17 @@ export function ThemeToggleButton() {
     );
     localStorage.setItem('manualThemePeriod', currentPeriod);
 
+    // 更新主题颜色
     setThemeColor(targetTheme);
 
-    // 使用 View Transition API 实现从上到下或从下到上的过渡
-    if (!(document as any).startViewTransition) {
-      setTheme(targetTheme);
-      return;
-    }
-
-    (document as any).startViewTransition(() => {
-      setTheme(targetTheme);
-    });
+    // 使用 setTheme 切换主题
+    setTheme(targetTheme);
   };
 
   return (
     <button
       onClick={toggleTheme}
-      className='group w-10 h-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
+      className='group w-8 h-8 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-300/70 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700/80 dark:hover:text-blue-400 font-medium transition-colors duration-200 flex-shrink-0'
       aria-label='Toggle theme'
       title={resolvedTheme === 'dark' ? '切换到浅色模式' : '切换到暗色模式'}
     >
