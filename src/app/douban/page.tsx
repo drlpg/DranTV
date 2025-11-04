@@ -805,7 +805,15 @@ function DoubanPageClient() {
             <div ref={loadingRef} className='flex justify-center mt-12 py-8'>
               {isLoadingMore ? (
                 <div className='flex items-center gap-2'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500'></div>
+                  <img
+                    src='/img/spinning-circles.svg'
+                    alt='Loading'
+                    className='w-6 h-6'
+                    style={{
+                      filter:
+                        'invert(45%) sepia(98%) saturate(2446%) hue-rotate(201deg) brightness(98%) contrast(101%)',
+                    }}
+                  />
                   <span className='text-gray-600 dark:text-gray-400'>
                     加载中...
                   </span>

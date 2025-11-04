@@ -153,11 +153,10 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
   const getActionHoverColor = (color: ActionItem['color']) => {
     switch (color) {
       case 'danger':
-        return 'hover:bg-red-50/50 dark:hover:bg-red-900/10';
+        return 'hover:bg-red-50 dark:hover:bg-red-900/10 active:bg-red-100 dark:active:bg-red-900/20';
       case 'primary':
-        return 'hover:bg-blue-50/50 dark:hover:bg-blue-900/10';
       default:
-        return 'hover:bg-gray-50/50 dark:hover:bg-gray-800/20';
+        return 'hover:bg-gray-100 dark:hover:bg-gray-800/20 active:bg-gray-200 dark:active:bg-gray-800/30';
     }
   };
 
@@ -274,7 +273,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
         </div>
 
         {/* 操作列表 */}
-        <div className='px-4 py-2'>
+        <div className='px-2 py-2'>
           {actions.map((action, index) => (
             <div key={action.id}>
               <button
@@ -284,7 +283,7 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                 }}
                 disabled={action.disabled}
                 className={`
-                  w-full flex items-center gap-4 py-4 px-2 transition-all duration-150 ease-out
+                  w-full flex items-center gap-4 py-4 px-4 rounded-lg transition-all duration-150 ease-out
                   ${
                     action.disabled
                       ? 'opacity-50 cursor-not-allowed'
@@ -330,9 +329,11 @@ const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
                 )}
               </button>
 
-              {/* 分割线 - 最后一项不显示 */}
+              {/* 分割线 - 最后一项不显示，定位在间距中间 */}
               {index < actions.length - 1 && (
-                <div className='border-b border-dashed border-gray-200 dark:border-gray-700'></div>
+                <div className='relative h-2'>
+                  <div className='absolute top-1/2 -translate-y-1/2 left-0 right-0 border-b border-dashed border-gray-200 dark:border-gray-700'></div>
+                </div>
               )}
             </div>
           ))}

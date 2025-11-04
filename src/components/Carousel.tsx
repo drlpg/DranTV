@@ -98,12 +98,12 @@ export default function Carousel({
     return (
       <div className='relative w-full overflow-hidden rounded-lg aspect-[16/9] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
         <div className='absolute inset-0 flex items-center justify-center'>
-          <div className='relative w-[20%] h-[20%] min-w-[50px] min-h-[50px] max-w-[100px] max-h-[100px]'>
+          <div className='relative w-12 h-3 sm:w-20 sm:h-5'>
             <Image
               src='/img/loading.svg'
               alt='加载中'
               fill
-              sizes='(max-width: 768px) 50px, 100px'
+              sizes='(max-width: 640px) 48px, 80px'
               className='object-contain opacity-80'
               priority
             />
@@ -150,12 +150,12 @@ export default function Carousel({
                 {/* 加载中状态 - 在图片加载完成前显示 */}
                 {!imageLoaded.has(index) && (
                   <div className='absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10'>
-                    <div className='relative w-[20%] h-[20%] min-w-[50px] min-h-[50px] max-w-[100px] max-h-[100px]'>
+                    <div className='relative w-12 h-3 sm:w-20 sm:h-5'>
                       <Image
                         src='/img/loading.svg'
                         alt='加载中'
                         fill
-                        sizes='(max-width: 768px) 50px, 100px'
+                        sizes='(max-width: 640px) 48px, 80px'
                         className='object-contain opacity-80'
                         priority
                       />
