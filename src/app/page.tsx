@@ -222,7 +222,7 @@ function HomeClient() {
   };
 
   return (
-    <PageLayout suppressHydrationWarning>
+    <PageLayout>
       <div
         className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'
         suppressHydrationWarning
