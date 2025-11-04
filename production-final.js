@@ -57,14 +57,6 @@ const app = next({
 
 const handle = app.getRequestHandler();
 
-const app = next({
-  dev: false,
-  hostname,
-  port,
-});
-
-const handle = app.getRequestHandler();
-
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     try {
