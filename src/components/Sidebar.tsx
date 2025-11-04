@@ -23,7 +23,6 @@ import {
   memo,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -58,14 +57,25 @@ const SidebarComponent = ({ onToggle, activePath = '/' }: SidebarProps) => {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
-  // 使用 lazy initialization 从全局变量读取初始状态
+  // 使用 lazy initialization 从 localStorage 或全局变量读取初始状态
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     // 这个函数只在客户端首次渲染时执行一次
-    if (
-      typeof window !== 'undefined' &&
-      typeof window.__sidebarCollapsed !== 'undefined'
-    ) {
-      return window.__sidebarCollapsed;
+    if (typeof window !== 'undefined') {
+      // 优先从全局变量读取
+      if (typeof window.__sidebarCollapsed !== 'undefined') {
+        return window.__sidebarCollapsed;
+      }
+      // 其次从 localStorage 读取
+      try {
+        const stored = localStorage.getItem('sidebarCollapsed');
+        if (stored !== null) {
+          const collapsed = JSON.parse(stored);
+          window.__sidebarCollapsed = collapsed;
+          return collapsed;
+        }
+      } catch (e) {
+        // 静默失败
+      }
     }
     return false; // 默认展开
   });
@@ -174,7 +184,7 @@ const SidebarComponent = ({ onToggle, activePath = '/' }: SidebarProps) => {
         <aside
           data-sidebar
           suppressHydrationWarning
-          className={`fixed top-0 left-0 h-screen bg-white/40 backdrop-blur-xl border-r border-gray-200/50 z-10 shadow-lg dark:bg-gray-900/70 dark:border-gray-700/50 rounded-r-xl ${
+          className={`fixed top-0 left-0 h-screen bg-white/40 backdrop-blur-xl border-r border-gray-200/50 z-10 shadow-lg dark:bg-gray-900/70 dark:border-gray-700/50 rounded-r-lg ${
             isCollapsed ? 'w-[3rem]' : 'w-[5.4375rem]'
           }`}
           style={{
@@ -185,9 +195,9 @@ const SidebarComponent = ({ onToggle, activePath = '/' }: SidebarProps) => {
         >
           <div className='flex h-full flex-col overflow-hidden'>
             {/* 首页导航 */}
-            <nav className='px-2 pt-4'>
-              {/* Logo - 仅在收起状态显示 */}
-              {isCollapsed && (
+            <nav className='px-2 pt-4' suppressHydrationWarning>
+              {/* Logo - 仅在收起状态显示，仅客户端渲染 */}
+              {mounted && isCollapsed && (
                 <Link
                   href='/'
                   className='flex items-center justify-center w-8 h-8 mb-2'

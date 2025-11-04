@@ -222,8 +222,11 @@ function HomeClient() {
   };
 
   return (
-    <PageLayout>
-      <div className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'>
+    <PageLayout suppressHydrationWarning>
+      <div
+        className='px-4 sm:px-10 py-4 sm:py-8 overflow-visible'
+        suppressHydrationWarning
+      >
         {/* 顶部 Tab 切换 */}
         <div className='mb-[22px] sm:mb-8 flex justify-between items-center'>
           {/* 桌面端左侧Logo和标题 - 仅在桌面端显示 */}
@@ -265,7 +268,7 @@ function HomeClient() {
           </div>
         </div>
 
-        <div>
+        <div suppressHydrationWarning>
           {activeTab === 'favorites' ? (
             // 收藏夹视图
             <section className='mb-6 sm:mb-8'>
@@ -363,7 +366,6 @@ function HomeClient() {
                             rate={movie.rate}
                             year={movie.year}
                             type='movie'
-                            priority={index === 0}
                           />
                         </div>
                       ))}
@@ -415,7 +417,7 @@ function HomeClient() {
               </section>
 
               {/* 每日新番放送 */}
-              <section className='mb-6 sm:mb-8'>
+              <section className='mb-6 sm:mb-8' suppressHydrationWarning>
                 <div className='mb-4 flex items-center justify-between'>
                   <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
                     新番放送
@@ -428,7 +430,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <ScrollableRow suppressHydrationWarning>
                   {loading
                     ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
@@ -610,7 +612,7 @@ function HomeClient() {
 
 export default function Home() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <HomeClient />
     </Suspense>
   );

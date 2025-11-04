@@ -17,7 +17,22 @@ const MobileHeader = memo(({ showBackButton = false }: MobileHeaderProps) => {
   return (
     <header className='md:hidden fixed top-0 left-0 right-0 z-[999] w-full bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm dark:bg-gray-900/70 dark:border-gray-700/50 rounded-b-xl'>
       <div className='h-12 flex items-center justify-between px-4'>
-        {/* 左侧：搜索按钮 */}
+        {/* 左侧：Logo + 标题 */}
+        <Link
+          href='/'
+          className='flex items-center gap-2 h-6 hover:opacity-80 transition-opacity'
+        >
+          <img
+            src='/logo.png'
+            alt='Logo'
+            className='w-6 h-6 object-contain rounded-lg'
+          />
+          <span className='text-xl font-bold text-gray-600 dark:text-gray-300 tracking-tight leading-none'>
+            {siteName}
+          </span>
+        </Link>
+
+        {/* 右侧按钮 */}
         <div className='flex items-center gap-1'>
           <Link
             href='/search'
@@ -38,20 +53,6 @@ const MobileHeader = memo(({ showBackButton = false }: MobileHeaderProps) => {
               />
             </svg>
           </Link>
-        </div>
-
-        {/* 中间：Logo（绝对居中） */}
-        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none'>
-          <Link
-            href='/'
-            className='text-2xl font-bold text-gray-600 dark:text-gray-300 tracking-tight hover:opacity-80 transition-opacity pointer-events-auto'
-          >
-            {siteName}
-          </Link>
-        </div>
-
-        {/* 右侧按钮 */}
-        <div className='flex items-center gap-1'>
           <ThemeToggle />
           <UserMenu />
         </div>

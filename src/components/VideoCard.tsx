@@ -761,7 +761,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                   origin === 'live' ? 'object-contain' : 'object-cover'
                 }
                 referrerPolicy='no-referrer'
-                loading={priority ? undefined : 'lazy'}
+                loading='eager'
                 priority={priority}
                 onLoad={() => {
                   setIsLoading(true);
