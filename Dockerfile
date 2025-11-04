@@ -64,6 +64,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
+COPY --from=builder --chown=nextjs:nodejs /app/universal-start.js ./universal-start.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
@@ -119,5 +120,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001
 
-# 使用最终的生产环境脚本，分离WebSocket服务
-CMD ["node", "production-final.js"]
+# 使用通用启动脚本，支持共享端口模式
+CMD ["node", "universal-start.js"]
