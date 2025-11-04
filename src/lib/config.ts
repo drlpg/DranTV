@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion */
 
+import fs from 'fs';
+import path from 'path';
+
 import { db } from '@/lib/db';
 
 import { AdminConfig } from './admin.types';
@@ -330,6 +333,8 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // 读 db
   let adminConfig: AdminConfig | null = null;
+  let needsSave = false;
+
   try {
     adminConfig = await db.getAdminConfig();
   } catch (e) {
@@ -338,11 +343,40 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // db 中无配置，执行一次初始化
   if (!adminConfig) {
-    adminConfig = await getInitConfig('');
+    console.log('数据库中没有配置，开始初始化...');
+
+    // 读取config.json文件
+    let configFileContent = '';
+    try {
+      const configPath = path.join(process.cwd(), 'config.json');
+      if (fs.existsSync(configPath)) {
+        configFileContent = fs.readFileSync(configPath, 'utf-8');
+        console.log('已加载config.json配置文件');
+      } else {
+        console.warn('config.json文件不存在，使用空配置初始化');
+      }
+    } catch (e) {
+      console.error('读取config.json失败:', e);
+    }
+
+    adminConfig = await getInitConfig(configFileContent);
+    needsSave = true;
+  } else {
+    console.log('从数据库加载配置成功');
   }
+
+  // 执行配置自检
   adminConfig = configSelfCheck(adminConfig);
+
+  // 缓存配置
   cachedConfig = adminConfig;
-  await db.saveAdminConfig(cachedConfig);
+
+  // 只在初始化时保存到数据库，避免覆盖已有数据
+  if (needsSave) {
+    console.log('保存初始化配置到数据库');
+    await db.saveAdminConfig(cachedConfig);
+  }
+
   return cachedConfig;
 }
 

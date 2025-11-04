@@ -47,3 +47,4 @@ coverage/
 organize-project.bat
 git-auto.sh
 clear-database.js
+scripts/check-db.js
