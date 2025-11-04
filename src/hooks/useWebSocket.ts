@@ -44,32 +44,45 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const getWebSocketUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostname = window.location.hostname;
+    const currentPort = window.location.port;
 
-    // 优先使用环境变量配置的 WebSocket URL
+    // 1. 优先使用 NEXT_PUBLIC_WS_URL 环境变量（完整 URL）
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+      console.log('🔌 Using NEXT_PUBLIC_WS_URL:', wsUrl);
+      return `${wsUrl}?_=${Date.now()}`;
+    }
+
+    // 2. 运行时配置（用于 Docker 等场景）
     if (
       typeof window !== 'undefined' &&
       (window as any).RUNTIME_CONFIG?.WS_URL
     ) {
-      return `${(window as any).RUNTIME_CONFIG.WS_URL}?_=${Date.now()}`;
+      const wsUrl = (window as any).RUNTIME_CONFIG.WS_URL;
+      console.log('🔌 Using RUNTIME_CONFIG.WS_URL:', wsUrl);
+      return `${wsUrl}?_=${Date.now()}`;
     }
 
-    // 开发环境
+    // 3. 开发环境 - 使用独立端口 3001
     if (process.env.NODE_ENV === 'development') {
-      return `${protocol}//${hostname}:3001/ws?_=${Date.now()}`;
+      const wsUrl = `${protocol}//${hostname}:3001`;
+      console.log('🔌 Development mode, connecting to:', wsUrl);
+      return `${wsUrl}?_=${Date.now()}`;
     }
 
-    // 生产环境 - 尝试多种可能的配置
-    // 1. 如果有自定义端口，使用端口3001
-    if (
-      window.location.port &&
-      window.location.port !== '80' &&
-      window.location.port !== '443'
-    ) {
-      return `${protocol}//${hostname}:3001/ws?_=${Date.now()}`;
+    // 4. 生产环境自动检测
+    // 如果当前页面有非标准端口，尝试使用独立 WebSocket 端口
+    if (currentPort && currentPort !== '80' && currentPort !== '443') {
+      // 可能是 VPS 或 Docker 部署，尝试 3001 端口
+      const wsUrl = `${protocol}//${hostname}:3001`;
+      console.log('🔌 Non-standard port detected, trying:', wsUrl);
+      return `${wsUrl}?_=${Date.now()}`;
     }
 
-    // 2. 生产环境默认使用同域名的 /ws 路径（需要反向代理配置）
-    return `${protocol}//${hostname}/ws?_=${Date.now()}`;
+    // 5. 默认：共享端口模式（适用于 Railway, Vercel, Render 等）
+    const wsUrl = `${protocol}//${hostname}`;
+    console.log('🔌 Shared port mode, connecting to:', wsUrl);
+    return `${wsUrl}?_=${Date.now()}`;
   };
 
   // 连接WebSocket
