@@ -4,7 +4,6 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
-  output: 'standalone',
   eslint: {
     dirs: ['src'],
     ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误
