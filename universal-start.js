@@ -1,15 +1,6 @@
+/* eslint-disable @typescript-eslint/no-var-requires, no-console */
 /**
  * 通用启动文件 - 支持多种部署模式
- *
- * 部署模式：
- * 1. SHARED_PORT (默认): WebSocket 和 HTTP 共享同一端口 - 适用于 Railway, Vercel, Render 等
- * 2. SEPARATE_PORTS: WebSocket 和 HTTP 使用不同端口 - 适用于 VPS, Docker 等
- *
- * 环境变量：
- * - DEPLOYMENT_MODE: 'shared' | 'separate' (默认: 'shared')
- * - PORT: HTTP 服务端口 (默认: 3000)
- * - WS_PORT: WebSocket 端口 (仅在 separate 模式下使用，默认: 3001)
- * - NEXT_PUBLIC_WS_URL: 客户端 WebSocket URL (可选，用于自定义配置)
  */
 
 process.env.NODE_ENV = 'production';
@@ -18,55 +9,37 @@ const path = require('path');
 const http = require('http');
 const { parse } = require('url');
 const WebSocket = require('ws');
+const fs = require('fs');
 
-// 读取部署模式
 const DEPLOYMENT_MODE = process.env.DEPLOYMENT_MODE || 'shared';
 const HTTP_PORT = process.env.PORT || 3000;
 const WS_PORT = process.env.WS_PORT || 3001;
 const HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 
 console.log('🚀 Starting server in', DEPLOYMENT_MODE.toUpperCase(), 'mode');
-console.log('📋 Configuration:', {
-  mode: DEPLOYMENT_MODE,
-  httpPort: HTTP_PORT,
-  wsPort: WS_PORT,
-  hostname: HOSTNAME,
-});
 
 // 生成 manifest
-function generateManifest() {
-  console.log('📝 Generating manifest.json...');
-  try {
-    const generateManifestScript = path.join(
-      __dirname,
-      'scripts',
-      'generate-manifest.js'
-    );
-    require(generateManifestScript);
-  } catch (error) {
-    console.error('❌ Error generating manifest:', error);
-  }
+try {
+  require(path.join(__dirname, 'scripts', 'generate-manifest.js'));
+} catch (error) {
+  console.error('❌ Error generating manifest:', error);
 }
-
-generateManifest();
 
 // WebSocket 用户管理
 const connectedUsers = new Map();
 
-// WebSocket 消息处理
 function handleWebSocketMessage(ws, message, userId) {
   switch (message.type) {
     case 'ping':
       ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
       break;
 
-    case 'user_connect':
+    case 'user_connect': {
       const newUserId = message.data.userId;
       connectedUsers.set(newUserId, ws);
       console.log(
         `✅ User ${newUserId} connected (total: ${connectedUsers.size})`
       );
-
       ws.send(
         JSON.stringify({
           type: 'connection_confirmed',
@@ -74,9 +47,7 @@ function handleWebSocketMessage(ws, message, userId) {
           timestamp: Date.now(),
         })
       );
-
       broadcastUserStatus(newUserId, 'online');
-
       ws.send(
         JSON.stringify({
           type: 'online_users',
@@ -85,6 +56,7 @@ function handleWebSocketMessage(ws, message, userId) {
         })
       );
       return newUserId;
+    }
 
     case 'message':
       if (
@@ -122,7 +94,7 @@ function handleWebSocketMessage(ws, message, userId) {
       }
       break;
 
-    case 'friend_request':
+    case 'friend_request': {
       const targetUser = message.data.to_user;
       if (targetUser && connectedUsers.has(targetUser)) {
         const targetWs = connectedUsers.get(targetUser);
@@ -131,8 +103,9 @@ function handleWebSocketMessage(ws, message, userId) {
         }
       }
       break;
+    }
 
-    case 'friend_accepted':
+    case 'friend_accepted': {
       const fromUser = message.data.from_user;
       if (fromUser && connectedUsers.has(fromUser)) {
         const fromUserWs = connectedUsers.get(fromUser);
@@ -140,6 +113,10 @@ function handleWebSocketMessage(ws, message, userId) {
           fromUserWs.send(JSON.stringify(message));
         }
       }
+      break;
+    }
+
+    default:
       break;
   }
   return userId;
@@ -158,7 +135,6 @@ function broadcastUserStatus(userId, status) {
   });
 }
 
-// 创建 WebSocket 服务器
 function createWebSocketServer(server) {
   const wss = new WebSocket.Server({
     server,
@@ -166,8 +142,8 @@ function createWebSocketServer(server) {
     clientTracking: true,
   });
 
-  wss.on('connection', (ws, req) => {
-    console.log('🔌 New WebSocket connection from', req.socket.remoteAddress);
+  wss.on('connection', (ws) => {
+    console.log('🔌 New WebSocket connection');
     let userId = null;
 
     ws.isAlive = true;
@@ -188,48 +164,36 @@ function createWebSocketServer(server) {
       if (userId) {
         connectedUsers.delete(userId);
         broadcastUserStatus(userId, 'offline');
-        console.log(
-          `👋 User ${userId} disconnected (total: ${connectedUsers.size})`
-        );
+        console.log(`👋 User ${userId} disconnected`);
       }
     });
 
     ws.on('error', (error) => {
-      console.error(
-        `❌ WebSocket error ${userId ? `(user: ${userId})` : ''}:`,
-        error.message
-      );
+      console.error(`❌ WebSocket error:`, error.message);
     });
   });
 
-  // 心跳检测
-  const heartbeatInterval = setInterval(() => {
+  setInterval(() => {
     let activeConnections = 0;
     wss.clients.forEach((ws) => {
-      if (ws.isAlive === false) {
-        return ws.terminate();
-      }
+      if (ws.isAlive === false) return ws.terminate();
       ws.isAlive = false;
       try {
         ws.ping();
         activeConnections++;
       } catch (error) {
-        console.error('❌ Ping failed:', error.message);
+        // Ignore ping errors
       }
     });
     if (activeConnections > 0) {
-      console.log(`💓 Active WebSocket connections: ${activeConnections}`);
+      console.log(`💓 Active connections: ${activeConnections}`);
     }
   }, 30000);
-
-  wss.on('close', () => {
-    clearInterval(heartbeatInterval);
-  });
 
   return wss;
 }
 
-// 全局 WebSocket 函数
+// 全局函数
 global.getOnlineUsers = () => Array.from(connectedUsers.keys());
 global.sendMessageToUsers = (userIds, message) => {
   let success = false;
@@ -243,68 +207,92 @@ global.sendMessageToUsers = (userIds, message) => {
   return success;
 };
 
-// 启动 Next.js
-const next = require('next');
-const app = next({ dev: false });
-const handle = app.getRequestHandler();
+// 检查 standalone 模式
+const standaloneServerPath = path.join(__dirname, '.next/standalone/server.js');
 
-app.prepare().then(() => {
-  if (DEPLOYMENT_MODE === 'separate') {
-    // 模式 1: 分离端口 - WebSocket 和 HTTP 使用不同端口
-    console.log('🔧 Using SEPARATE PORTS mode');
+if (fs.existsSync(standaloneServerPath)) {
+  console.log('🔧 Using Next.js standalone mode');
 
-    // 启动独立的 WebSocket 服务器
-    const wsServer = http.createServer();
-    createWebSocketServer(wsServer);
-    wsServer.listen(WS_PORT, HOSTNAME, () => {
-      console.log(`✅ WebSocket server running on ws://${HOSTNAME}:${WS_PORT}`);
-    });
+  // Standalone 模式不能直接 require server.js
+  // 需要使用标准 Next.js 启动
+  const next = require('next');
+  const app = next({
+    dev: false,
+    dir: path.join(__dirname, '.next/standalone'),
+  });
+  const handle = app.getRequestHandler();
 
-    // 启动 HTTP 服务器
-    const httpServer = http.createServer(async (req, res) => {
-      try {
-        const parsedUrl = parse(req.url, true);
-        await handle(req, res, parsedUrl);
-      } catch (err) {
-        console.error('❌ Error handling request:', err);
-        res.statusCode = 500;
-        res.end('Internal Server Error');
-      }
-    });
-
-    httpServer.listen(HTTP_PORT, HOSTNAME, () => {
-      console.log('====================================');
-      console.log(`✅ HTTP server running on http://${HOSTNAME}:${HTTP_PORT}`);
-      console.log(`✅ WebSocket server running on ws://${HOSTNAME}:${WS_PORT}`);
-      console.log('📝 Client should connect to: ws://${HOSTNAME}:${WS_PORT}');
-      console.log('💡 Set NEXT_PUBLIC_WS_URL=ws://your-domain:${WS_PORT}');
-      console.log('====================================');
-    });
-  } else {
-    // 模式 2: 共享端口 - WebSocket 和 HTTP 使用同一端口 (默认)
-    console.log('🔧 Using SHARED PORT mode');
-
+  app.prepare().then(() => {
     const server = http.createServer(async (req, res) => {
       try {
         const parsedUrl = parse(req.url, true);
         await handle(req, res, parsedUrl);
       } catch (err) {
-        console.error('❌ Error handling request:', err);
+        console.error('❌ Error:', err);
         res.statusCode = 500;
         res.end('Internal Server Error');
       }
     });
 
-    // 在同一服务器上创建 WebSocket
     createWebSocketServer(server);
 
     server.listen(HTTP_PORT, HOSTNAME, () => {
       console.log('====================================');
-      console.log(`✅ Server running on http://${HOSTNAME}:${HTTP_PORT}`);
-      console.log(`✅ WebSocket ready on ws://${HOSTNAME}:${HTTP_PORT}`);
-      console.log('📝 Client will auto-connect to: ws://your-domain');
-      console.log('💡 No NEXT_PUBLIC_WS_URL needed');
+      console.log(`✅ Server: http://${HOSTNAME}:${HTTP_PORT}`);
+      console.log(`✅ WebSocket: ws://${HOSTNAME}:${HTTP_PORT}`);
       console.log('====================================');
     });
-  }
-});
+  });
+} else {
+  console.log('🔧 Using standard Next.js mode');
+
+  const next = require('next');
+  const app = next({ dev: false });
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    if (DEPLOYMENT_MODE === 'separate') {
+      // 分离端口模式
+      const wsServer = http.createServer();
+      createWebSocketServer(wsServer);
+      wsServer.listen(WS_PORT, HOSTNAME, () => {
+        console.log(`✅ WebSocket: ws://${HOSTNAME}:${WS_PORT}`);
+      });
+
+      const httpServer = http.createServer(async (req, res) => {
+        try {
+          const parsedUrl = parse(req.url, true);
+          await handle(req, res, parsedUrl);
+        } catch (err) {
+          console.error('❌ Error:', err);
+          res.statusCode = 500;
+          res.end('Internal Server Error');
+        }
+      });
+
+      httpServer.listen(HTTP_PORT, HOSTNAME, () => {
+        console.log(`✅ HTTP: http://${HOSTNAME}:${HTTP_PORT}`);
+      });
+    } else {
+      // 共享端口模式（默认）
+      const server = http.createServer(async (req, res) => {
+        try {
+          const parsedUrl = parse(req.url, true);
+          await handle(req, res, parsedUrl);
+        } catch (err) {
+          console.error('❌ Error:', err);
+          res.statusCode = 500;
+          res.end('Internal Server Error');
+        }
+      });
+
+      createWebSocketServer(server);
+
+      server.listen(HTTP_PORT, HOSTNAME, () => {
+        console.log('====================================');
+        console.log(`✅ Server: http://${HOSTNAME}:${HTTP_PORT}`);
+        console.log(`✅ WebSocket: ws://${HOSTNAME}:${HTTP_PORT}`);
+      });
+    }
+  });
+}
