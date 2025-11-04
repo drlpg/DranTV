@@ -120,5 +120,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001
 
-# 使用通用启动脚本，支持共享端口模式
-CMD ["node", "universal-start.js"]
+# 使用分离端口模式
+CMD ["node", "production-final.js"]
