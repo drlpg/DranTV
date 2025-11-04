@@ -120,6 +120,7 @@ export default async function RootLayout({
     CUSTOM_CATEGORIES: customCategories,
     FLUID_SEARCH: fluidSearch,
     REQUIRE_DEVICE_CODE: requireDeviceCode,
+    WS_URL: process.env.NEXT_PUBLIC_WS_URL || '',
   };
 
   return (

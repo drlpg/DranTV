@@ -46,20 +46,20 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     const hostname = window.location.hostname;
     const currentPort = window.location.port;
 
-    // 1. 优先使用 NEXT_PUBLIC_WS_URL 环境变量（完整 URL）
-    if (process.env.NEXT_PUBLIC_WS_URL) {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-      console.log('🔌 Using NEXT_PUBLIC_WS_URL:', wsUrl);
-      return `${wsUrl}?_=${Date.now()}`;
-    }
-
-    // 2. 运行时配置（用于 Docker 等场景）
+    // 1. 运行时配置（最高优先级，用于 Docker/Railway 等场景）
     if (
       typeof window !== 'undefined' &&
       (window as any).RUNTIME_CONFIG?.WS_URL
     ) {
       const wsUrl = (window as any).RUNTIME_CONFIG.WS_URL;
       console.log('🔌 Using RUNTIME_CONFIG.WS_URL:', wsUrl);
+      return `${wsUrl}?_=${Date.now()}`;
+    }
+
+    // 2. 构建时环境变量
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+      console.log('🔌 Using NEXT_PUBLIC_WS_URL:', wsUrl);
       return `${wsUrl}?_=${Date.now()}`;
     }
 
