@@ -59,29 +59,15 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 从构建器中复制 standalone 输出
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# 从构建器中复制 scripts 目录
+# 从构建器中复制所有必要文件
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
-# 从构建器中复制启动脚本和WebSocket相关文件
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-# 从构建器中复制 public 和 .next/static 目录
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# 从构建器中复制 package.json 和 package-lock.json，用于安装额外依赖
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
-# 复制 tsconfig.json 以确保路径解析正确
 COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
-
-# 安装必要的WebSocket依赖（兼容多架构）
-USER root
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    # 使用 --no-optional 避免某些架构下的可选依赖问题
-    pnpm install --prod --no-optional ws && \
-    # 清理安装缓存减小镜像大小
-    pnpm store prune
 
 # 创建健康检查脚本（在切换用户之前以root权限创建）
 RUN echo '#!/usr/bin/env node\n\
