@@ -430,7 +430,7 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow suppressHydrationWarning>
+                <ScrollableRow>
                   {loading
                     ? // 加载状态显示骨架屏
                       Array.from({ length: 8 }).map((_, index) => (
