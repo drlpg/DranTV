@@ -52,21 +52,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       (window as any).RUNTIME_CONFIG?.WS_URL
     ) {
       const wsUrl = (window as any).RUNTIME_CONFIG.WS_URL;
-      console.log('🔌 Using RUNTIME_CONFIG.WS_URL:', wsUrl);
       return `${wsUrl}?_=${Date.now()}`;
     }
 
     // 2. 构建时环境变量
     if (process.env.NEXT_PUBLIC_WS_URL) {
       const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
-      console.log('🔌 Using NEXT_PUBLIC_WS_URL:', wsUrl);
       return `${wsUrl}?_=${Date.now()}`;
     }
 
     // 3. 开发环境 - 使用独立端口 3001
     if (process.env.NODE_ENV === 'development') {
       const wsUrl = `${protocol}//${hostname}:3001`;
-      console.log('🔌 Development mode, connecting to:', wsUrl);
       return `${wsUrl}?_=${Date.now()}`;
     }
 
@@ -75,13 +72,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     if (currentPort && currentPort !== '80' && currentPort !== '443') {
       // 可能是 VPS 或 Docker 部署，尝试 3001 端口
       const wsUrl = `${protocol}//${hostname}:3001`;
-      console.log('🔌 Non-standard port detected, trying:', wsUrl);
       return `${wsUrl}?_=${Date.now()}`;
     }
 
     // 5. 默认：共享端口模式（适用于 Railway, Vercel, Render 等）
     const wsUrl = `${protocol}//${hostname}`;
-    console.log('🔌 Shared port mode, connecting to:', wsUrl);
     return `${wsUrl}?_=${Date.now()}`;
   };
 
@@ -92,11 +87,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       wsRef.current?.readyState === WebSocket.OPEN ||
       isConnectingRef.current
     ) {
-      console.log('🚫 防止重复连接 - 当前状态:', {
-        readyState: wsRef.current?.readyState,
-        isConnecting: isConnectingRef.current,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 

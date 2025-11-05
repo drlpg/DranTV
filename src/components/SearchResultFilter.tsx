@@ -189,7 +189,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
 
   return (
     <>
-      <div className='relative inline-flex rounded-full p-0 bg-transparent gap-1 sm:gap-2'>
+      <div className='relative inline-flex rounded-full p-0 bg-transparent gap-2 sm:gap-2'>
         {categories.map((category, index) => (
           <div
             key={category.key}

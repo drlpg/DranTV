@@ -11,6 +11,36 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.28",
+    date: "2025-11-04",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "修复管理面板配置列表移动端横向滚动时表头和分割线断层问题",
+    "优化视频源、自定义分类、直播源配置列表的移动端显示"
+    ]
+  },
+  {
+    version: "1.0.27",
+    date: "2025-11-04",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化分类检索按钮间距，改善移动端布局"
+    ],
+    fixed: [
+    "修复视频封面图片加载状态管理问题，避免已加载图片变成占位符",
+    "修复视频卡片徽章文字居中显示",
+    "移除客户端调试代码，优化控制台输出",
+    "修复代码规范问题（prefer-const）"
+    ]
+  },
+  {
     version: "1.0.26",
     date: "2025-11-04",
     added: [

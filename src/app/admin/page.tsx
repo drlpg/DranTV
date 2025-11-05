@@ -3312,7 +3312,7 @@ const VideoSourceConfig = ({
               case 'source_error':
                 if (data.source === 'temp') {
                   let message = '';
-                  let details: any = {
+                  const details: any = {
                     responseTime,
                     searchKeyword: testKeyword,
                   };
@@ -3513,7 +3513,7 @@ const VideoSourceConfig = ({
 
         {/* Key */}
         <div
-          className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
+          className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis min-w-[5rem]'
           title={source.key}
         >
           {source.key}
@@ -3521,7 +3521,7 @@ const VideoSourceConfig = ({
 
         {/* API 地址 - 固定宽度，溢出省略 */}
         <div
-          className='w-64 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
+          className='w-64 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis min-w-[16rem]'
           title={source.api}
         >
           {source.api}
@@ -4187,11 +4187,11 @@ const VideoSourceConfig = ({
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
         <div
-          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'
+          className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'
           data-table='source-list'
         >
           {/* 表头 */}
-          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-[1000px]'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
               <div className='w-6 flex-shrink-0 flex justify-center'></div>
               <div className='w-10 flex-shrink-0 flex justify-center'>
@@ -4217,7 +4217,7 @@ const VideoSourceConfig = ({
             items={filteredSources.map((s) => s.key)}
             strategy={verticalListSortingStrategy}
           >
-            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+            <div className='divide-y divide-gray-200 dark:divide-gray-700 min-w-[1000px]'>
               {filteredSources.length > 0 ? (
                 filteredSources.map((source) => (
                   <DraggableRow key={source.key} source={source} />
@@ -4739,9 +4739,9 @@ const CategoryConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'>
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto relative'>
           {/* 表头 */}
-          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-[800px]'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
               <div className='w-6 flex-shrink-0 flex justify-center'></div>
               <div className='w-32 flex-shrink-0 px-2'>分类名称</div>
@@ -4757,7 +4757,7 @@ const CategoryConfig = ({
             items={filteredCategories.map((c) => `${c.query}:${c.type}`)}
             strategy={verticalListSortingStrategy}
           >
-            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+            <div className='divide-y divide-gray-200 dark:divide-gray-700 min-w-[800px]'>
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((category) => (
                   <DraggableRow
@@ -6220,9 +6220,9 @@ const LiveSourceConfig = ({
         autoScroll={false}
         modifiers={[restrictToVerticalAxis, restrictToParentElement]}
       >
-        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto md:overflow-x-hidden overflow-x-auto relative'>
+        <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto md:overflow-x-hidden relative'>
           {/* 表头 */}
-          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900'>
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-[1200px] md:min-w-0'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
               <div className='w-6 flex-shrink-0 flex justify-center'></div>
               <div className='w-24 flex-shrink-0 px-2 whitespace-nowrap'>
@@ -6257,7 +6257,7 @@ const LiveSourceConfig = ({
             items={filteredLiveSources.map((s) => s.key)}
             strategy={verticalListSortingStrategy}
           >
-            <div className='divide-y divide-gray-200 dark:divide-gray-700'>
+            <div className='divide-y divide-gray-200 dark:divide-gray-700 min-w-[1200px] md:min-w-0'>
               {filteredLiveSources.length > 0 ? (
                 filteredLiveSources.map((liveSource) => (
                   <DraggableRow key={liveSource.key} liveSource={liveSource} />

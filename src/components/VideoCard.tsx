@@ -765,6 +765,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 priority={priority}
                 onLoad={() => {
                   setIsLoading(true);
+                  setImageError(false);
                   if (imageLoadTimeout) {
                     clearTimeout(imageLoadTimeout);
                     setImageLoadTimeout(null);
@@ -779,15 +780,19 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
                   // 图片加载失败时的重试机制
                   const img = e.target as HTMLImageElement;
-                  if (!img.dataset.retried) {
+                  const currentSrc = img.src;
+
+                  if (!img.dataset.retried && currentSrc) {
                     img.dataset.retried = 'true';
                     setTimeout(() => {
-                      if (actualPoster) {
+                      // 只有当 src 没有变化时才重试
+                      if (actualPoster && img.src === currentSrc) {
                         img.src = processImageUrl(actualPoster);
                       }
                     }, 2000);
                   } else {
                     // 重试后仍然失败，显示错误占位符
+                    setIsLoading(false);
                     setImageError(true);
                   }
                 }}
@@ -923,7 +928,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               actualYear !== 'unknown' &&
               actualYear.trim() !== '' && (
                 <div
-                  className='absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-black/50 text-white text-[9px] md:text-xs font-medium px-1 py-0.5 md:px-2 md:py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90'
+                  className='absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-black/50 text-white text-[9px] md:text-xs font-medium px-1 py-0.5 md:px-2 md:py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90 flex items-center justify-center'
                   style={
                     {
                       WebkitUserSelect: 'none',
@@ -943,7 +948,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500/80 backdrop-blur-md text-white text-[9px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110'
+                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500/80 backdrop-blur-md text-white text-[9px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center'
                 style={
                   {
                     WebkitUserSelect: 'none',
@@ -962,7 +967,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
             {actualEpisodes && actualEpisodes > 1 && (
               <div
-                className={`absolute top-2 right-2 bg-blue-500 text-white font-semibold rounded-md transition-all duration-300 ease-out group-hover:scale-110 ${
+                className={`absolute top-2 right-2 bg-blue-500 text-white font-semibold rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center ${
                   from === 'playrecord'
                     ? 'text-[10px] px-1.5 py-0.5 sm:text-xs sm:px-2 sm:py-1'
                     : 'text-xs px-2 py-1'
