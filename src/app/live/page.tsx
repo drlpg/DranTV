@@ -1242,7 +1242,7 @@ function LivePageClient() {
     <PageLayout activePath='/live'>
       <div
         className='flex flex-col gap-3 px-5 lg:px-[3rem] 2xl:px-20'
-        style={{ paddingTop: '2rem', paddingBottom: '1rem' }}
+        style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
       >
         {/* 播放器和频道列表 */}
         <div className='space-y-2'>
@@ -1307,7 +1307,7 @@ function LivePageClient() {
                 isChannelListCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
-              <div className='relative w-full h-[300px] lg:h-full'>
+              <div className='relative w-full aspect-video lg:aspect-auto lg:h-full'>
                 <div
                   ref={artRef}
                   className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30'

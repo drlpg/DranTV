@@ -11,6 +11,33 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.30",
+    date: "2025-11-05",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化移动端直播页面播放器容器比例为 16:9",
+    "调整直播页面外层容器上下 padding 为 24px"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
+    version: "1.0.29",
+    date: "2025-11-05",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "统一短剧页面底部加载图标样式，与其他视频板块保持一致"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "1.0.28",
     date: "2025-11-04",
     added: [
