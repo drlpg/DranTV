@@ -1240,10 +1240,7 @@ function LivePageClient() {
 
   return (
     <PageLayout activePath='/live'>
-      <div
-        className='flex flex-col gap-3 px-5 lg:px-[3rem] 2xl:px-20'
-        style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
-      >
+      <div className='flex flex-col justify-center gap-3 px-5 lg:px-[3rem] 2xl:px-20 min-h-[calc(100vh-3rem)] py-6'>
         {/* 播放器和频道列表 */}
         <div className='space-y-2'>
           {/* 标题栏 - 包含返回按钮、标题和折叠控制 */}
