@@ -18,7 +18,8 @@ export const changelog: ChangelogEntry[] = [
     ],
     changed: [
     "优化移动端直播页面播放器容器比例为 16:9",
-    "调整直播页面外层容器上下 padding 为 24px"
+    "调整直播页面外层容器上下 padding 为 24px",
+    '优化直播页面侧边栏"频道"和"直播源"空状态布局，内容在容器内垂直居中显示'
     ],
     fixed: [
       // 无修复内容
