@@ -1422,7 +1422,7 @@ function SearchPageClient() {
         </div>
 
         {/* 搜索结果或搜索历史 */}
-        <div className='max-w-[95%] mx-auto mt-12 overflow-visible'>
+        <div className='max-w-[95%] mx-auto mt-6 sm:mt-12 overflow-visible'>
           {showResults ? (
             <section className='mb-12'>
               {/* 标题 */}
@@ -1464,7 +1464,7 @@ function SearchPageClient() {
                 </div>
                 {/* 聚合开关 */}
                 <label className='flex items-center gap-2 cursor-pointer select-none shrink-0'>
-                  <span className='text-xs sm:text-sm text-gray-700 dark:text-gray-300'>
+                  <span className='text-sm sm:text-base text-gray-700 dark:text-gray-300'>
                     聚合
                   </span>
                   <div className='relative'>

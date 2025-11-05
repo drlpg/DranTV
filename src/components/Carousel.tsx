@@ -20,7 +20,7 @@ interface CarouselProps {
 
 export default function Carousel({
   items,
-  autoPlayInterval = 5000,
+  autoPlayInterval = 10000,
 }: CarouselProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -183,7 +183,7 @@ export default function Carousel({
               </div>
             )}
             {/* 渐变遮罩 */}
-            <div className='absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-black/60 to-transparent' />
+            <div className='absolute bottom-0 left-0 right-0 h-[30%] bg-gradient-to-t from-black/40 to-transparent' />
             {/* 标题 */}
             <div className='absolute bottom-0 left-0 right-0 pt-0 pb-7 sm:pb-10 px-6 sm:px-8 text-center sm:text-left'>
               <h3 className='text-xl sm:text-3xl font-bold text-white'>

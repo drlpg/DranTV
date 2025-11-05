@@ -11,6 +11,41 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.26",
+    date: "2025-11-04",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化轮播图停留时间至10秒，降低底部遮罩透明度",
+    "优化搜索页面移动端间距和筛选器样式",
+    "增大筛选器文字和图标尺寸，改善可读性",
+    "优化下拉菜单宽度自适应，支持内容自动换行",
+    "优化视频卡片徽章响应式尺寸，移动端适当缩小"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
+    version: "1.0.25",
+    date: "2025-11-04",
+    added: [
+    "新增 WebSocket 支持，实现实时通信功能",
+    "新增分离端口模式启动脚本（production-final.js）",
+    "新增运行时 WebSocket URL 配置支持"
+    ],
+    changed: [
+    "优化 WebSocket 客户端连接逻辑，支持自动检测和重连",
+    "移除 standalone 输出模式，改用标准构建",
+    "更新 Dockerfile 以支持分离端口部署"
+    ],
+    fixed: [
+    "修复 Next.js 构建配置问题",
+    "优化开发环境 WebSocket 启动流程"
+    ]
+  },
+  {
     version: "1.0.24",
     date: "2025-11-04",
     added: [

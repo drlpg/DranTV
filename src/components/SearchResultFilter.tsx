@@ -66,14 +66,31 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
 
       let x = rect.left;
       // 为标题筛选设置更大的最小宽度，其他保持原来的最小宽度
-      const minWidth = categoryKey === 'title' ? 400 : 240;
+      const minWidth = 240;
       let dropdownWidth = Math.max(rect.width, minWidth);
       let useFixedWidth = false;
 
       if (isMobile) {
-        const padding = 16;
+        const padding = 24;
         const maxWidth = viewportWidth - padding * 2;
         dropdownWidth = Math.min(dropdownWidth, maxWidth);
+        useFixedWidth = true;
+
+        if (x + dropdownWidth > viewportWidth - padding) {
+          x = viewportWidth - dropdownWidth - padding;
+        }
+        if (x < padding) {
+          x = padding;
+        }
+      } else {
+        // 桌面端：所有分类使用内容自适应宽度
+        const padding = 32;
+        const maxWidth = Math.min(
+          categoryKey === 'title' ? 600 : 400,
+          viewportWidth - padding * 2
+        );
+        // 使用 max-content，但限制最大宽度
+        dropdownWidth = maxWidth;
         useFixedWidth = true;
 
         if (x + dropdownWidth > viewportWidth - padding) {
@@ -187,7 +204,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
                 index === 0
                   ? 'pl-0 pr-0 sm:pl-0 sm:pr-2 md:pl-0 md:pr-4'
                   : 'px-0 sm:px-2 md:px-4'
-              } py-0.5 sm:py-1 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+              } py-0.5 sm:py-1 md:py-2 text-sm sm:text-base font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
                 activeCategory === category.key
                   ? isDefaultValue(category.key)
                     ? 'text-gray-900 dark:text-gray-100 cursor-default'
@@ -199,7 +216,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
             >
               <span>{getDisplayText(category.key)}</span>
               <svg
-                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ml-0.5 sm:ml-1 transition-transform duration-200 ${
+                className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ml-0.5 sm:ml-1 transition-transform duration-200 ${
                   activeCategory === category.key ? 'rotate-180' : ''
                 }`}
                 fill='none'
@@ -236,7 +253,7 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
               }
               onChange({ ...mergedValues, yearOrder: next });
             }}
-            className={`relative z-10 flex items-center px-0 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-xs sm:text-sm font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+            className={`relative z-10 flex items-center px-0 py-0.5 sm:px-2 sm:py-1 md:px-4 md:py-2 text-sm sm:text-base font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
               mergedValues.yearOrder === 'none'
                 ? 'text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 cursor-pointer'
                 : 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer'
@@ -251,11 +268,11 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
           >
             <span>年份</span>
             {mergedValues.yearOrder === 'none' ? (
-              <ArrowUpDown className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowUpDown className='ml-1 w-4 h-4 sm:w-4.5 sm:h-4.5' />
             ) : mergedValues.yearOrder === 'desc' ? (
-              <ArrowDownWideNarrow className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowDownWideNarrow className='ml-1 w-4 h-4 sm:w-4.5 sm:h-4.5' />
             ) : (
-              <ArrowUpNarrowWide className='ml-1 w-4 h-4 sm:w-4 sm:h-4' />
+              <ArrowUpNarrowWide className='ml-1 w-4 h-4 sm:w-4.5 sm:h-4.5' />
             )}
           </button>
         </div>
@@ -265,34 +282,48 @@ const SearchResultFilter: React.FC<SearchResultFilterProps> = ({
         createPortal(
           <div
             ref={dropdownRef}
-            className='fixed z-[9999] bg-white/95 dark:bg-gray-800/95 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm max-h-[50dvh] flex flex-col w-auto overflow-hidden'
+            className='fixed z-[9999] bg-white/95 dark:bg-gray-800/95 rounded-xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm max-h-[50dvh] flex flex-col overflow-hidden'
             style={{
               left: `${dropdownPosition.x}px`,
               top: `${dropdownPosition.y}px`,
+              width:
+                window.innerWidth >= 640
+                  ? 'max-content'
+                  : `${dropdownPosition.width}px`,
+              maxWidth:
+                window.innerWidth >= 640
+                  ? `${dropdownPosition.width}px`
+                  : undefined,
               minWidth: '180px',
-              maxWidth: '600px',
               position: 'fixed',
             }}
           >
-            <div className='p-2 sm:p-4 overflow-y-auto flex-1 min-h-0'>
+            <div className='p-2 sm:p-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0'>
               <div className='flex flex-col gap-1 sm:gap-2'>
                 {categories
                   .find((cat) => cat.key === activeCategory)
-                  ?.options.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() =>
-                        handleOptionSelect(activeCategory, option.value)
-                      }
-                      className={`px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-200 text-center flex items-center justify-center whitespace-nowrap w-full ${
-                        isOptionSelected(activeCategory, option.value)
-                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  ?.options.map((option) => {
+                    const isTitle = activeCategory === 'title';
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          handleOptionSelect(activeCategory, option.value)
+                        }
+                        className={`px-2 py-1.5 sm:px-3 sm:py-2 text-sm sm:text-base rounded-lg transition-all duration-200 w-full ${
+                          isTitle
+                            ? 'text-left break-words'
+                            : 'text-center whitespace-nowrap'
+                        } ${
+                          isOptionSelected(activeCategory, option.value)
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-700'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
               </div>
             </div>
           </div>,
