@@ -100,7 +100,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
   ) {
     const router = useRouter();
     const [favorited, setFavorited] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [showMobileActions, setShowMobileActions] = useState(false);
     const [searchFavorited, setSearchFavorited] = useState<boolean | null>(
@@ -108,6 +108,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
     ); // 搜索结果的收藏状态
     const [imageLoadTimeout, setImageLoadTimeout] =
       useState<NodeJS.Timeout | null>(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     // 可外部修改的可控字段
     const [dynamicEpisodes, setDynamicEpisodes] = useState<number | undefined>(
@@ -152,42 +153,41 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         : 'tv'
       : type;
 
-    // 检查poster是否有效
+    // 检查poster是否有效并重置状态
     useEffect(() => {
+      // 清理之前的超时定时器
+      if (imageLoadTimeout) {
+        clearTimeout(imageLoadTimeout);
+        setImageLoadTimeout(null);
+      }
+
       // 如果poster为空或无效，直接显示错误占位符
       if (!actualPoster || !processImageUrl(actualPoster)) {
         setImageError(true);
         setIsLoading(false);
+        setImageLoaded(false);
       } else {
         // 重置状态（当poster改变时）
         setImageError(false);
-        setIsLoading(false);
-      }
-    }, [actualPoster]);
+        setIsLoading(true);
+        setImageLoaded(false);
 
-    // 图片加载超时机制 - 10秒后如果还没加载完成，显示错误占位符
-    useEffect(() => {
-      if (
-        actualPoster &&
-        processImageUrl(actualPoster) &&
-        !isLoading &&
-        !imageError
-      ) {
+        // 设置15秒超时机制
         const timeout = setTimeout(() => {
-          if (!isLoading && !imageError) {
+          if (!imageLoaded) {
             setImageError(true);
+            setIsLoading(false);
           }
-        }, 10000); // 10秒超时
+        }, 15000);
         setImageLoadTimeout(timeout);
-
-        return () => {
-          clearTimeout(timeout);
-        };
-      } else if (imageLoadTimeout) {
-        clearTimeout(imageLoadTimeout);
-        setImageLoadTimeout(null);
       }
-    }, [actualPoster, isLoading, imageError]);
+
+      return () => {
+        if (imageLoadTimeout) {
+          clearTimeout(imageLoadTimeout);
+        }
+      };
+    }, [actualPoster]);
 
     // 获取收藏状态（搜索结果、豆瓣和短剧页面不检查）
     useEffect(() => {
@@ -739,7 +739,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             }}
           >
             {/* 加载中动画 */}
-            {!isLoading && !imageError && (
+            {isLoading && !imageError && (
               <ImagePlaceholder
                 aspectRatio='aspect-[2/3]'
                 type='loading'
@@ -764,8 +764,9 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
                 loading='eager'
                 priority={priority}
                 onLoad={() => {
-                  setIsLoading(true);
+                  setIsLoading(false);
                   setImageError(false);
+                  setImageLoaded(true);
                   if (imageLoadTimeout) {
                     clearTimeout(imageLoadTimeout);
                     setImageLoadTimeout(null);
@@ -784,16 +785,27 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
                   if (!img.dataset.retried && currentSrc) {
                     img.dataset.retried = 'true';
+                    // 第一次失败，等待1秒后重试
                     setTimeout(() => {
-                      // 只有当 src 没有变化时才重试
-                      if (actualPoster && img.src === currentSrc) {
+                      // 只有当 src 没有变化且poster仍然有效时才重试
+                      if (
+                        actualPoster &&
+                        img.src === currentSrc &&
+                        processImageUrl(actualPoster)
+                      ) {
                         img.src = processImageUrl(actualPoster);
+                      } else {
+                        // poster已变化或无效，显示错误占位符
+                        setIsLoading(false);
+                        setImageError(true);
+                        setImageLoaded(false);
                       }
-                    }, 2000);
+                    }, 1000);
                   } else {
                     // 重试后仍然失败，显示错误占位符
                     setIsLoading(false);
                     setImageError(true);
+                    setImageLoaded(false);
                   }
                 }}
                 style={

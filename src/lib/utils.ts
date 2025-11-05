@@ -37,33 +37,43 @@ export function processImageUrl(originalUrl: string): string {
     return originalUrl.replace('http://', 'https://');
   }
 
-  // 仅处理豆瓣图片代理
-  if (!originalUrl.includes('doubanio.com')) {
-    return originalUrl;
+  // 处理豆瓣图片代理
+  if (originalUrl.includes('doubanio.com')) {
+    const { proxyType, proxyUrl } = getDoubanImageProxyConfig();
+    switch (proxyType) {
+      case 'server':
+        return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
+      case 'img3':
+        return originalUrl.replace(
+          /img\d+\.doubanio\.com/g,
+          'img3.doubanio.com'
+        );
+      case 'cmliussss-cdn-tencent':
+        return originalUrl.replace(
+          /img\d+\.doubanio\.com/g,
+          'img.doubanio.cmliussss.net'
+        );
+      case 'cmliussss-cdn-ali':
+        return originalUrl.replace(
+          /img\d+\.doubanio\.com/g,
+          'img.doubanio.cmliussss.com'
+        );
+      case 'custom':
+        return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
+      case 'direct':
+      default:
+        return originalUrl;
+    }
   }
 
-  const { proxyType, proxyUrl } = getDoubanImageProxyConfig();
-  switch (proxyType) {
-    case 'server':
-      return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
-    case 'img3':
-      return originalUrl.replace(/img\d+\.doubanio\.com/g, 'img3.doubanio.com');
-    case 'cmliussss-cdn-tencent':
-      return originalUrl.replace(
-        /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.net'
-      );
-    case 'cmliussss-cdn-ali':
-      return originalUrl.replace(
-        /img\d+\.doubanio\.com/g,
-        'img.doubanio.cmliussss.com'
-      );
-    case 'custom':
-      return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
-    case 'direct':
-    default:
-      return originalUrl;
+  // 对于其他外部图片，如果是http或https开头的完整URL，使用服务器代理
+  // 这样可以避免防盗链和跨域问题
+  if (originalUrl.startsWith('http://') || originalUrl.startsWith('https://')) {
+    return `/api/image-proxy?url=${encodeURIComponent(originalUrl)}`;
   }
+
+  // 相对路径或其他格式的URL直接返回
+  return originalUrl;
 }
 
 /**
