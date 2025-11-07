@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
 import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
+import { refreshLiveChannels } from '@/lib/live';
 
 export async function POST(request: NextRequest) {
   try {
@@ -93,7 +94,6 @@ export async function POST(request: NextRequest) {
 
     // 立即获取频道数
     try {
-      const { refreshLiveChannels } = await import('@/lib/live');
       const channelCount = await refreshLiveChannels(newSource);
       newSource.channelNumber = channelCount;
       console.log(`已获取频道数: ${channelCount}`);

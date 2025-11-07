@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
-import { getConfig } from '@/lib/config';
+import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { deleteCachedLiveChannels, refreshLiveChannels } from '@/lib/live';
 
@@ -252,7 +252,6 @@ export async function POST(request: NextRequest) {
     console.log(`[Admin Live API] 配置已保存到数据库`);
 
     // 更新内存缓存
-    const { setCachedConfig } = await import('@/lib/config');
     await setCachedConfig(config);
     console.log(`[Admin Live API] 内存缓存已更新`);
 

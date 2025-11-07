@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     // 拉取配置内容
     console.log(`[Live Import] 开始从URL拉取直播源配置: ${url}`);
-    
+
     // 添加30秒超时
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
       ua?: string;
       epg?: string;
       disabled?: boolean;
-      from: 'config' | 'custom';
+      from: 'config' | 'custom' | 'subscription';
     }> = [];
 
     // 尝试解析为JSON

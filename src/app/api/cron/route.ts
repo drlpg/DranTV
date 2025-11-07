@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getConfig, refineConfig } from '@/lib/config';
+import { getConfig, refineConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
 import { refreshLiveChannels } from '@/lib/live';
@@ -129,7 +129,6 @@ async function refreshConfig() {
       await db.saveAdminConfig(config);
 
       // 更新内存缓存
-      const { setCachedConfig } = await import('@/lib/config');
       await setCachedConfig(config);
       console.log('配置文件订阅刷新成功');
     } catch (e) {
@@ -274,7 +273,6 @@ async function refreshSourceSubscription() {
           config.SourceSubscription.LastCheck = new Date().toISOString();
           await db.saveAdminConfig(config);
 
-          const { setCachedConfig } = await import('@/lib/config');
           await setCachedConfig(config);
           console.log(`视频源订阅刷新成功，新增 ${newSources.length} 个视频源`);
         } else {
@@ -462,7 +460,6 @@ async function refreshLiveSubscription() {
           config.LiveSubscription.LastCheck = new Date().toISOString();
           await db.saveAdminConfig(config);
 
-          const { setCachedConfig } = await import('@/lib/config');
           await setCachedConfig(config);
           console.log(`直播源订阅刷新成功，新增 ${newSources.length} 个直播源`);
         } else {

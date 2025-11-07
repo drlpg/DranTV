@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       key: string;
       api: string;
       disabled?: boolean;
-      from: 'config' | 'custom';
+      from: 'config' | 'custom' | 'subscription';
     }> = [];
 
     // 尝试解析为JSON

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
-import { refreshLiveChannels } from '@/lib/live';
+import { refreshLiveChannels, clearAllCachedLiveChannels } from '@/lib/live';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 增加超时时间到60秒
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
     console.log('[Live Refresh] 清除直播源缓存...');
 
     // 只清除缓存，不实际刷新（刷新会在用户访问时自动进行）
-    const { clearAllCachedLiveChannels } = await import('@/lib/live');
     clearAllCachedLiveChannels();
 
     console.log('[Live Refresh] 缓存已清除，下次访问时会自动刷新');
