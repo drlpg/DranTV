@@ -5823,6 +5823,23 @@ const LiveSourceConfig = ({
     channelCount?: number;
   }>({ status: null, message: '' });
 
+  // 频道管理相关状态
+  const [showChannelModal, setShowChannelModal] = useState(false);
+  const [currentLiveSourceKey, setCurrentLiveSourceKey] = useState<string>('');
+  const [channels, setChannels] = useState<
+    Array<{
+      id: string;
+      name: string;
+      url: string;
+      disabled?: boolean;
+    }>
+  >([]);
+  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(
+    new Set()
+  );
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+  const [channelSearchKeyword, setChannelSearchKeyword] = useState('');
+
   // dnd-kit 传感器
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -6104,6 +6121,179 @@ const LiveSourceConfig = ({
     }
 
     setIsValidating(false);
+  };
+
+  // 获取频道列表
+  const handleViewChannels = async (liveSourceKey: string) => {
+    setCurrentLiveSourceKey(liveSourceKey);
+    setShowChannelModal(true);
+    setIsLoadingChannels(true);
+    setChannels([]);
+    setSelectedChannels(new Set());
+
+    try {
+      const response = await fetch(
+        `/api/live/channels?source=${encodeURIComponent(liveSourceKey)}`
+      );
+      const data = await response.json();
+
+      if (data.success && data.data && Array.isArray(data.data)) {
+        setChannels(data.data);
+      } else {
+        showAlert({
+          type: 'error',
+          title: '获取频道失败',
+          message: data.error || '无法获取频道列表',
+          showConfirm: true,
+        });
+      }
+    } catch (error) {
+      showAlert({
+        type: 'error',
+        title: '获取频道失败',
+        message: '网络错误或服务异常',
+        showConfirm: true,
+      });
+    } finally {
+      setIsLoadingChannels(false);
+    }
+  };
+
+  // 关闭频道管理弹窗并更新频道数
+  const handleCloseChannelModal = () => {
+    // 计算当前启用的频道数
+    const enabledChannelCount = channels.filter((ch) => !ch.disabled).length;
+
+    // 更新本地直播源列表的频道数
+    setLiveSources((prev) =>
+      prev.map((source) =>
+        source.key === currentLiveSourceKey
+          ? { ...source, channelNumber: enabledChannelCount }
+          : source
+      )
+    );
+
+    // 关闭弹窗
+    setShowChannelModal(false);
+    setCurrentLiveSourceKey('');
+    setChannels([]);
+    setSelectedChannels(new Set());
+    setChannelSearchKeyword('');
+  };
+
+  // 过滤频道列表
+  const filteredChannels = useMemo(() => {
+    if (!channelSearchKeyword.trim()) {
+      return channels;
+    }
+    const keyword = channelSearchKeyword.toLowerCase().trim();
+    return channels.filter(
+      (channel) =>
+        channel.name.toLowerCase().includes(keyword) ||
+        channel.url.toLowerCase().includes(keyword)
+    );
+  }, [channels, channelSearchKeyword]);
+
+  // 切换频道启用/禁用状态
+  const handleToggleChannel = (channelId: string) => {
+    setChannels((prev) =>
+      prev.map((ch) =>
+        ch.id === channelId ? { ...ch, disabled: !ch.disabled } : ch
+      )
+    );
+    // 显示操作成功提示
+    const channel = channels.find((ch) => ch.id === channelId);
+    if (channel) {
+      showAlert({
+        type: 'success',
+        title: '操作成功',
+        message: `频道"${channel.name}"已${channel.disabled ? '启用' : '禁用'}`,
+        timer: 1500,
+      });
+    }
+  };
+
+  // 删除频道
+  const handleDeleteChannel = (channelId: string) => {
+    const channel = channels.find((ch) => ch.id === channelId);
+    setChannels((prev) => prev.filter((ch) => ch.id !== channelId));
+    // 显示操作成功提示
+    if (channel) {
+      showAlert({
+        type: 'success',
+        title: '删除成功',
+        message: `频道"${channel.name}"已删除`,
+        timer: 1500,
+      });
+    }
+  };
+
+  // 批量操作频道
+  const handleBatchChannelOperation = (
+    action: 'enable' | 'disable' | 'delete'
+  ) => {
+    if (selectedChannels.size === 0) return;
+
+    const count = selectedChannels.size;
+
+    if (action === 'delete') {
+      setChannels((prev) => prev.filter((ch) => !selectedChannels.has(ch.id)));
+    } else {
+      setChannels((prev) =>
+        prev.map((ch) =>
+          selectedChannels.has(ch.id)
+            ? { ...ch, disabled: action === 'disable' }
+            : ch
+        )
+      );
+    }
+    setSelectedChannels(new Set());
+
+    // 显示操作成功提示
+    showAlert({
+      type: 'success',
+      title: '批量操作成功',
+      message:
+        action === 'enable'
+          ? `已启用 ${count} 个频道`
+          : action === 'disable'
+          ? `已禁用 ${count} 个频道`
+          : `已删除 ${count} 个频道`,
+      timer: 1500,
+    });
+  };
+
+  // 全选/取消全选频道（基于过滤后的列表）
+  const handleSelectAllChannels = () => {
+    const filteredIds = new Set(filteredChannels.map((ch) => ch.id));
+    const allFilteredSelected = filteredChannels.every((ch) =>
+      selectedChannels.has(ch.id)
+    );
+
+    if (allFilteredSelected) {
+      // 取消选中所有过滤后的频道
+      setSelectedChannels(
+        new Set(
+          Array.from(selectedChannels).filter((id) => !filteredIds.has(id))
+        )
+      );
+    } else {
+      // 选中所有过滤后的频道
+      setSelectedChannels(
+        new Set([...Array.from(selectedChannels), ...Array.from(filteredIds)])
+      );
+    }
+  };
+
+  // 切换单个频道选择
+  const handleToggleChannelSelect = (channelId: string) => {
+    const newSelected = new Set(selectedChannels);
+    if (newSelected.has(channelId)) {
+      newSelected.delete(channelId);
+    } else {
+      newSelected.add(channelId);
+    }
+    setSelectedChannels(newSelected);
   };
 
   // 单个直播源检测
@@ -6465,7 +6655,13 @@ const LiveSourceConfig = ({
             );
           })()}
         </div>
-        <div className='w-56 flex-shrink-0 px-2 flex gap-2'>
+        <div className='w-72 flex-shrink-0 px-2 flex gap-2'>
+          <button
+            onClick={() => handleViewChannels(liveSource.key)}
+            className={`flex-1 inline-flex items-center justify-center ${buttonStyles.roundedPrimary}`}
+          >
+            查看
+          </button>
           <button
             onClick={() => handleToggleEnable(liveSource.key)}
             disabled={isLoading(`toggleLiveSource_${liveSource.key}`)}
@@ -6615,9 +6811,9 @@ const LiveSourceConfig = ({
       {/* 订阅配置显示 */}
       {subscriptionUrl && !showImportForm && (
         <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3'>
-          <div className='flex items-center justify-between'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
             <div className='flex-1'>
-              <div className='flex items-center gap-2'>
+              <div className='flex flex-wrap items-center gap-2'>
                 <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
                   订阅配置
                 </h4>
@@ -6640,11 +6836,11 @@ const LiveSourceConfig = ({
                 </p>
               )}
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
               <button
                 type='button'
                 onClick={() => setAutoUpdate(!autoUpdate)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                   autoUpdate ? buttonStyles.warning : buttonStyles.success
                 }`}
               >
@@ -6653,7 +6849,7 @@ const LiveSourceConfig = ({
               <button
                 onClick={handleSaveSubscription}
                 disabled={isLoading('saveLiveSubscription')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                   isLoading('saveLiveSubscription')
                     ? buttonStyles.disabled
                     : buttonStyles.primary
@@ -6672,7 +6868,7 @@ const LiveSourceConfig = ({
                   }
                 }}
                 disabled={isLoading('clearLiveSubscription')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                   isLoading('clearLiveSubscription')
                     ? buttonStyles.disabled
                     : buttonStyles.danger
@@ -7096,7 +7292,7 @@ const LiveSourceConfig = ({
               <div className='w-28 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 有效性
               </div>
-              <div className='w-56 flex-shrink-0 px-2 whitespace-nowrap text-left'>
+              <div className='w-72 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 操作
               </div>
             </div>
@@ -7138,6 +7334,201 @@ const LiveSourceConfig = ({
           </button>
         </div>
       )}
+
+      {/* 频道管理弹窗 */}
+      {showChannelModal &&
+        createPortal(
+          <div
+            className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50'
+            onClick={handleCloseChannelModal}
+          >
+            <div
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col'
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 弹窗标题 */}
+              <div className='flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700'>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0'>
+                  频道管理
+                </h3>
+                <div className='flex items-center gap-3 flex-1 justify-end'>
+                  <input
+                    type='text'
+                    placeholder='搜索频道名称或地址...'
+                    value={channelSearchKeyword}
+                    onChange={(e) => setChannelSearchKeyword(e.target.value)}
+                    className='px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-64'
+                  />
+                  <button
+                    onClick={handleCloseChannelModal}
+                    className='text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-shrink-0'
+                  >
+                    <svg
+                      className='w-6 h-6'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M6 18L18 6M6 6l12 12'
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* 频道列表 */}
+              <div className='flex-1 overflow-y-auto overflow-x-auto'>
+                {isLoadingChannels ? (
+                  <div className='flex items-center justify-center h-64'>
+                    <div className='text-center'>
+                      <div className='w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2'></div>
+                      <p className='text-sm text-gray-500 dark:text-gray-400'>
+                        加载中...
+                      </p>
+                    </div>
+                  </div>
+                ) : channels.length === 0 ? (
+                  <div className='flex items-center justify-center h-64'>
+                    <p className='text-sm text-gray-500 dark:text-gray-400'>
+                      暂无频道数据
+                    </p>
+                  </div>
+                ) : (
+                  <table className='w-full'>
+                    <thead className='bg-gray-50 dark:bg-gray-900 sticky top-0 z-10'>
+                      <tr>
+                        <th className='w-12 px-4 py-3 text-left'>
+                          <input
+                            type='checkbox'
+                            checked={
+                              filteredChannels.length > 0 &&
+                              filteredChannels.every((ch) =>
+                                selectedChannels.has(ch.id)
+                              )
+                            }
+                            onChange={handleSelectAllChannels}
+                            className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer'
+                          />
+                        </th>
+                        <th className='w-20 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                          序号
+                        </th>
+                        <th className='w-40 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                          频道名称
+                        </th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                          频道地址
+                        </th>
+                        <th className='w-24 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                          状态
+                        </th>
+                        <th className='w-40 px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className='bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700'>
+                      {filteredChannels.map((channel, index) => (
+                        <tr
+                          key={channel.id}
+                          className='hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors'
+                        >
+                          <td className='px-4 py-3'>
+                            <input
+                              type='checkbox'
+                              checked={selectedChannels.has(channel.id)}
+                              onChange={() =>
+                                handleToggleChannelSelect(channel.id)
+                              }
+                              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer'
+                            />
+                          </td>
+                          <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-100'>
+                            {index + 1}
+                          </td>
+                          <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-100'>
+                            {channel.name}
+                          </td>
+                          <td className='px-4 py-3 text-sm text-gray-900 dark:text-gray-100'>
+                            <div
+                              className='max-w-xs overflow-hidden text-ellipsis whitespace-nowrap'
+                              title={channel.url}
+                            >
+                              {channel.url}
+                            </div>
+                          </td>
+                          <td className='px-4 py-3'>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                                !channel.disabled
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                              }`}
+                            >
+                              {!channel.disabled ? '启用' : '禁用'}
+                            </span>
+                          </td>
+                          <td className='px-4 py-3'>
+                            <div className='flex gap-2'>
+                              <button
+                                onClick={() => handleToggleChannel(channel.id)}
+                                className={`px-3 py-1 text-xs rounded-lg ${
+                                  !channel.disabled
+                                    ? buttonStyles.warning
+                                    : buttonStyles.success
+                                }`}
+                              >
+                                {!channel.disabled ? '禁用' : '启用'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteChannel(channel.id)}
+                                className={`px-3 py-1 text-xs rounded-lg ${buttonStyles.danger}`}
+                              >
+                                删除
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* 底部批量操作栏 */}
+              {selectedChannels.size > 0 && (
+                <div className='flex flex-wrap items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border-t border-gray-200 dark:border-gray-700'>
+                  <span className='text-sm text-gray-600 dark:text-gray-400'>
+                    已选择 {selectedChannels.size} 个频道
+                  </span>
+                  <button
+                    onClick={() => handleBatchChannelOperation('enable')}
+                    className={`px-3 py-1 text-sm ${buttonStyles.success}`}
+                  >
+                    批量启用
+                  </button>
+                  <button
+                    onClick={() => handleBatchChannelOperation('disable')}
+                    className={`px-3 py-1 text-sm ${buttonStyles.warning}`}
+                  >
+                    批量禁用
+                  </button>
+                  <button
+                    onClick={() => handleBatchChannelOperation('delete')}
+                    className={`px-3 py-1 text-sm ${buttonStyles.danger}`}
+                  >
+                    批量删除
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* 通用弹窗组件 */}
       <AlertModal
