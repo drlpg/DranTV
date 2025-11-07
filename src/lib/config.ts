@@ -483,6 +483,11 @@ export async function getConfig(): Promise<AdminConfig> {
     throw new Error('数据库连接超时，请稍后重试');
   }
 
+  // 确保 adminConfig 不为 null
+  if (!adminConfig) {
+    throw new Error('无法获取配置');
+  }
+
   // 执行配置自检
   adminConfig = configSelfCheck(adminConfig);
 

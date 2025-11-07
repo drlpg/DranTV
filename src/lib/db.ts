@@ -340,6 +340,15 @@ class MemoryStorage implements IStorage {
   async removeFriend(): Promise<void> {}
   async updateFriend(): Promise<void> {}
   async updateFriendStatus(): Promise<void> {}
+  async get(key: string): Promise<string | null> {
+    return this.data[key] || null;
+  }
+  async set(key: string, value: string): Promise<void> {
+    this.data[key] = value;
+  }
+  async delete(key: string): Promise<void> {
+    delete this.data[key];
+  }
 }
 
 // 创建存储实例
@@ -788,6 +797,26 @@ export class DbManager {
       await (this.storage as any).clearAllData();
     } else {
       throw new Error('存储类型不支持清空数据操作');
+    }
+  }
+
+  // ---------- 通用键值存储 ----------
+  async get(key: string): Promise<string | null> {
+    if (typeof (this.storage as any).get === 'function') {
+      return (this.storage as any).get(key);
+    }
+    return null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    if (typeof (this.storage as any).set === 'function') {
+      await (this.storage as any).set(key, value);
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    if (typeof (this.storage as any).delete === 'function') {
+      await (this.storage as any).delete(key);
     }
   }
 }

@@ -1025,6 +1025,20 @@ export class UpstashRedisStorage implements IStorage {
       throw new Error('清空数据失败');
     }
   }
+
+  // ---------- 通用键值存储 ----------
+  async get(key: string): Promise<string | null> {
+    const val = await withRetry(() => this.client.get(key));
+    return val ? ensureString(val) : null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    await withRetry(() => this.client.set(key, value));
+  }
+
+  async delete(key: string): Promise<void> {
+    await withRetry(() => this.client.del(key));
+  }
 }
 
 // 单例 Upstash Redis 客户端

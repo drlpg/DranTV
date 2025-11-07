@@ -55,7 +55,7 @@ export interface AdminConfig {
     name: string;
     api: string;
     detail?: string;
-    from: 'config' | 'custom';
+    from: 'config' | 'custom' | 'subscription';
     disabled?: boolean;
   }[];
   CustomCategories: {
@@ -71,7 +71,7 @@ export interface AdminConfig {
     url: string; // m3u 地址
     ua?: string;
     epg?: string; // 节目单
-    from: 'config' | 'custom';
+    from: 'config' | 'custom' | 'subscription';
     channelNumber?: number;
     disabled?: boolean;
   }[];

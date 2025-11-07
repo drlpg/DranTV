@@ -576,7 +576,7 @@ interface DataSource {
   api: string;
   detail?: string;
   disabled?: boolean;
-  from: 'config' | 'custom';
+  from: 'config' | 'custom' | 'subscription';
 }
 
 // 直播源数据类型
@@ -588,7 +588,7 @@ interface LiveDataSource {
   epg?: string;
   channelNumber?: number;
   disabled?: boolean;
-  from: 'config' | 'custom';
+  from: 'config' | 'custom' | 'subscription';
 }
 
 // 自定义分类数据类型
