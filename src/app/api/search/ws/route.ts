@@ -301,7 +301,6 @@ export async function GET(request: NextRequest) {
     cancel() {
       // 客户端断开连接时，标记流已关闭
       streamClosed = true;
-      console.log('Client disconnected, cancelling search stream');
     },
   });
 

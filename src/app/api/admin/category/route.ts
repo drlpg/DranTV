@@ -176,6 +176,10 @@ export async function POST(request: NextRequest) {
     // 持久化到存储
     await db.saveAdminConfig(adminConfig);
 
+    // 更新内存缓存
+    const { setCachedConfig } = await import('@/lib/config');
+    await setCachedConfig(adminConfig);
+
     return NextResponse.json(
       { ok: true },
       {

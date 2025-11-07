@@ -29,32 +29,30 @@ function ensureStringArray(value: any[]): string[] {
 // 添加Upstash Redis操作重试包装器
 async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 3
+  maxRetries = 2 // 减少到2次重试
 ): Promise<T> {
-  // 判断是否为开发环境
-  const isDev = process.env.NODE_ENV !== 'production';
-
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await operation();
+      // 为每个操作添加8秒超时
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('操作超时')), 8000);
+      });
+
+      return await Promise.race([operation(), timeoutPromise]);
     } catch (err: any) {
       const isLastAttempt = i === maxRetries - 1;
       const isConnectionError =
         err.message?.includes('Connection') ||
         err.message?.includes('ECONNREFUSED') ||
         err.message?.includes('ENOTFOUND') ||
+        err.message?.includes('超时') ||
         err.code === 'ECONNRESET' ||
         err.code === 'EPIPE' ||
         err.name === 'UpstashError';
 
       if (isConnectionError && !isLastAttempt) {
-        console.log(
-          `Upstash Redis operation failed, retrying... (${i + 1}/${maxRetries})`
-        );
-        console.error('Error:', err.message);
-
-        // 开发环境使用更短的重试间隔
-        const retryDelay = isDev ? 300 * (i + 1) : 1000 * (i + 1);
+        // 使用更短的重试间隔：100ms, 200ms
+        const retryDelay = 100 * (i + 1);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         continue;
       }
@@ -90,7 +88,6 @@ export class UpstashRedisStorage implements IStorage {
     try {
       return typeof val === 'string' ? JSON.parse(val) : (val as PlayRecord);
     } catch (error) {
-      console.error('解析播放记录失败:', error);
       return null;
     }
   }
@@ -127,7 +124,7 @@ export class UpstashRedisStorage implements IStorage {
               : (value as PlayRecord);
           result[keyPart] = record;
         } catch (error) {
-          console.error('解析播放记录失败:', error, 'key:', fullKey);
+          // 静默处理解析错误
         }
       }
     }
@@ -152,7 +149,6 @@ export class UpstashRedisStorage implements IStorage {
     try {
       return typeof val === 'string' ? JSON.parse(val) : (val as Favorite);
     } catch (error) {
-      console.error('解析收藏失败:', error);
       return null;
     }
   }
@@ -184,7 +180,7 @@ export class UpstashRedisStorage implements IStorage {
             typeof value === 'string' ? JSON.parse(value) : (value as Favorite);
           result[keyPart] = favorite;
         } catch (error) {
-          console.error('解析收藏失败:', error, 'key:', fullKey);
+          // 静默处理解析错误
         }
       }
     }
@@ -317,26 +313,27 @@ export class UpstashRedisStorage implements IStorage {
 
   async getAdminConfig(): Promise<AdminConfig | null> {
     const val = await withRetry(() => this.client.get(this.adminConfigKey()));
-    if (!val) return null;
+    if (!val) {
+      return null;
+    }
 
     try {
       // 尝试解析JSON字符串（兼容BaseRedisStorage格式）
       if (typeof val === 'string') {
-        return JSON.parse(val) as AdminConfig;
+        const config = JSON.parse(val) as AdminConfig;
+        return config;
       }
       // 如果已经是对象，直接返回（Upstash自动反序列化的情况）
       return val as AdminConfig;
     } catch (error) {
-      console.error('解析管理员配置失败:', error);
       return null;
     }
   }
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
     // 统一使用JSON字符串格式存储，与BaseRedisStorage保持一致
-    await withRetry(() =>
-      this.client.set(this.adminConfigKey(), JSON.stringify(config))
-    );
+    const configStr = JSON.stringify(config);
+    await withRetry(() => this.client.set(this.adminConfigKey(), configStr));
   }
 
   // ---------- 跳过片头片尾配置 ----------
@@ -357,7 +354,6 @@ export class UpstashRedisStorage implements IStorage {
     try {
       return typeof val === 'string' ? JSON.parse(val) : (val as SkipConfig);
     } catch (error) {
-      console.error('解析跳过配置失败:', error);
       return null;
     }
   }
@@ -416,7 +412,7 @@ export class UpstashRedisStorage implements IStorage {
             configs[sourceAndId] = config;
           }
         } catch (error) {
-          console.error('解析跳过配置失败:', error, 'key:', key);
+          // 静默处理解析错误
         }
       }
     });
@@ -462,7 +458,6 @@ export class UpstashRedisStorage implements IStorage {
         try {
           return typeof item === 'string' ? JSON.parse(item) : item;
         } catch (error) {
-          console.error('解析弹幕数据失败:', error);
           return null;
         }
       })
@@ -528,7 +523,6 @@ export class UpstashRedisStorage implements IStorage {
       const data = typeof val === 'string' ? JSON.parse(val) : val;
       return data.machineCode || null;
     } catch (error) {
-      console.error('解析用户机器码失败:', error);
       return null;
     }
   }
@@ -596,12 +590,12 @@ export class UpstashRedisStorage implements IStorage {
             const data = typeof val === 'string' ? JSON.parse(val) : val;
             result[userName] = data;
           } catch (error) {
-            console.error('解析机器码用户数据失败:', error, 'key:', key);
+            // 静默处理解析错误
           }
         }
       }
     } catch (error) {
-      console.error('获取机器码用户列表失败:', error);
+      // 静默处理错误
     }
 
     return result;
@@ -692,7 +686,7 @@ export class UpstashRedisStorage implements IStorage {
               : messageData;
           messages.push(message as ChatMessage);
         } catch (error) {
-          console.error('解析消息失败:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -715,7 +709,7 @@ export class UpstashRedisStorage implements IStorage {
           this.client.set(this.messageKey(messageId), JSON.stringify(message))
         );
       } catch (error) {
-        console.error('标记消息为已读失败:', error);
+        // 静默处理错误
       }
     }
   }
@@ -750,7 +744,6 @@ export class UpstashRedisStorage implements IStorage {
         ? JSON.parse(conversationData)
         : (conversationData as Conversation);
     } catch (error) {
-      console.error('解析对话失败:', error);
       return null;
     }
   }
@@ -835,7 +828,7 @@ export class UpstashRedisStorage implements IStorage {
               : friendData;
           friends.push(friend as Friend);
         } catch (error) {
-          console.error('解析好友数据失败:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -883,7 +876,7 @@ export class UpstashRedisStorage implements IStorage {
           this.client.set(this.friendKey(friendId), JSON.stringify(friend))
         );
       } catch (error) {
-        console.error('更新好友状态失败:', error);
+        // 静默处理错误
       }
     }
   }
@@ -910,7 +903,7 @@ export class UpstashRedisStorage implements IStorage {
             requests.push(request);
           }
         } catch (error) {
-          console.error('解析好友申请失败:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -961,7 +954,7 @@ export class UpstashRedisStorage implements IStorage {
           )
         );
       } catch (error) {
-        console.error('更新好友申请失败:', error);
+        // 静默处理错误
       }
     }
   }
@@ -991,7 +984,7 @@ export class UpstashRedisStorage implements IStorage {
           )
         );
       } catch (error) {
-        console.error('删除好友申请失败:', error);
+        // 静默处理错误
       }
     }
 
@@ -1028,10 +1021,7 @@ export class UpstashRedisStorage implements IStorage {
 
       // 删除管理员配置
       await withRetry(() => this.client.del(this.adminConfigKey()));
-
-      console.log('所有数据已清空');
     } catch (error) {
-      console.error('清空数据失败:', error);
       throw new Error('清空数据失败');
     }
   }
@@ -1056,15 +1046,14 @@ function getUpstashRedisClient(): Redis {
     client = new Redis({
       url: upstashUrl,
       token: upstashToken,
-      // 可选配置
+      // 优化重试配置：更短的超时和重试间隔
       retry: {
-        retries: 3,
-        backoff: (retryCount: number) =>
-          Math.min(1000 * Math.pow(2, retryCount), 30000),
+        retries: 2, // 减少重试次数
+        backoff: (retryCount: number) => 200 * retryCount, // 线性退避：200ms, 400ms
       },
+      // 添加请求超时
+      automaticDeserialization: true,
     });
-
-    console.log('Upstash Redis client created successfully');
 
     (global as any)[globalKey] = client;
   }

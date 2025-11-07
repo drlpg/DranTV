@@ -147,7 +147,10 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: '源不存在' }, { status: 404 });
         const entry = adminConfig.SourceConfig[idx];
         // 只有站长可以删除来自config的源
-        if (entry.from === 'config' && username !== process.env.LOGIN_USERNAME) {
+        if (
+          entry.from === 'config' &&
+          username !== process.env.LOGIN_USERNAME
+        ) {
           return NextResponse.json({ error: '该源不可删除' }, { status: 400 });
         }
         adminConfig.SourceConfig.splice(idx, 1);
@@ -168,6 +171,12 @@ export async function POST(request: NextRequest) {
             user.enabledApis = user.enabledApis.filter((api) => api !== key);
           }
         });
+
+        // 如果删除后没有视频源了，清除订阅配置
+        if (adminConfig.SourceConfig.length === 0) {
+          adminConfig.SourceSubscription = undefined;
+          console.log('已清除视频源订阅配置（所有视频源已删除）');
+        }
         break;
       }
       case 'batch_disable': {
@@ -250,6 +259,12 @@ export async function POST(request: NextRequest) {
             }
           });
         }
+
+        // 如果删除后没有视频源了，清除订阅配置
+        if (adminConfig.SourceConfig.length === 0) {
+          adminConfig.SourceSubscription = undefined;
+          console.log('已清除视频源订阅配置（所有视频源已删除）');
+        }
         break;
       }
       case 'sort': {
@@ -283,8 +298,15 @@ export async function POST(request: NextRequest) {
     // 持久化到存储
     await db.saveAdminConfig(adminConfig);
 
+    // 更新内存缓存
+    const { setCachedConfig } = await import('@/lib/config');
+    await setCachedConfig(adminConfig);
+
     return NextResponse.json(
-      { ok: true },
+      {
+        ok: true,
+        config: adminConfig, // 返回更新后的配置，避免前端重新请求
+      },
       {
         headers: {
           'Cache-Control': 'no-store',

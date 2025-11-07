@@ -291,7 +291,6 @@ const ThemeManager = ({ showAlert, role }: ThemeManagerProps) => {
         customCSS: css,
       };
       localStorage.setItem('theme-cache', JSON.stringify(themeConfig));
-      console.log('主题配置已缓存:', themeConfig);
     } catch (error) {
       console.warn('缓存主题配置失败:', error);
     }

@@ -1,9 +1,9 @@
 /* eslint-disable no-constant-condition */
 
-import { getConfig } from "@/lib/config";
-import { db } from "@/lib/db";
+import { getConfig } from '@/lib/config';
+import { db } from '@/lib/db';
 
-const defaultUA = 'AptvPlayer/1.4.10'
+const defaultUA = 'AptvPlayer/1.4.10';
 
 export interface LiveChannels {
   channelNumber: number;
@@ -31,20 +31,42 @@ export function deleteCachedLiveChannels(key: string) {
   delete cachedLiveChannels[key];
 }
 
-export async function getCachedLiveChannels(key: string): Promise<LiveChannels | null> {
+export function clearAllCachedLiveChannels() {
+  const keys = Object.keys(cachedLiveChannels);
+  keys.forEach((key) => delete cachedLiveChannels[key]);
+}
+
+export async function getCachedLiveChannels(
+  key: string
+): Promise<LiveChannels | null> {
   if (!cachedLiveChannels[key]) {
-    const config = await getConfig();
-    const liveInfo = config.LiveConfig?.find(live => live.key === key);
+    let config;
+    try {
+      config = await getConfig();
+    } catch (configError) {
+      throw new Error(
+        `无法获取配置: ${
+          configError instanceof Error ? configError.message : '未知错误'
+        }`
+      );
+    }
+
+    const liveInfo = config.LiveConfig?.find((live) => live.key === key);
     if (!liveInfo) {
-      return null;
+      throw new Error(`直播源 "${key}" 不存在`);
     }
-    const channelNum = await refreshLiveChannels(liveInfo);
-    if (channelNum === 0) {
-      return null;
+
+    try {
+      const channelNum = await refreshLiveChannels(liveInfo);
+      if (channelNum === 0) {
+        return null;
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : '未知错误';
+      throw new Error(`刷新直播源失败: ${errorMsg}`);
     }
-    liveInfo.channelNumber = channelNum;
-    await db.saveAdminConfig(config);
   }
+
   return cachedLiveChannels[key] || null;
 }
 
@@ -58,41 +80,147 @@ export async function refreshLiveChannels(liveInfo: {
   channelNumber?: number;
   disabled?: boolean;
 }): Promise<number> {
-  if (cachedLiveChannels[liveInfo.key]) {
-    delete cachedLiveChannels[liveInfo.key];
-  }
+  // 不删除现有缓存，如果刷新失败可以继续使用旧数据
+  const hasCache = !!cachedLiveChannels[liveInfo.key];
+
   const ua = liveInfo.ua || defaultUA;
-  const response = await fetch(liveInfo.url, {
-    headers: {
-      'User-Agent': ua,
-    },
-  });
-  const data = await response.text();
-  const result = parseM3U(liveInfo.key, data);
-  const epgUrl = liveInfo.epg || result.tvgUrl;
-  const epgs = await parseEpg(epgUrl, liveInfo.ua || defaultUA, result.channels.map(channel => channel.tvgId).filter(tvgId => tvgId));
-  cachedLiveChannels[liveInfo.key] = {
-    channelNumber: result.channels.length,
-    channels: result.channels,
-    epgUrl: epgUrl,
-    epgs: epgs,
-  };
-  return result.channels.length;
+
+  try {
+    let data: string;
+
+    // 1. 检查是否是数据库API端点
+    if (liveInfo.url.includes('/api/live/m3u?key=')) {
+      const key = liveInfo.url.split('key=')[1];
+      const content = await db.get(`live_m3u_${key}`);
+      if (!content) {
+        throw new Error(`数据库中没有M3U内容: ${key}`);
+      }
+      data = content;
+    }
+    // 2. 检查是否是相对路径（以/开头但不是完整URL）
+    else if (liveInfo.url.startsWith('/') && !liveInfo.url.startsWith('//')) {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const fullUrl = `${baseUrl}${liveInfo.url}`;
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      try {
+        const response = await fetch(fullUrl, {
+          headers: { 'User-Agent': ua },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        data = await response.text();
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (hasCache) {
+          return cachedLiveChannels[liveInfo.key].channelNumber;
+        }
+        throw fetchError;
+      }
+    }
+    // 3. 网络URL
+    else {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      let response;
+      try {
+        response = await fetch(liveInfo.url, {
+          headers: {
+            'User-Agent': ua,
+          },
+          signal: controller.signal,
+        });
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        const errorMsg =
+          fetchError instanceof Error ? fetchError.message : '网络请求失败';
+
+        if (hasCache) {
+          return cachedLiveChannels[liveInfo.key].channelNumber;
+        }
+
+        throw new Error(`无法访问M3U文件: ${errorMsg}`);
+      }
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+
+        if (hasCache) {
+          return cachedLiveChannels[liveInfo.key].channelNumber;
+        }
+
+        throw new Error(errorMsg);
+      }
+
+      data = await response.text();
+    }
+
+    const result = parseM3U(liveInfo.key, data);
+
+    // 跳过EPG解析以加快刷新速度
+    const epgUrl = liveInfo.epg || result.tvgUrl;
+    const epgs = {};
+
+    // EPG可以在后台异步加载，不阻塞刷新
+    if (epgUrl) {
+      parseEpg(
+        epgUrl,
+        liveInfo.ua || defaultUA,
+        result.channels.map((channel) => channel.tvgId).filter((tvgId) => tvgId)
+      ).catch(() => {
+        // 静默处理EPG解析失败
+      });
+    }
+
+    cachedLiveChannels[liveInfo.key] = {
+      channelNumber: result.channels.length,
+      channels: result.channels,
+      epgUrl: epgUrl,
+      epgs: epgs,
+    };
+
+    return result.channels.length;
+  } catch (error) {
+    // 如果有缓存，返回缓存的频道数，不抛出错误
+    if (hasCache && cachedLiveChannels[liveInfo.key]) {
+      return cachedLiveChannels[liveInfo.key].channelNumber;
+    }
+
+    // 没有缓存时才抛出错误
+    throw error;
+  }
 }
 
-async function parseEpg(epgUrl: string, ua: string, tvgIds: string[]): Promise<{
+async function parseEpg(
+  epgUrl: string,
+  ua: string,
+  tvgIds: string[]
+): Promise<{
   [key: string]: {
     start: string;
     end: string;
     title: string;
-  }[]
+  }[];
 }> {
   if (!epgUrl) {
     return {};
   }
 
   const tvgs = new Set(tvgIds);
-  const result: { [key: string]: { start: string; end: string; title: string }[] } = {};
+  const result: {
+    [key: string]: { start: string; end: string; title: string }[];
+  } = {};
 
   try {
     const response = await fetch(epgUrl, {
@@ -113,7 +241,8 @@ async function parseEpg(epgUrl: string, ua: string, tvgIds: string[]): Promise<{
     const decoder = new TextDecoder();
     let buffer = '';
     let currentTvgId = '';
-    let currentProgram: { start: string; end: string; title: string } | null = null;
+    let currentProgram: { start: string; end: string; title: string } | null =
+      null;
     let shouldSkipCurrentProgram = false;
 
     while (true) {
@@ -152,9 +281,15 @@ async function parseEpg(epgUrl: string, ua: string, tvgIds: string[]): Promise<{
           }
         }
         // 解析 <title> 标签 - 只有在需要解析当前节目时才处理
-        else if (trimmedLine.startsWith('<title') && currentProgram && !shouldSkipCurrentProgram) {
+        else if (
+          trimmedLine.startsWith('<title') &&
+          currentProgram &&
+          !shouldSkipCurrentProgram
+        ) {
           // 处理带有语言属性的title标签，如 <title lang="zh">远方的家2025-60</title>
-          const titleMatch = trimmedLine.match(/<title(?:\s+[^>]*)?>(.*?)<\/title>/);
+          const titleMatch = trimmedLine.match(
+            /<title(?:\s+[^>]*)?>(.*?)<\/title>/
+          );
           if (titleMatch && currentProgram) {
             currentProgram.title = titleMatch[1];
 
@@ -187,7 +322,10 @@ async function parseEpg(epgUrl: string, ua: string, tvgIds: string[]): Promise<{
  * @param m3uContent M3U文件的内容字符串
  * @returns 频道信息数组
  */
-function parseM3U(sourceKey: string, m3uContent: string): {
+function parseM3U(
+  sourceKey: string,
+  m3uContent: string
+): {
   tvgUrl: string;
   channels: {
     id: string;
@@ -207,7 +345,10 @@ function parseM3U(sourceKey: string, m3uContent: string): {
     url: string;
   }[] = [];
 
-  const lines = m3uContent.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const lines = m3uContent
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   let tvgUrl = '';
   let channelIndex = 0;
@@ -259,7 +400,7 @@ function parseM3U(sourceKey: string, m3uContent: string): {
             name,
             logo,
             group,
-            url
+            url,
           });
           channelIndex++;
         }
@@ -277,7 +418,10 @@ function parseM3U(sourceKey: string, m3uContent: string): {
 export function resolveUrl(baseUrl: string, relativePath: string) {
   try {
     // 如果已经是完整的 URL，直接返回
-    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+    if (
+      relativePath.startsWith('http://') ||
+      relativePath.startsWith('https://')
+    ) {
       return relativePath;
     }
 
@@ -311,8 +455,8 @@ function fallbackUrlResolve(baseUrl: string, relativePath: string) {
     return `${urlObj.protocol}//${urlObj.host}${relativePath}`;
   } else if (relativePath.startsWith('../')) {
     // 上级目录相对路径 (../path/to/file)
-    const segments = base.split('/').filter(s => s);
-    const relativeSegments = relativePath.split('/').filter(s => s);
+    const segments = base.split('/').filter((s) => s);
+    const relativeSegments = relativePath.split('/').filter((s) => s);
 
     for (const segment of relativeSegments) {
       if (segment === '..') {
@@ -326,7 +470,9 @@ function fallbackUrlResolve(baseUrl: string, relativePath: string) {
     return `${urlObj.protocol}//${urlObj.host}/${segments.join('/')}`;
   } else {
     // 当前目录相对路径 (file.ts 或 ./file.ts)
-    const cleanRelative = relativePath.startsWith('./') ? relativePath.slice(2) : relativePath;
+    const cleanRelative = relativePath.startsWith('./')
+      ? relativePath.slice(2)
+      : relativePath;
     return base + cleanRelative;
   }
 }
@@ -337,11 +483,14 @@ export function getBaseUrl(m3u8Url: string) {
     const url = new URL(m3u8Url);
     // 如果 URL 以 .m3u8 结尾，移除文件名
     if (url.pathname.endsWith('.m3u8')) {
-      url.pathname = url.pathname.substring(0, url.pathname.lastIndexOf('/') + 1);
+      url.pathname = url.pathname.substring(
+        0,
+        url.pathname.lastIndexOf('/') + 1
+      );
     } else if (!url.pathname.endsWith('/')) {
       url.pathname += '/';
     }
-    return url.protocol + "//" + url.host + url.pathname;
+    return url.protocol + '//' + url.host + url.pathname;
   } catch (error) {
     return m3u8Url.endsWith('/') ? m3u8Url : m3u8Url + '/';
   }

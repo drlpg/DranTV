@@ -3,7 +3,16 @@
 import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
-import { Favorite, IStorage, PlayRecord, SkipConfig, ChatMessage, Conversation, Friend, FriendRequest } from './types';
+import {
+  Favorite,
+  IStorage,
+  PlayRecord,
+  SkipConfig,
+  ChatMessage,
+  Conversation,
+  Friend,
+  FriendRequest,
+} from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
 // storage type 常量: 'localstorage' | 'redis' | 'upstash'，默认 'localstorage'
@@ -32,7 +41,11 @@ class MemoryStorage implements IStorage {
     this.data[messagesKey].push(message.id);
   }
 
-  async getMessages(conversationId: string, limit = 50, offset = 0): Promise<ChatMessage[]> {
+  async getMessages(
+    conversationId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<ChatMessage[]> {
     const messagesKey = `conversation_messages:${conversationId}`;
     const messageIds = this.data[messagesKey] || [];
 
@@ -92,7 +105,10 @@ class MemoryStorage implements IStorage {
     }
   }
 
-  async updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<void> {
+  async updateConversation(
+    conversationId: string,
+    updates: Partial<Conversation>
+  ): Promise<void> {
     const key = `conversation:${conversationId}`;
     if (this.data[key]) {
       Object.assign(this.data[key], updates);
@@ -106,9 +122,9 @@ class MemoryStorage implements IStorage {
       for (const participant of conversation.participants) {
         const userConversationsKey = `user_conversations:${participant}`;
         if (this.data[userConversationsKey]) {
-          this.data[userConversationsKey] = this.data[userConversationsKey].filter(
-            (id: string) => id !== conversationId
-          );
+          this.data[userConversationsKey] = this.data[
+            userConversationsKey
+          ].filter((id: string) => id !== conversationId);
         }
       }
 
@@ -131,7 +147,11 @@ class MemoryStorage implements IStorage {
     return this.data[key] || [];
   }
 
-  async createFriend(friendship: { user1: string; user2: string; created_at: number }): Promise<void> {
+  async createFriend(friendship: {
+    user1: string;
+    user2: string;
+    created_at: number;
+  }): Promise<void> {
     // 双向添加好友关系
     const user1FriendsKey = `user_friends:${friendship.user1}`;
     const user2FriendsKey = `user_friends:${friendship.user2}`;
@@ -140,24 +160,32 @@ class MemoryStorage implements IStorage {
     if (!this.data[user2FriendsKey]) this.data[user2FriendsKey] = [];
 
     // 为user1添加user2作为好友
-    if (!this.data[user1FriendsKey].some((f: Friend) => f.username === friendship.user2)) {
+    if (
+      !this.data[user1FriendsKey].some(
+        (f: Friend) => f.username === friendship.user2
+      )
+    ) {
       this.data[user1FriendsKey].push({
         id: `friend_${Date.now()}_1`,
         username: friendship.user2,
         nickname: friendship.user2,
         status: 'offline' as const,
-        added_at: friendship.created_at
+        added_at: friendship.created_at,
       });
     }
 
     // 为user2添加user1作为好友
-    if (!this.data[user2FriendsKey].some((f: Friend) => f.username === friendship.user1)) {
+    if (
+      !this.data[user2FriendsKey].some(
+        (f: Friend) => f.username === friendship.user1
+      )
+    ) {
       this.data[user2FriendsKey].push({
         id: `friend_${Date.now()}_2`,
         username: friendship.user1,
         nickname: friendship.user1,
         status: 'offline' as const,
-        added_at: friendship.created_at
+        added_at: friendship.created_at,
       });
     }
   }
@@ -179,12 +207,17 @@ class MemoryStorage implements IStorage {
     this.data[key].push(request);
   }
 
-  async updateFriendRequest(requestId: string, status: 'pending' | 'accepted' | 'rejected'): Promise<void> {
+  async updateFriendRequest(
+    requestId: string,
+    status: 'pending' | 'accepted' | 'rejected'
+  ): Promise<void> {
     // 查找并更新好友请求
     for (const key in this.data) {
       if (key.startsWith('user_friend_requests:')) {
         const requests = this.data[key];
-        const requestIndex = requests.findIndex((r: FriendRequest) => r.id === requestId);
+        const requestIndex = requests.findIndex(
+          (r: FriendRequest) => r.id === requestId
+        );
         if (requestIndex !== -1) {
           requests[requestIndex].status = status;
           requests[requestIndex].updated_at = Date.now();
@@ -199,7 +232,9 @@ class MemoryStorage implements IStorage {
     for (const key in this.data) {
       if (key.startsWith('user_friend_requests:')) {
         const requests = this.data[key];
-        const requestIndex = requests.findIndex((r: FriendRequest) => r.id === requestId);
+        const requestIndex = requests.findIndex(
+          (r: FriendRequest) => r.id === requestId
+        );
         if (requestIndex !== -1) {
           requests.splice(requestIndex, 1);
           break;
@@ -212,50 +247,99 @@ class MemoryStorage implements IStorage {
   async searchUsers(query: string): Promise<Friend[]> {
     // 返回一些模拟用户用于测试
     const mockUsers: Friend[] = [
-      { id: 'user1', username: 'test1', nickname: 'Test User 1', status: 'offline' as const, added_at: Date.now() },
-      { id: 'user2', username: 'test2', nickname: 'Test User 2', status: 'offline' as const, added_at: Date.now() },
-      { id: 'user3', username: 'admin', nickname: 'Admin User', status: 'offline' as const, added_at: Date.now() },
+      {
+        id: 'user1',
+        username: 'test1',
+        nickname: 'Test User 1',
+        status: 'offline' as const,
+        added_at: Date.now(),
+      },
+      {
+        id: 'user2',
+        username: 'test2',
+        nickname: 'Test User 2',
+        status: 'offline' as const,
+        added_at: Date.now(),
+      },
+      {
+        id: 'user3',
+        username: 'admin',
+        nickname: 'Admin User',
+        status: 'offline' as const,
+        added_at: Date.now(),
+      },
     ];
 
-    return mockUsers.filter(user =>
-      user.username.toLowerCase().includes(query.toLowerCase()) ||
-      user.nickname?.toLowerCase().includes(query.toLowerCase())
+    return mockUsers.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query.toLowerCase()) ||
+        user.nickname?.toLowerCase().includes(query.toLowerCase())
     );
   }
 
   // 其他必需的方法存根
-  async getPlayRecord(): Promise<PlayRecord | null> { return null; }
-  async setPlayRecord(): Promise<void> { }
-  async getAllPlayRecords(): Promise<{ [key: string]: PlayRecord }> { return {}; }
-  async deletePlayRecord(): Promise<void> { }
-  async getFavorite(): Promise<Favorite | null> { return null; }
-  async setFavorite(): Promise<void> { }
-  async getAllFavorites(): Promise<{ [key: string]: Favorite }> { return {}; }
-  async deleteFavorite(): Promise<void> { }
-  async registerUser(): Promise<void> { }
-  async verifyUser(): Promise<boolean> { return true; }
-  async checkUser(): Promise<boolean> { return true; }
-  async checkUserExist(): Promise<boolean> { return true; }
-  async changePassword(): Promise<void> { }
-  async deleteUser(): Promise<void> { }
-  async getSearchHistory(): Promise<string[]> { return []; }
-  async addSearchHistory(): Promise<void> { }
-  async deleteSearchHistory(): Promise<void> { }
-  async clearSearchHistory(): Promise<void> { }
-  async getSearchHistoryCount(): Promise<number> { return 0; }
-  async getSkipConfigs(): Promise<SkipConfig[]> { return []; }
-  async getSkipConfig(): Promise<SkipConfig | null> { return null; }
-  async setSkipConfig(): Promise<void> { }
-  async deleteSkipConfig(): Promise<void> { }
-  async getAdminConfig(): Promise<AdminConfig> { return {} as AdminConfig; }
-  async setAdminConfig(): Promise<void> { }
-  async getAllUsers(): Promise<string[]> { return []; }
-  async getAllSkipConfigs(): Promise<{ [key: string]: SkipConfig }> { return {}; }
-  async clearAllData(): Promise<void> { this.data = {}; }
-  async addFriend(): Promise<void> { }
-  async removeFriend(): Promise<void> { }
-  async updateFriend(): Promise<void> { }
-  async updateFriendStatus(): Promise<void> { }
+  async getPlayRecord(): Promise<PlayRecord | null> {
+    return null;
+  }
+  async setPlayRecord(): Promise<void> {}
+  async getAllPlayRecords(): Promise<{ [key: string]: PlayRecord }> {
+    return {};
+  }
+  async deletePlayRecord(): Promise<void> {}
+  async getFavorite(): Promise<Favorite | null> {
+    return null;
+  }
+  async setFavorite(): Promise<void> {}
+  async getAllFavorites(): Promise<{ [key: string]: Favorite }> {
+    return {};
+  }
+  async deleteFavorite(): Promise<void> {}
+  async registerUser(): Promise<void> {}
+  async verifyUser(): Promise<boolean> {
+    return true;
+  }
+  async checkUser(): Promise<boolean> {
+    return true;
+  }
+  async checkUserExist(): Promise<boolean> {
+    return true;
+  }
+  async changePassword(): Promise<void> {}
+  async deleteUser(): Promise<void> {}
+  async getSearchHistory(): Promise<string[]> {
+    return [];
+  }
+  async addSearchHistory(): Promise<void> {}
+  async deleteSearchHistory(): Promise<void> {}
+  async clearSearchHistory(): Promise<void> {}
+  async getSearchHistoryCount(): Promise<number> {
+    return 0;
+  }
+  async getSkipConfigs(): Promise<SkipConfig[]> {
+    return [];
+  }
+  async getSkipConfig(): Promise<SkipConfig | null> {
+    return null;
+  }
+  async setSkipConfig(): Promise<void> {}
+  async deleteSkipConfig(): Promise<void> {}
+  async getAdminConfig(): Promise<AdminConfig> {
+    return {} as AdminConfig;
+  }
+  async setAdminConfig(): Promise<void> {}
+  async getAllUsers(): Promise<string[]> {
+    return [];
+  }
+  async getAllSkipConfigs(): Promise<{ [key: string]: SkipConfig }> {
+    return {};
+  }
+  async clearAllData(): Promise<void> {
+    this.data = {};
+  }
+  async addFriend(): Promise<void> {}
+  async removeFriend(): Promise<void> {}
+  async updateFriend(): Promise<void> {}
+  async updateFriendStatus(): Promise<void> {}
 }
 
 // 创建存储实例
@@ -269,7 +353,6 @@ function createStorage(): IStorage {
       return new KvrocksStorage();
     case 'localstorage':
     default:
-      console.log('使用内存存储模式（用于开发和测试）');
       return new MemoryStorage();
   }
 }
@@ -503,13 +586,17 @@ export class DbManager {
     return [];
   }
 
-  async saveDanmu(videoId: string, userName: string, danmu: {
-    text: string;
-    color: string;
-    mode: number;
-    time: number;
-    timestamp: number;
-  }): Promise<void> {
+  async saveDanmu(
+    videoId: string,
+    userName: string,
+    danmu: {
+      text: string;
+      color: string;
+      mode: number;
+      time: number;
+      timestamp: number;
+    }
+  ): Promise<void> {
     if (typeof (this.storage as any).saveDanmu === 'function') {
       await (this.storage as any).saveDanmu(videoId, userName, danmu);
     }
@@ -529,9 +616,17 @@ export class DbManager {
     return null;
   }
 
-  async setUserMachineCode(userName: string, machineCode: string, deviceInfo?: string): Promise<void> {
+  async setUserMachineCode(
+    userName: string,
+    machineCode: string,
+    deviceInfo?: string
+  ): Promise<void> {
     if (typeof (this.storage as any).setUserMachineCode === 'function') {
-      await (this.storage as any).setUserMachineCode(userName, machineCode, deviceInfo);
+      await (this.storage as any).setUserMachineCode(
+        userName,
+        machineCode,
+        deviceInfo
+      );
     }
   }
 
@@ -541,7 +636,12 @@ export class DbManager {
     }
   }
 
-  async getMachineCodeUsers(): Promise<Record<string, { machineCode: string; deviceInfo?: string; bindTime: number }>> {
+  async getMachineCodeUsers(): Promise<
+    Record<
+      string,
+      { machineCode: string; deviceInfo?: string; bindTime: number }
+    >
+  > {
     if (typeof (this.storage as any).getMachineCodeUsers === 'function') {
       return (this.storage as any).getMachineCodeUsers();
     }
@@ -563,7 +663,11 @@ export class DbManager {
     }
   }
 
-  async getMessages(conversationId: string, limit?: number, offset?: number): Promise<ChatMessage[]> {
+  async getMessages(
+    conversationId: string,
+    limit?: number,
+    offset?: number
+  ): Promise<ChatMessage[]> {
     if (typeof (this.storage as any).getMessages === 'function') {
       return (this.storage as any).getMessages(conversationId, limit, offset);
     }
@@ -597,7 +701,10 @@ export class DbManager {
     }
   }
 
-  async updateConversation(conversationId: string, updates: Partial<Conversation>): Promise<void> {
+  async updateConversation(
+    conversationId: string,
+    updates: Partial<Conversation>
+  ): Promise<void> {
     if (typeof (this.storage as any).updateConversation === 'function') {
       await (this.storage as any).updateConversation(conversationId, updates);
     }
@@ -629,7 +736,10 @@ export class DbManager {
     }
   }
 
-  async updateFriendStatus(friendId: string, status: Friend['status']): Promise<void> {
+  async updateFriendStatus(
+    friendId: string,
+    status: Friend['status']
+  ): Promise<void> {
     if (typeof (this.storage as any).updateFriendStatus === 'function') {
       await (this.storage as any).updateFriendStatus(friendId, status);
     }
@@ -649,7 +759,10 @@ export class DbManager {
     }
   }
 
-  async updateFriendRequest(requestId: string, status: FriendRequest['status']): Promise<void> {
+  async updateFriendRequest(
+    requestId: string,
+    status: FriendRequest['status']
+  ): Promise<void> {
     if (typeof (this.storage as any).updateFriendRequest === 'function') {
       await (this.storage as any).updateFriendRequest(requestId, status);
     }

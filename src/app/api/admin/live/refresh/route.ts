@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { refreshLiveChannels } from '@/lib/live';
 
 export const runtime = 'nodejs';
+export const maxDuration = 60; // 增加超时时间到60秒
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,31 +18,19 @@ export async function POST(request: NextRequest) {
     const config = await getConfig();
     if (username !== process.env.LOGIN_USERNAME) {
       // 管理员
-      const user = config.UserConfig.Users.find(
-        (u) => u.username === username
-      );
+      const user = config.UserConfig.Users.find((u) => u.username === username);
       if (!user || user.role !== 'admin' || user.banned) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
       }
     }
 
-    // 并发刷新所有启用的直播源
-    const refreshPromises = (config.LiveConfig || [])
-      .filter(liveInfo => !liveInfo.disabled)
-      .map(async (liveInfo) => {
-        try {
-          const nums = await refreshLiveChannels(liveInfo);
-          liveInfo.channelNumber = nums;
-        } catch (error) {
-          liveInfo.channelNumber = 0;
-        }
-      });
+    console.log('[Live Refresh] 清除直播源缓存...');
 
-    // 等待所有刷新任务完成
-    await Promise.all(refreshPromises);
+    // 只清除缓存，不实际刷新（刷新会在用户访问时自动进行）
+    const { clearAllCachedLiveChannels } = await import('@/lib/live');
+    clearAllCachedLiveChannels();
 
-    // 保存配置
-    await db.saveAdminConfig(config);
+    console.log('[Live Refresh] 缓存已清除，下次访问时会自动刷新');
 
     return NextResponse.json({
       success: true,

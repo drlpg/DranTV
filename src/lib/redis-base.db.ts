@@ -57,15 +57,8 @@ function createRetryWrapper(
           err.code === 'EPIPE';
 
         if (isConnectionError && !isLastAttempt) {
-          console.log(
-            `${clientName} operation failed, retrying... (${
-              i + 1
-            }/${maxRetries})`
-          );
-          console.error('Error:', err.message);
-
-          // 开发环境使用更短的重试间隔
-          const retryDelay = isDev ? 300 * (i + 1) : 1000 * (i + 1);
+          // 使用更短的重试间隔：100ms, 200ms, 300ms
+          const retryDelay = 100 * (i + 1);
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
           // 尝试重新连接
@@ -75,7 +68,7 @@ function createRetryWrapper(
               await client.connect();
             }
           } catch (reconnectErr) {
-            console.error('Failed to reconnect:', reconnectErr);
+            // 静默处理重连错误
           }
 
           continue;
@@ -110,14 +103,8 @@ export function createRedisClient(
       socket: {
         // 重连策略：开发环境使用更短的重试间隔和次数
         reconnectStrategy: (retries: number) => {
-          console.log(
-            `${config.clientName} reconnection attempt ${retries + 1}`
-          );
           const maxRetries = isDev ? 3 : 10;
           if (retries > maxRetries) {
-            console.error(
-              `${config.clientName} max reconnection attempts exceeded`
-            );
             return false; // 停止重连
           }
           // 开发环境：最大5秒，生产环境：最大30秒
@@ -138,30 +125,15 @@ export function createRedisClient(
     client = createClient(clientConfig);
 
     // 添加错误事件监听
-    client.on('error', (err) => {
-      console.error(`${config.clientName} client error:`, err);
-    });
-
-    client.on('connect', () => {
-      console.log(`${config.clientName} connected`);
-    });
-
-    client.on('reconnecting', () => {
-      console.log(`${config.clientName} reconnecting...`);
-    });
-
-    client.on('ready', () => {
-      console.log(`${config.clientName} ready`);
+    client.on('error', () => {
+      // 静默处理连接错误
     });
 
     // 初始连接，带重试机制
     const connectWithRetry = async () => {
       try {
         await client!.connect();
-        console.log(`${config.clientName} connected successfully`);
       } catch (err) {
-        console.error(`${config.clientName} initial connection failed:`, err);
-        console.log('Will retry in 5 seconds...');
         setTimeout(connectWithRetry, 5000);
       }
     };
@@ -413,12 +385,17 @@ export abstract class BaseRedisStorage implements IStorage {
     const val = await this.withRetry(() =>
       this.client.get(this.adminConfigKey())
     );
-    return val ? (JSON.parse(val) as AdminConfig) : null;
+    if (!val) {
+      return null;
+    }
+    const config = JSON.parse(val) as AdminConfig;
+    return config;
   }
 
   async setAdminConfig(config: AdminConfig): Promise<void> {
+    const configStr = JSON.stringify(config);
     await this.withRetry(() =>
-      this.client.set(this.adminConfigKey(), JSON.stringify(config))
+      this.client.set(this.adminConfigKey(), configStr)
     );
   }
 
@@ -655,7 +632,7 @@ export abstract class BaseRedisStorage implements IStorage {
         }
       }
     } catch (error) {
-      console.error('获取机器码用户列表失败:', error);
+      // 静默处理错误
     }
 
     return result;
@@ -742,7 +719,7 @@ export abstract class BaseRedisStorage implements IStorage {
         try {
           messages.push(JSON.parse(ensureString(messageData)));
         } catch (error) {
-          console.error('Error parsing message:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -762,7 +739,7 @@ export abstract class BaseRedisStorage implements IStorage {
           this.client.set(this.messageKey(messageId), JSON.stringify(message))
         );
       } catch (error) {
-        console.error('Error marking message as read:', error);
+        // 静默处理错误
       }
     }
   }
@@ -795,7 +772,6 @@ export abstract class BaseRedisStorage implements IStorage {
     try {
       return JSON.parse(ensureString(conversationData));
     } catch (error) {
-      console.error('Error parsing conversation:', error);
       return null;
     }
   }
@@ -876,7 +852,7 @@ export abstract class BaseRedisStorage implements IStorage {
         try {
           friends.push(JSON.parse(ensureString(friendData)));
         } catch (error) {
-          console.error('Error parsing friend:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -921,7 +897,7 @@ export abstract class BaseRedisStorage implements IStorage {
           this.client.set(this.friendKey(friendId), JSON.stringify(friend))
         );
       } catch (error) {
-        console.error('Error updating friend status:', error);
+        // 静默处理错误
       }
     }
   }
@@ -945,7 +921,7 @@ export abstract class BaseRedisStorage implements IStorage {
             requests.push(request);
           }
         } catch (error) {
-          console.error('Error parsing friend request:', error);
+          // 静默处理解析错误
         }
       }
     }
@@ -993,7 +969,7 @@ export abstract class BaseRedisStorage implements IStorage {
           )
         );
       } catch (error) {
-        console.error('Error updating friend request:', error);
+        // 静默处理错误
       }
     }
   }
@@ -1020,7 +996,7 @@ export abstract class BaseRedisStorage implements IStorage {
           )
         );
       } catch (error) {
-        console.error('Error deleting friend request:', error);
+        // 静默处理错误
       }
     }
 
@@ -1059,10 +1035,7 @@ export abstract class BaseRedisStorage implements IStorage {
 
       // 删除管理员配置
       await this.withRetry(() => this.client.del(this.adminConfigKey()));
-
-      console.log('所有数据已清空');
     } catch (error) {
-      console.error('清空数据失败:', error);
       throw new Error('清空数据失败');
     }
   }

@@ -153,7 +153,6 @@ export class MachineCode {
       // 取前32位作为机器码
       return hash.toString(CryptoJS.enc.Hex).substring(0, 32).toUpperCase();
     } catch (error) {
-      console.error('生成机器码失败:', error);
       // 如果生成失败，使用时间戳和随机数作为后备方案
       const fallback = `${Date.now()}-${Math.random()
         .toString(36)

@@ -29,7 +29,10 @@ export async function middleware(request: NextRequest) {
 
   // localstorage模式：在middleware中完成验证
   if (storageType === 'localstorage') {
-    if (!authInfo.password || authInfo.password !== process.env.LOGIN_PASSWORD) {
+    if (
+      !authInfo.password ||
+      authInfo.password !== process.env.LOGIN_PASSWORD
+    ) {
       return handleAuthFailure(request, pathname);
     }
     return NextResponse.next();
@@ -92,7 +95,6 @@ async function verifySignature(
       messageData
     );
   } catch (error) {
-    console.error('签名验证失败:', error);
     return false;
   }
 }

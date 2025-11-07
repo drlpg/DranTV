@@ -71,13 +71,126 @@ export const API_CONFIG = {
 // 在模块加载时根据环境决定配置来源
 let cachedConfig: AdminConfig;
 
+// 解析非JSON格式的配置文件（M3U、TXT）
+function parseNonJsonConfig(configContent: string): ConfigFileStruct {
+  const config: ConfigFileStruct = {
+    lives: {},
+  };
+
+  // 检查是否为M3U格式
+  if (
+    configContent.trim().startsWith('#EXTM3U') ||
+    configContent.includes('#EXTINF')
+  ) {
+    // 解析M3U格式
+    const lines = configContent
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line);
+    let currentName = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // 解析 #EXTINF 行获取名称
+      if (line.startsWith('#EXTINF:')) {
+        const match = line.match(/,(.+)$/);
+        if (match) {
+          currentName = match[1].trim();
+        }
+      }
+      // 解析URL行
+      else if (line.startsWith('http://') || line.startsWith('https://')) {
+        if (currentName) {
+          const key = currentName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+          config.lives![key] = {
+            name: currentName,
+            url: line,
+          };
+          currentName = '';
+        }
+      }
+    }
+  }
+  // 检查是否为TXT格式（键值对）
+  else if (configContent.includes('=')) {
+    const lines = configContent
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'));
+
+    lines.forEach((line) => {
+      const equalIndex = line.indexOf('=');
+      if (equalIndex === -1) return;
+
+      const key = line.substring(0, equalIndex).trim();
+      const value = line.substring(equalIndex + 1).trim();
+
+      if (!key || !value) return;
+
+      const parts = key.split(',').map((s) => s.trim());
+
+      // 格式1: key,name,api,detail（视频源，4个字段）
+      if (parts.length === 4) {
+        const [sourceKey, sourceName, sourceApi, sourceDetail] = parts;
+        config.api_site![sourceKey] = {
+          key: sourceKey,
+          name: sourceName,
+          api: sourceApi,
+          detail: sourceDetail,
+        };
+      }
+      // 格式2: key,name,api（视频源，3个字段，detail为空）
+      else if (parts.length === 3) {
+        const [sourceKey, sourceName, sourceApi] = parts;
+        config.api_site![sourceKey] = {
+          key: sourceKey,
+          name: sourceName,
+          api: sourceApi,
+          detail: '',
+        };
+      }
+      // 格式3: key,name=url（直播源，2个字段）
+      else if (parts.length === 2) {
+        const [liveKey, liveName] = parts;
+        config.lives![liveKey] = {
+          name: liveName,
+          url: value,
+        };
+      }
+      // 格式4: key=value（自动判断类型）
+      else if (parts.length === 1) {
+        // 如果value看起来像视频源API（包含?ac=或/api/）
+        if (value.includes('?ac=') || value.includes('/api/')) {
+          config.api_site![key] = {
+            key: key,
+            name: key,
+            api: value,
+            detail: '',
+          };
+        }
+        // 否则当作直播源
+        else {
+          config.lives![key] = {
+            name: key,
+            url: value,
+          };
+        }
+      }
+    });
+  }
+
+  return config;
+}
+
 // 从配置文件补充管理员配置
 export function refineConfig(adminConfig: AdminConfig): AdminConfig {
   let fileConfig: ConfigFileStruct;
   try {
     fileConfig = JSON.parse(adminConfig.ConfigFile) as ConfigFileStruct;
   } catch (e) {
-    fileConfig = {} as ConfigFileStruct;
+    // 如果不是JSON格式，尝试解析为M3U或TXT格式
+    fileConfig = parseNonJsonConfig(adminConfig.ConfigFile);
   }
 
   // 合并文件中的源信息
@@ -106,7 +219,6 @@ export function refineConfig(adminConfig: AdminConfig): AdminConfig {
     } else {
       // 检查API地址是否已存在
       if (existingApiUrls.has(normalizedApiUrl)) {
-        console.warn(`跳过重复的API地址: ${site.api} (key: ${key})`);
         return; // 跳过重复的API地址
       }
 
@@ -266,7 +378,7 @@ async function getInitConfig(
   try {
     userNames = await db.getAllUsers();
   } catch (e) {
-    console.error('获取用户列表失败:', e);
+    // 静默处理错误
   }
   const allUsers = userNames
     .filter((u) => u !== process.env.LOGIN_USERNAME)
@@ -335,34 +447,40 @@ export async function getConfig(): Promise<AdminConfig> {
   let adminConfig: AdminConfig | null = null;
   let needsSave = false;
 
+  let isTimeout = false;
+
   try {
-    adminConfig = await db.getAdminConfig();
+    // 添加15秒超时控制（给数据库操作足够的时间）
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('数据库操作超时')), 15000);
+    });
+
+    adminConfig = await Promise.race([db.getAdminConfig(), timeoutPromise]);
   } catch (e) {
-    console.error('获取管理员配置失败:', e);
+    // 判断是否为超时错误
+    if (e instanceof Error && e.message.includes('超时')) {
+      isTimeout = true;
+    }
   }
 
-  // db 中无配置，执行一次初始化
-  if (!adminConfig) {
-    console.log('数据库中没有配置，开始初始化...');
-
+  // db 中无配置且不是超时，执行一次初始化
+  if (!adminConfig && !isTimeout) {
     // 读取config.json文件
     let configFileContent = '';
     try {
       const configPath = path.join(process.cwd(), 'config.json');
       if (fs.existsSync(configPath)) {
         configFileContent = fs.readFileSync(configPath, 'utf-8');
-        console.log('已加载config.json配置文件');
-      } else {
-        console.warn('config.json文件不存在，使用空配置初始化');
       }
     } catch (e) {
-      console.error('读取config.json失败:', e);
+      // 静默处理读取错误
     }
 
     adminConfig = await getInitConfig(configFileContent);
     needsSave = true;
-  } else {
-    console.log('从数据库加载配置成功');
+  } else if (isTimeout) {
+    // 超时情况：抛出错误，不返回空配置，避免数据丢失风险
+    throw new Error('数据库连接超时，请稍后重试');
   }
 
   // 执行配置自检
@@ -373,7 +491,6 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // 只在初始化时保存到数据库，避免覆盖已有数据
   if (needsSave) {
-    console.log('保存初始化配置到数据库');
     await db.saveAdminConfig(cachedConfig);
   }
 
@@ -517,7 +634,7 @@ export async function resetConfig() {
   try {
     originConfig = await db.getAdminConfig();
   } catch (e) {
-    console.error('获取管理员配置失败:', e);
+    // 静默处理错误
   }
   if (!originConfig) {
     originConfig = {} as AdminConfig;
@@ -599,4 +716,29 @@ export async function setCachedConfig(config: AdminConfig) {
 
 export function clearCachedConfig() {
   cachedConfig = undefined as any;
+}
+
+// 获取管理员配置（用于API路由）
+export async function getAdminConfig(): Promise<AdminConfig> {
+  return await getConfig();
+}
+
+// 保存管理员配置（用于API路由）
+export async function saveAdminConfig(config: AdminConfig): Promise<void> {
+  // 验证配置完整性
+  if (!config.SourceConfig) {
+    config.SourceConfig = [];
+  }
+  if (!config.LiveConfig) {
+    config.LiveConfig = [];
+  }
+  if (!config.CustomCategories) {
+    config.CustomCategories = [];
+  }
+
+  // 更新缓存
+  cachedConfig = config;
+
+  // 保存到数据库
+  await db.saveAdminConfig(config);
 }

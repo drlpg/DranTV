@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
 
 async function cronJob() {
   await refreshConfig();
+  await refreshSourceSubscription();
+  await refreshLiveSubscription();
   await refreshAllLiveChannels();
   await refreshRecordAndFavorites();
 }
@@ -48,13 +50,16 @@ async function refreshAllLiveChannels() {
 
   // 并发刷新所有启用的直播源
   const refreshPromises = (config.LiveConfig || [])
-    .filter(liveInfo => !liveInfo.disabled)
+    .filter((liveInfo) => !liveInfo.disabled)
     .map(async (liveInfo) => {
       try {
         const nums = await refreshLiveChannels(liveInfo);
         liveInfo.channelNumber = nums;
       } catch (error) {
-        console.error(`刷新直播源失败 [${liveInfo.name || liveInfo.key}]:`, error);
+        console.error(
+          `刷新直播源失败 [${liveInfo.name || liveInfo.key}]:`,
+          error
+        );
         liveInfo.channelNumber = 0;
       }
     });
@@ -68,7 +73,12 @@ async function refreshAllLiveChannels() {
 
 async function refreshConfig() {
   let config = await getConfig();
-  if (config && config.ConfigSubscribtion && config.ConfigSubscribtion.URL && config.ConfigSubscribtion.AutoUpdate) {
+  if (
+    config &&
+    config.ConfigSubscribtion &&
+    config.ConfigSubscribtion.URL &&
+    config.ConfigSubscribtion.AutoUpdate
+  ) {
     try {
       const response = await fetch(config.ConfigSubscribtion.URL);
 
@@ -78,38 +88,406 @@ async function refreshConfig() {
 
       const configContent = await response.text();
 
-      // 对 configContent 进行 base58 解码
+      // 尝试解析配置内容
       let decodedContent;
-      try {
-        const bs58 = (await import('bs58')).default;
-        const decodedBytes = bs58.decode(configContent);
-        decodedContent = new TextDecoder().decode(decodedBytes);
-      } catch (decodeError) {
-        console.warn('Base58 解码失败:', decodeError);
-        throw decodeError;
-      }
 
+      // 1. 尝试直接解析为JSON
       try {
-        JSON.parse(decodedContent);
-      } catch (e) {
-        throw new Error('配置文件格式错误，请检查 JSON 语法');
+        JSON.parse(configContent);
+        decodedContent = configContent;
+        console.log('配置格式: JSON');
+      } catch {
+        // 2. 尝试Base58解码
+        try {
+          const bs58 = (await import('bs58')).default;
+          const decodedBytes = bs58.decode(configContent);
+          decodedContent = new TextDecoder().decode(decodedBytes);
+          JSON.parse(decodedContent); // 验证解码后是否为有效JSON
+          console.log('配置格式: Base58');
+        } catch {
+          // 3. 检查是否为M3U或TXT格式
+          if (
+            configContent.trim().startsWith('#EXTM3U') ||
+            configContent.includes('#EXTINF')
+          ) {
+            decodedContent = configContent;
+            console.log('配置格式: M3U');
+          } else if (
+            configContent.includes('=') ||
+            configContent.split('\n').length > 1
+          ) {
+            decodedContent = configContent;
+            console.log('配置格式: TXT');
+          } else {
+            throw new Error('无法识别的配置格式');
+          }
+        }
       }
       config.ConfigFile = decodedContent;
       config.ConfigSubscribtion.LastCheck = new Date().toISOString();
       config = refineConfig(config);
       await db.saveAdminConfig(config);
+
+      // 更新内存缓存
+      const { setCachedConfig } = await import('@/lib/config');
+      await setCachedConfig(config);
+      console.log('配置文件订阅刷新成功');
     } catch (e) {
-      console.error('刷新配置失败:', e);
+      console.error('刷新配置文件订阅失败:', e);
     }
   } else {
-    console.log('跳过刷新：未配置订阅地址或自动更新');
+    console.log('跳过配置文件订阅刷新：未配置订阅地址或自动更新');
+  }
+}
+
+// 刷新视频源订阅
+async function refreshSourceSubscription() {
+  let config = await getConfig();
+  if (
+    config &&
+    config.SourceSubscription &&
+    config.SourceSubscription.URL &&
+    config.SourceSubscription.AutoUpdate
+  ) {
+    try {
+      console.log(`开始刷新视频源订阅: ${config.SourceSubscription.URL}`);
+      const response = await fetch(config.SourceSubscription.URL, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`拉取失败: HTTP ${response.status}`);
+      }
+
+      const configContent = await response.text();
+      let sources: Array<{
+        name: string;
+        key: string;
+        api: string;
+        detail?: string;
+        disabled?: boolean;
+        from: 'config' | 'custom';
+      }> = [];
+
+      // 解析配置内容
+      try {
+        const jsonData = JSON.parse(configContent);
+
+        if (Array.isArray(jsonData)) {
+          sources = jsonData.map((item, index) => ({
+            name: item.name || `视频源${index + 1}`,
+            key: item.key || `source_${index + 1}`,
+            api: item.api || item.url || '',
+            detail: item.detail,
+            disabled: item.disabled || false,
+            from: 'config' as const,
+          }));
+        } else if (jsonData.api_site) {
+          sources = Object.entries(jsonData.api_site).map(
+            ([key, value]: [string, any]) => ({
+              name: (value as any).name || key,
+              key,
+              api: (value as any).api || (value as any).url || '',
+              detail: (value as any).detail,
+              disabled: (value as any).disabled || false,
+              from: 'config' as const,
+            })
+          );
+        } else if (jsonData.sources) {
+          sources = jsonData.sources.map((item: any, index: number) => ({
+            name: item.name || `视频源${index + 1}`,
+            key: item.key || `source_${index + 1}`,
+            api: item.api || item.url || '',
+            detail: item.detail,
+            disabled: item.disabled || false,
+            from: 'config' as const,
+          }));
+        }
+      } catch (e) {
+        // 非JSON格式，尝试M3U或TXT
+        if (
+          configContent.trim().startsWith('#EXTM3U') ||
+          configContent.includes('#EXTINF')
+        ) {
+          // M3U格式 - 简化解析
+          const lines = configContent.split('\n').map((line) => line.trim());
+          let currentName = '';
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.startsWith('#EXTINF:')) {
+              const match = line.match(/#EXTINF:[^,]*,(.+)/);
+              if (match) currentName = match[1].trim();
+            } else if (line && !line.startsWith('#')) {
+              if (currentName) {
+                const key = currentName
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+                  .substring(0, 20);
+                sources.push({
+                  name: currentName,
+                  key: key || `source_${sources.length + 1}`,
+                  api: line,
+                  disabled: false,
+                  from: 'config',
+                });
+                currentName = '';
+              }
+            }
+          }
+        } else {
+          // TXT格式
+          const lines = configContent
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith('#'));
+          lines.forEach((line) => {
+            if (line.includes('=')) {
+              const [name, api] = line.split('=').map((s) => s.trim());
+              if (name && api) {
+                const key = name
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+                  .substring(0, 20);
+                sources.push({
+                  name,
+                  key: key || `source_${sources.length + 1}`,
+                  api,
+                  disabled: false,
+                  from: 'config',
+                });
+              }
+            }
+          });
+        }
+      }
+
+      if (sources.length > 0) {
+        const existingSources = config.SourceConfig || [];
+        const existingKeys = new Set(existingSources.map((s) => s.key));
+        const newSources = sources.filter((s) => !existingKeys.has(s.key));
+
+        if (newSources.length > 0) {
+          config.SourceConfig = [...existingSources, ...newSources];
+          config.SourceSubscription.LastCheck = new Date().toISOString();
+          await db.saveAdminConfig(config);
+
+          const { setCachedConfig } = await import('@/lib/config');
+          await setCachedConfig(config);
+          console.log(`视频源订阅刷新成功，新增 ${newSources.length} 个视频源`);
+        } else {
+          config.SourceSubscription.LastCheck = new Date().toISOString();
+          await db.saveAdminConfig(config);
+          console.log('视频源订阅刷新完成，无新增内容');
+        }
+      } else {
+        console.log('视频源订阅刷新失败：未解析到视频源数据');
+      }
+    } catch (e) {
+      console.error('刷新视频源订阅失败:', e);
+    }
+  } else {
+    console.log('跳过视频源订阅刷新：未配置订阅地址或自动更新');
+  }
+}
+
+// 刷新直播源订阅
+async function refreshLiveSubscription() {
+  let config = await getConfig();
+  if (
+    config &&
+    config.LiveSubscription &&
+    config.LiveSubscription.URL &&
+    config.LiveSubscription.AutoUpdate
+  ) {
+    try {
+      console.log(`开始刷新直播源订阅: ${config.LiveSubscription.URL}`);
+      const response = await fetch(config.LiveSubscription.URL, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`拉取失败: HTTP ${response.status}`);
+      }
+
+      const configContent = await response.text();
+      let sources: Array<{
+        name: string;
+        key: string;
+        url: string;
+        ua?: string;
+        epg?: string;
+        disabled?: boolean;
+        from: 'config' | 'custom';
+      }> = [];
+
+      // 解析配置内容
+      try {
+        const jsonData = JSON.parse(configContent);
+
+        if (Array.isArray(jsonData)) {
+          sources = jsonData.map((item, index) => ({
+            name: item.name || `直播源${index + 1}`,
+            key: item.key || `live_${index + 1}`,
+            url: item.url || '',
+            ua: item.ua,
+            epg: item.epg,
+            disabled: item.disabled || false,
+            from: 'config' as const,
+          }));
+        } else if (jsonData.lives) {
+          sources = Object.entries(jsonData.lives).map(
+            ([key, value]: [string, any]) => ({
+              name: (value as any).name || key,
+              key,
+              url: (value as any).url || '',
+              ua: (value as any).ua,
+              epg: (value as any).epg,
+              disabled: (value as any).disabled || false,
+              from: 'config' as const,
+            })
+          );
+        } else if (jsonData.sources) {
+          sources = jsonData.sources.map((item: any, index: number) => ({
+            name: item.name || `直播源${index + 1}`,
+            key: item.key || `live_${index + 1}`,
+            url: item.url || '',
+            ua: item.ua,
+            epg: item.epg,
+            disabled: item.disabled || false,
+            from: 'config' as const,
+          }));
+        }
+      } catch (e) {
+        // 非JSON格式，尝试M3U或TXT
+        if (
+          configContent.trim().startsWith('#EXTM3U') ||
+          configContent.includes('#EXTINF')
+        ) {
+          // M3U格式
+          const lines = configContent.split('\n').map((line) => line.trim());
+          let currentName = '';
+          let currentEpg = '';
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.startsWith('#EXTINF:')) {
+              const match = line.match(/#EXTINF:[^,]*,(.+)/);
+              if (match) currentName = match[1].trim();
+              const epgMatch = line.match(/tvg-url="([^"]+)"/);
+              if (epgMatch) currentEpg = epgMatch[1];
+            } else if (line && !line.startsWith('#')) {
+              if (currentName) {
+                const key = currentName
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+                  .substring(0, 20);
+                sources.push({
+                  name: currentName,
+                  key: key || `live_${sources.length + 1}`,
+                  url: line,
+                  epg: currentEpg || undefined,
+                  disabled: false,
+                  from: 'config',
+                });
+                currentName = '';
+                currentEpg = '';
+              }
+            }
+          }
+        } else {
+          // TXT格式
+          const lines = configContent
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith('#'));
+          lines.forEach((line) => {
+            if (line.includes('=')) {
+              const parts = line.split('=').map((s) => s.trim());
+              const name = parts[0];
+              const url = parts[1];
+              const epg = parts[2];
+              if (name && url) {
+                const key = name
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+                  .substring(0, 20);
+                sources.push({
+                  name,
+                  key: key || `live_${sources.length + 1}`,
+                  url,
+                  epg: epg || undefined,
+                  disabled: false,
+                  from: 'config',
+                });
+              }
+            } else if (line.includes(',')) {
+              const parts = line.split(',').map((s) => s.trim());
+              const name = parts[0];
+              const url = parts[1];
+              const epg = parts[2];
+              if (name && url) {
+                const key = name
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+                  .substring(0, 20);
+                sources.push({
+                  name,
+                  key: key || `live_${sources.length + 1}`,
+                  url,
+                  epg: epg || undefined,
+                  disabled: false,
+                  from: 'config',
+                });
+              }
+            }
+          });
+        }
+      }
+
+      if (sources.length > 0) {
+        const existingSources = config.LiveConfig || [];
+        const existingKeys = new Set(existingSources.map((s) => s.key));
+        const newSources = sources.filter((s) => !existingKeys.has(s.key));
+
+        if (newSources.length > 0) {
+          config.LiveConfig = [
+            ...existingSources,
+            ...newSources.map((s) => ({ ...s, channelNumber: 0 })),
+          ];
+          config.LiveSubscription.LastCheck = new Date().toISOString();
+          await db.saveAdminConfig(config);
+
+          const { setCachedConfig } = await import('@/lib/config');
+          await setCachedConfig(config);
+          console.log(`直播源订阅刷新成功，新增 ${newSources.length} 个直播源`);
+        } else {
+          config.LiveSubscription.LastCheck = new Date().toISOString();
+          await db.saveAdminConfig(config);
+          console.log('直播源订阅刷新完成，无新增内容');
+        }
+      } else {
+        console.log('直播源订阅刷新失败：未解析到直播源数据');
+      }
+    } catch (e) {
+      console.error('刷新直播源订阅失败:', e);
+    }
+  } else {
+    console.log('跳过直播源订阅刷新：未配置订阅地址或自动更新');
   }
 }
 
 async function refreshRecordAndFavorites() {
   try {
     const users = await db.getAllUsers();
-    if (process.env.LOGIN_USERNAME && !users.includes(process.env.LOGIN_USERNAME)) {
+    if (
+      process.env.LOGIN_USERNAME &&
+      !users.includes(process.env.LOGIN_USERNAME)
+    ) {
       users.push(process.env.LOGIN_USERNAME);
     }
     // 函数级缓存：key 为 `${source}+${id}`，值为 Promise<VideoDetail | null>

@@ -23,6 +23,41 @@ export function getAuthInfoFromCookie(request: NextRequest): {
   }
 }
 
+// 检查用户权限
+export async function checkAuth(
+  request: NextRequest,
+  allowedRoles: Array<'owner' | 'admin' | 'user'>
+): Promise<{
+  authorized: boolean;
+  error?: string;
+  username?: string;
+  role?: 'owner' | 'admin' | 'user';
+}> {
+  const authInfo = getAuthInfoFromCookie(request);
+
+  if (!authInfo || !authInfo.username) {
+    return {
+      authorized: false,
+      error: '未授权：请先登录',
+    };
+  }
+
+  const { username, role } = authInfo;
+
+  if (!role || !allowedRoles.includes(role)) {
+    return {
+      authorized: false,
+      error: '权限不足：需要管理员权限',
+    };
+  }
+
+  return {
+    authorized: true,
+    username,
+    role,
+  };
+}
+
 // 从cookie获取认证信息 (客户端使用)
 export function getAuthInfoFromBrowserCookie(): {
   password?: string;

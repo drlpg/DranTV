@@ -17,9 +17,7 @@ export async function POST(request: NextRequest) {
     const config = await getConfig();
     if (username !== process.env.LOGIN_USERNAME) {
       // 管理员
-      const user = config.UserConfig.Users.find(
-        (u) => u.username === username
-      );
+      const user = config.UserConfig.Users.find((u) => u.username === username);
       if (!user || user.role !== 'admin' || user.banned) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
       }
@@ -41,7 +39,10 @@ export async function POST(request: NextRequest) {
       case 'add':
         // 检查是否已存在相同的 key
         if (config.LiveConfig.some((l) => l.key === key)) {
-          return NextResponse.json({ error: '直播源 key 已存在' }, { status: 400 });
+          return NextResponse.json(
+            { error: '直播源 key 已存在' },
+            { status: 400 }
+          );
         }
 
         const liveInfo = {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
           from: 'custom' as 'custom' | 'config',
           channelNumber: 0,
           disabled: false,
-        }
+        };
 
         try {
           const nums = await refreshLiveChannels(liveInfo);
@@ -76,12 +77,20 @@ export async function POST(request: NextRequest) {
 
         const liveSource = config.LiveConfig[deleteIndex];
         if (liveSource.from === 'config') {
-          return NextResponse.json({ error: '不能删除配置文件中的直播源' }, { status: 400 });
+          return NextResponse.json(
+            { error: '不能删除配置文件中的直播源' },
+            { status: 400 }
+          );
         }
 
         deleteCachedLiveChannels(key);
 
         config.LiveConfig.splice(deleteIndex, 1);
+
+        // 如果删除后没有直播源了，清除订阅配置
+        if (config.LiveConfig.length === 0) {
+          config.LiveSubscription = undefined;
+        }
         break;
 
       case 'enable':
@@ -111,7 +120,10 @@ export async function POST(request: NextRequest) {
 
         // 配置文件中的直播源不允许编辑
         if (editSource.from === 'config') {
-          return NextResponse.json({ error: '不能编辑配置文件中的直播源' }, { status: 400 });
+          return NextResponse.json(
+            { error: '不能编辑配置文件中的直播源' },
+            { status: 400 }
+          );
         }
 
         // 更新字段（除了 key 和 from）
@@ -134,7 +146,10 @@ export async function POST(request: NextRequest) {
         // 排序直播源
         const { order } = body;
         if (!Array.isArray(order)) {
-          return NextResponse.json({ error: '排序数据格式错误' }, { status: 400 });
+          return NextResponse.json(
+            { error: '排序数据格式错误' },
+            { status: 400 }
+          );
         }
 
         // 创建新的排序后的数组
@@ -156,14 +171,95 @@ export async function POST(request: NextRequest) {
         config.LiveConfig = sortedLiveConfig;
         break;
 
+      case 'batch_enable':
+        // 批量启用直播源
+        const { keys: enableKeys } = body;
+        if (!Array.isArray(enableKeys) || enableKeys.length === 0) {
+          return NextResponse.json(
+            { error: '缺少 keys 参数或为空' },
+            { status: 400 }
+          );
+        }
+        enableKeys.forEach((key) => {
+          const source = config.LiveConfig?.find((l) => l.key === key);
+          if (source) {
+            source.disabled = false;
+          }
+        });
+        break;
+
+      case 'batch_disable':
+        // 批量禁用直播源
+        const { keys: disableKeys } = body;
+        if (!Array.isArray(disableKeys) || disableKeys.length === 0) {
+          return NextResponse.json(
+            { error: '缺少 keys 参数或为空' },
+            { status: 400 }
+          );
+        }
+        disableKeys.forEach((key) => {
+          const source = config.LiveConfig?.find((l) => l.key === key);
+          if (source) {
+            source.disabled = true;
+          }
+        });
+        break;
+
+      case 'batch_delete':
+        // 批量删除直播源
+        const { keys: deleteKeys } = body;
+        if (!Array.isArray(deleteKeys) || deleteKeys.length === 0) {
+          return NextResponse.json(
+            { error: '缺少 keys 参数或为空' },
+            { status: 400 }
+          );
+        }
+        // 只能删除custom来源的直播源
+        const keysToDelete = deleteKeys.filter((key) => {
+          const source = config.LiveConfig?.find((l) => l.key === key);
+          if (!source) return false;
+          // 配置文件中的直播源不能删除
+          return source.from !== 'config';
+        });
+
+        // 批量删除
+        keysToDelete.forEach((key) => {
+          const idx = config.LiveConfig?.findIndex((l) => l.key === key);
+          if (idx !== undefined && idx !== -1) {
+            deleteCachedLiveChannels(key);
+            config.LiveConfig?.splice(idx, 1);
+          }
+        });
+
+        // 如果删除后没有直播源了，清除订阅配置
+        if (config.LiveConfig && config.LiveConfig.length === 0) {
+          config.LiveSubscription = undefined;
+          console.log('已清除直播源订阅配置（所有直播源已删除）');
+        }
+        break;
+
       default:
         return NextResponse.json({ error: '未知操作' }, { status: 400 });
     }
 
+    console.log(`[Admin Live API] 操作完成: ${action}`);
+    console.log(
+      `[Admin Live API] 当前直播源数量: ${config.LiveConfig?.length || 0}`
+    );
+
     // 保存配置
     await db.saveAdminConfig(config);
+    console.log(`[Admin Live API] 配置已保存到数据库`);
 
-    return NextResponse.json({ success: true });
+    // 更新内存缓存
+    const { setCachedConfig } = await import('@/lib/config');
+    await setCachedConfig(config);
+    console.log(`[Admin Live API] 内存缓存已更新`);
+
+    return NextResponse.json({
+      success: true,
+      config: config, // 返回更新后的配置，避免前端重新请求
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '操作失败' },

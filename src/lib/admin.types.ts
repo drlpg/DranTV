@@ -5,6 +5,16 @@ export interface AdminConfig {
     LastCheck: string;
   };
   ConfigFile: string;
+  SourceSubscription?: {
+    URL: string;
+    AutoUpdate: boolean;
+    LastCheck: string;
+  };
+  LiveSubscription?: {
+    URL: string;
+    AutoUpdate: boolean;
+    LastCheck: string;
+  };
   SiteConfig: {
     SiteName: string;
     Announcement: string;
@@ -58,7 +68,7 @@ export interface AdminConfig {
   LiveConfig?: {
     key: string;
     name: string;
-    url: string;  // m3u 地址
+    url: string; // m3u 地址
     ua?: string;
     epg?: string; // 节目单
     from: 'config' | 'custom';

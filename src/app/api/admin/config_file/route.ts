@@ -48,12 +48,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证 JSON 格式
+    // 验证配置文件格式（支持多种格式）
+    let isValidFormat = false;
+    let formatType = 'unknown';
+
+    // 1. 尝试解析为JSON
     try {
       JSON.parse(configFile);
-    } catch (e) {
+      isValidFormat = true;
+      formatType = 'json';
+    } catch {
+      // 2. 检查是否为M3U格式
+      if (
+        configFile.trim().startsWith('#EXTM3U') ||
+        configFile.includes('#EXTINF')
+      ) {
+        isValidFormat = true;
+        formatType = 'm3u';
+      }
+      // 3. 检查是否为TXT格式
+      else if (configFile.includes('=') || configFile.split('\n').length > 1) {
+        isValidFormat = true;
+        formatType = 'txt';
+      }
+    }
+
+    if (!isValidFormat) {
       return NextResponse.json(
-        { error: '配置文件格式错误，请检查 JSON 语法' },
+        { error: '配置文件格式错误，支持的格式：JSON、M3U、TXT' },
         { status: 400 }
       );
     }
@@ -79,6 +101,11 @@ export async function POST(request: NextRequest) {
     adminConfig = refineConfig(adminConfig);
     // 更新配置文件
     await db.saveAdminConfig(adminConfig);
+
+    // 更新内存缓存
+    const { setCachedConfig } = await import('@/lib/config');
+    await setCachedConfig(adminConfig);
+
     return NextResponse.json({
       success: true,
       message: '配置文件更新成功',

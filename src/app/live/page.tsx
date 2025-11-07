@@ -935,19 +935,26 @@ function LivePageClient() {
         cleanupPlayer();
       }
 
-      // precheck type
+      // precheck type（可选，失败时默认使用m3u8）
       let type = 'm3u8';
-      const precheckUrl = `/api/live/precheck?url=${encodeURIComponent(
-        videoUrl
-      )}&DranTV-source=${currentSourceRef.current?.key || ''}`;
-      const precheckResponse = await fetch(precheckUrl);
-      if (!precheckResponse.ok) {
-        console.error('预检查失败:', precheckResponse.statusText);
-        return;
-      }
-      const precheckResult = await precheckResponse.json();
-      if (precheckResult.success) {
-        type = precheckResult.type;
+      try {
+        const precheckUrl = `/api/live/precheck?url=${encodeURIComponent(
+          videoUrl
+        )}&DranTV-source=${currentSourceRef.current?.key || ''}`;
+        const precheckResponse = await fetch(precheckUrl);
+        if (precheckResponse.ok) {
+          const precheckResult = await precheckResponse.json();
+          if (precheckResult.success) {
+            type = precheckResult.type;
+          }
+        } else {
+          console.warn(
+            '预检查失败，使用默认类型 m3u8:',
+            precheckResponse.statusText
+          );
+        }
+      } catch (error) {
+        console.warn('预检查出错，使用默认类型 m3u8:', error);
       }
 
       // 如果不是 m3u8 类型，设置不支持的类型并返回
@@ -1343,19 +1350,22 @@ function LivePageClient() {
 
                 {/* 视频加载蒙层 */}
                 {isVideoLoading && (
-                  <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-white/0 dark:border-white/30 flex items-center justify-center z-[500] transition-all duration-300'>
-                    <div className='text-center max-w-md mx-auto px-6'>
-                      <div className='relative mb-8'>
-                        <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-blue-300 to-blue-700 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
-                          <div className='text-white text-4xl'>📺</div>
-                          <div className='absolute -inset-2 bg-gradient-to-r from-blue-300 to-blue-700 rounded-2xl opacity-20 animate-spin'></div>
-                        </div>
+                  <div className='absolute inset-0 bg-black/85 backdrop-blur-sm rounded-xl flex items-center justify-center z-[500] transition-all duration-300'>
+                    <div className='text-center'>
+                      {/* 加载动画 */}
+                      <div className='mb-2 flex justify-center'>
+                        <img
+                          src='/img/loading.svg'
+                          alt='Loading'
+                          width='60'
+                          height='15'
+                        />
                       </div>
-                      <div className='space-y-2'>
-                        <p className='text-xl font-semibold text-white animate-pulse'>
-                          🔄 IPTV 加载中...
-                        </p>
-                      </div>
+
+                      {/* 加载消息 */}
+                      <p className='text-base font-medium text-white animate-pulse'>
+                        正在加载直播流...
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1370,12 +1380,12 @@ function LivePageClient() {
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
               }`}
             >
-              <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
+              <div className='md:ml-2 pr-0 h-full rounded-xl bg-black/5 dark:bg-white/3 flex flex-col border border-gray-300 dark:border-white/30 overflow-x-hidden overflow-y-hidden'>
                 {/* 主要的 Tab 切换 */}
-                <div className='flex -mx-6 flex-shrink-0 border-b border-gray-300 dark:border-gray-700'>
+                <div className='flex flex-shrink-0 border-b border-dashed border-gray-300 dark:border-gray-600'>
                   <div
                     onClick={() => setActiveTab('channels')}
-                    className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
+                    className={`flex-1 py-3 pl-4 pr-4 text-center cursor-pointer transition-all duration-200 font-medium
                       ${
                         activeTab === 'channels'
                           ? 'text-blue-600 dark:text-blue-400'
@@ -1387,11 +1397,11 @@ function LivePageClient() {
                   </div>
                   <div
                     onClick={() => setActiveTab('sources')}
-                    className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
+                    className={`flex-1 py-3 pl-4 pr-4 text-center cursor-pointer transition-all duration-200 font-medium
                       ${
                         activeTab === 'sources'
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-gray-700 hover:text-blue-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-blue-400 hover:bg-black/3 dark:hover:bg-white/3'
+                          ? 'text-gray-900 dark:text-gray-100'
+                          : 'text-gray-700 hover:text-gray-900 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-gray-100 hover:bg-black/3 dark:hover:bg-white/3'
                       }
                     `.trim()}
                   >
@@ -1405,99 +1415,104 @@ function LivePageClient() {
                     {filteredChannels.length > 0 ? (
                       <>
                         {/* 分组标签 */}
-                        <div className='flex items-center gap-4 mb-4 -mx-6 px-6 flex-shrink-0'>
-                          {/* 切换状态提示 */}
-                          {isSwitchingSource && (
-                            <div className='flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400'>
-                              <div className='w-2 h-2 bg-amber-500 rounded-full animate-pulse'></div>
-                              切换直播源中...
-                            </div>
-                          )}
-
-                          <div
-                            className='flex-1 overflow-x-auto'
-                            ref={groupContainerRef}
-                            onMouseEnter={() => {
-                              // 鼠标进入分组标签区域时，添加滚轮事件监听
-                              const container = groupContainerRef.current;
-                              if (container) {
-                                const handleWheel = (e: WheelEvent) => {
+                        <div className='grid grid-cols-2 border-b border-dashed border-gray-300 dark:border-gray-600 flex-shrink-0'>
+                          {/* 左侧：分组标签 */}
+                          <div className='flex justify-center items-center'>
+                            {isSwitchingSource ? (
+                              <div className='flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 py-2'>
+                                <div className='w-2 h-2 bg-amber-500 rounded-full animate-pulse'></div>
+                                切换直播源中...
+                              </div>
+                            ) : (
+                              <div
+                                className='overflow-x-auto'
+                                ref={groupContainerRef}
+                                onMouseEnter={() => {
+                                  // 鼠标进入分组标签区域时，添加滚轮事件监听
+                                  const container = groupContainerRef.current;
+                                  if (container) {
+                                    const handleWheel = (e: WheelEvent) => {
+                                      if (
+                                        container.scrollWidth >
+                                        container.clientWidth
+                                      ) {
+                                        e.preventDefault();
+                                        container.scrollLeft += e.deltaY;
+                                      }
+                                    };
+                                    container.addEventListener(
+                                      'wheel',
+                                      handleWheel,
+                                      {
+                                        passive: false,
+                                      }
+                                    );
+                                    // 将事件处理器存储在容器上，以便后续移除
+                                    (container as any)._wheelHandler =
+                                      handleWheel;
+                                  }
+                                }}
+                                onMouseLeave={() => {
+                                  // 鼠标离开分组标签区域时，移除滚轮事件监听
+                                  const container = groupContainerRef.current;
                                   if (
-                                    container.scrollWidth >
-                                    container.clientWidth
+                                    container &&
+                                    (container as any)._wheelHandler
                                   ) {
-                                    e.preventDefault();
-                                    container.scrollLeft += e.deltaY;
+                                    container.removeEventListener(
+                                      'wheel',
+                                      (container as any)._wheelHandler
+                                    );
+                                    delete (container as any)._wheelHandler;
                                   }
-                                };
-                                container.addEventListener(
-                                  'wheel',
-                                  handleWheel,
-                                  {
-                                    passive: false,
-                                  }
-                                );
-                                // 将事件处理器存储在容器上，以便后续移除
-                                (container as any)._wheelHandler = handleWheel;
-                              }
-                            }}
-                            onMouseLeave={() => {
-                              // 鼠标离开分组标签区域时，移除滚轮事件监听
-                              const container = groupContainerRef.current;
-                              if (
-                                container &&
-                                (container as any)._wheelHandler
-                              ) {
-                                container.removeEventListener(
-                                  'wheel',
-                                  (container as any)._wheelHandler
-                                );
-                                delete (container as any)._wheelHandler;
-                              }
-                            }}
-                          >
-                            <div className='flex gap-4 min-w-max'>
-                              {Object.keys(groupedChannels).map(
-                                (group, index) => (
-                                  <button
-                                    key={group}
-                                    data-group={group}
-                                    ref={(el) => {
-                                      groupButtonRefs.current[index] = el;
-                                    }}
-                                    onClick={() => handleGroupChange(group)}
-                                    disabled={isSwitchingSource}
-                                    className={`w-20 relative py-2 text-sm font-medium transition-colors flex-shrink-0 text-center overflow-hidden
-                                 ${
-                                   isSwitchingSource
-                                     ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
-                                     : selectedGroup === group
-                                     ? 'text-blue-500 dark:text-blue-400'
-                                     : 'text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400'
-                                 }
-                               `.trim()}
-                                  >
-                                    <div
-                                      className='px-1 overflow-hidden whitespace-nowrap'
-                                      title={group}
-                                    >
-                                      {group}
-                                    </div>
-                                    {selectedGroup === group &&
-                                      !isSwitchingSource && (
-                                        <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400' />
-                                      )}
-                                  </button>
-                                )
-                              )}
-                            </div>
+                                }}
+                              >
+                                <div className='flex gap-4 min-w-max'>
+                                  {Object.keys(groupedChannels).map(
+                                    (group, index) => (
+                                      <button
+                                        key={group}
+                                        data-group={group}
+                                        ref={(el) => {
+                                          groupButtonRefs.current[index] = el;
+                                        }}
+                                        onClick={() => handleGroupChange(group)}
+                                        disabled={isSwitchingSource}
+                                        className={`relative text-sm font-medium transition-colors flex-shrink-0 text-center overflow-hidden flex items-center
+                                   ${
+                                     isSwitchingSource
+                                       ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'
+                                       : selectedGroup === group
+                                       ? 'text-blue-500 dark:text-blue-400'
+                                       : 'text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400'
+                                   }
+                                 `.trim()}
+                                      >
+                                        <div
+                                          className='px-1 py-2 overflow-hidden whitespace-nowrap'
+                                          title={group}
+                                        >
+                                          {group}
+                                        </div>
+                                        {selectedGroup === group &&
+                                          !isSwitchingSource && (
+                                            <div className='absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 dark:bg-blue-400' />
+                                          )}
+                                      </button>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
+                          {/* 右侧：空白占位 */}
+                          <div></div>
                         </div>
 
                         {/* 频道列表 */}
                         <div
                           ref={channelListRef}
-                          className='flex-1 overflow-y-auto space-y-2 pb-4'
+                          className='flex-1 overflow-y-auto space-y-3 pt-4 pb-4 pl-4 pr-4'
                         >
                           {filteredChannels.map((channel) => {
                             const isActive = channel.id === currentChannel?.id;
@@ -1511,12 +1526,18 @@ function LivePageClient() {
                                   isSwitchingSource
                                     ? 'opacity-50 cursor-not-allowed'
                                     : isActive
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700'
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    ? 'bg-blue-500 text-white dark:bg-blue-600'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300/60 border border-gray-300 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/17 dark:border-white/20'
                                 }`}
                               >
                                 <div className='flex items-center gap-3'>
-                                  <div className='w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                                  <div
+                                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border ${
+                                      isActive
+                                        ? 'bg-white/20 border-white/30'
+                                        : 'bg-gray-300/80 dark:bg-gray-600/80 border-gray-300 dark:border-gray-600'
+                                    }`}
+                                  >
                                     {channel.logo ? (
                                       <img
                                         src={`/api/proxy/logo?url=${encodeURIComponent(
@@ -1527,18 +1548,32 @@ function LivePageClient() {
                                         loading='lazy'
                                       />
                                     ) : (
-                                      <Tv className='w-5 h-5 text-gray-500' />
+                                      <Tv
+                                        className={`w-5 h-5 ${
+                                          isActive
+                                            ? 'text-white'
+                                            : 'text-gray-500'
+                                        }`}
+                                      />
                                     )}
                                   </div>
                                   <div className='flex-1 min-w-0'>
                                     <div
-                                      className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'
+                                      className={`text-sm font-medium truncate ${
+                                        isActive
+                                          ? 'text-white'
+                                          : 'text-gray-900 dark:text-gray-100'
+                                      }`}
                                       title={channel.name}
                                     >
                                       {channel.name}
                                     </div>
                                     <div
-                                      className='text-xs text-gray-500 dark:text-gray-400 mt-1'
+                                      className={`text-xs mt-1 ${
+                                        isActive
+                                          ? 'text-white/80'
+                                          : 'text-gray-500 dark:text-gray-400'
+                                      }`}
                                       title={channel.group}
                                     >
                                       {channel.group}
@@ -1551,7 +1586,7 @@ function LivePageClient() {
                         </div>
                       </>
                     ) : (
-                      <div className='flex-1 flex items-center justify-center'>
+                      <div className='flex-1 flex items-center justify-center px-4'>
                         <div className='flex flex-col items-center justify-center text-center'>
                           <div className='w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4'>
                             <Tv className='w-8 h-8 text-gray-400 dark:text-gray-600' />
@@ -1570,9 +1605,9 @@ function LivePageClient() {
 
                 {/* 直播源 Tab 内容 */}
                 {activeTab === 'sources' && (
-                  <div className='flex flex-col flex-1 overflow-hidden'>
+                  <div className='flex flex-col flex-1 min-h-0'>
                     {liveSources.length > 0 ? (
-                      <div className='flex-1 overflow-y-auto space-y-2 pb-20 mt-3'>
+                      <div className='flex-1 overflow-y-auto space-y-2 pl-4 pr-4 py-3 scrollbar-auto-hide'>
                         {liveSources.map((source) => {
                           const isCurrentSource =
                             source.key === currentSource?.key;
@@ -1582,15 +1617,15 @@ function LivePageClient() {
                               onClick={() =>
                                 !isCurrentSource && handleSourceChange(source)
                               }
-                              className={`flex items-start gap-3 px-2 py-3 rounded-lg transition-all select-none duration-200 relative
+                              className={`flex items-start gap-3 px-3 py-3 rounded-lg transition-colors select-none duration-200 relative
                                 ${
                                   isCurrentSource
                                     ? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 border'
-                                    : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
+                                    : 'hover:bg-gray-300/60 dark:hover:bg-white/10 cursor-pointer'
                                 }`.trim()}
                             >
                               {/* 图标 */}
-                              <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0'>
+                              <div className='w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-300 dark:border-gray-500'>
                                 <Radio className='w-6 h-6 text-gray-500' />
                               </div>
 
@@ -1616,7 +1651,7 @@ function LivePageClient() {
                         })}
                       </div>
                     ) : (
-                      <div className='flex-1 flex items-center justify-center'>
+                      <div className='flex-1 flex items-center justify-center px-4'>
                         <div className='flex flex-col items-center justify-center text-center'>
                           <div className='w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4'>
                             <Radio className='w-8 h-8 text-gray-400 dark:text-gray-600' />

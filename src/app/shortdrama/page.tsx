@@ -180,7 +180,6 @@ function ShortDramaPageClient() {
             setHasMore(data.length !== 0 && currentPage < totalPages);
           } else {
             // 参数不一致，忽略此次响应
-            console.log('参数已变更，忽略过期的数据响应');
           }
         } catch (err) {
           console.error('加载更多短剧数据失败:', err);

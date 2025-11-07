@@ -23,7 +23,29 @@ export async function GET(request: NextRequest) {
   const username = authInfo?.username;
 
   try {
+    console.log('[Admin Config API] 开始获取配置...');
     const config = await getConfig();
+    console.log('[Admin Config API] 配置获取成功');
+    console.log(
+      '[Admin Config API] LiveConfig 数量:',
+      config.LiveConfig?.length || 0
+    );
+    console.log(
+      '[Admin Config API] SourceConfig 数量:',
+      config.SourceConfig?.length || 0
+    );
+
+    // 打印前3个直播源的信息用于调试
+    if (config.LiveConfig && config.LiveConfig.length > 0) {
+      console.log(
+        '[Admin Config API] 前3个直播源:',
+        config.LiveConfig.slice(0, 3).map((l) => ({
+          key: l.key,
+          name: l.name,
+          disabled: l.disabled,
+        }))
+      );
+    }
 
     // 检查用户权限
     let userRole = 'guest'; // 未登录用户为 guest

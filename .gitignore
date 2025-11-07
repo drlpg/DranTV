@@ -48,3 +48,6 @@ organize-project.bat
 git-auto.sh
 clear-database.js
 scripts/check-db.js
+
+# M3U直播源文件
+*.m3u

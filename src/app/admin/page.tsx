@@ -434,7 +434,7 @@ const AlertModal = ({
       case 'success':
         return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800';
       case 'error':
-        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+        return 'bg-blue-50 dark:bg-blue-900/20 border-red-200 dark:border-red-800';
       case 'warning':
         return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
       default:
@@ -449,7 +449,7 @@ const AlertModal = ({
       }`}
     >
       <div
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-sm w-full border ${getBgColor()} transition-all duration-200 ${
+        className={`rounded-lg shadow-xl max-w-sm w-full border backdrop-blur-md ${getBgColor()} transition-all duration-200 ${
           isVisible ? 'scale-100' : 'scale-95'
         }`}
       >
@@ -461,7 +461,9 @@ const AlertModal = ({
           </h3>
 
           {message && (
-            <p className='text-gray-600 dark:text-gray-400 mb-4'>{message}</p>
+            <p className='text-gray-600 dark:text-gray-400 mb-4 max-h-40 overflow-y-auto text-sm break-words'>
+              {message}
+            </p>
           )}
 
           {showConfirm && (
@@ -2893,6 +2895,15 @@ const VideoSourceConfig = ({
   // 搜索相关状态
   const [searchKeyword, setSearchKeyword] = useState('');
 
+  // 订阅配置相关状态
+  const [subscriptionUrl, setSubscriptionUrl] = useState('');
+  const [autoUpdate, setAutoUpdate] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<string>('');
+
+  // 导入配置相关状态
+  const [showImportForm, setShowImportForm] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+
   // 过滤后的视频源列表
   const filteredSources = useMemo(() => {
     if (!searchKeyword.trim()) {
@@ -2994,6 +3005,16 @@ const VideoSourceConfig = ({
       // 重置选择状态
       setSelectedSources(new Set());
     }
+    if (config?.SourceSubscription) {
+      setSubscriptionUrl(config.SourceSubscription.URL);
+      setAutoUpdate(config.SourceSubscription.AutoUpdate);
+      setLastCheckTime(config.SourceSubscription.LastCheck || '');
+    } else {
+      // 如果订阅配置不存在，清空状态
+      setSubscriptionUrl('');
+      setAutoUpdate(false);
+      setLastCheckTime('');
+    }
   }, [config]);
 
   // 通用 API 请求
@@ -3010,7 +3031,8 @@ const VideoSourceConfig = ({
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
-      // 成功后刷新配置
+      // 刷新配置以获取最新数据
+      await resp.json(); // 消费响应体
       await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
@@ -3112,6 +3134,142 @@ const VideoSourceConfig = ({
       .catch(() => {
         console.error('操作失败', 'sort', order);
       });
+  };
+
+  // 保存订阅配置
+  const handleSaveSubscription = async () => {
+    await withLoading('saveSourceSubscription', async () => {
+      try {
+        const resp = await fetch('/api/admin/source/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: subscriptionUrl,
+            autoUpdate: autoUpdate,
+            lastCheck: lastCheckTime || new Date().toISOString(),
+          }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error('保存超时，操作可能已完成。请刷新页面查看状态。');
+          }
+          throw new Error(
+            data.error ||
+              `保存失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        showSuccess('订阅配置保存成功', showAlert);
+        await refreshConfig();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '保存失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  // 清除订阅配置
+  const handleClearSubscription = async () => {
+    await withLoading('clearSourceSubscription', async () => {
+      try {
+        const resp = await fetch('/api/admin/source/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: '',
+            autoUpdate: false,
+            lastCheck: '',
+          }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error(
+              '清除超时，可能是数据量较大。操作可能已部分完成，请刷新页面查看状态。'
+            );
+          }
+          throw new Error(
+            data.error ||
+              `清除失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        showSuccess('订阅配置已清除', showAlert);
+        setSubscriptionUrl('');
+        setAutoUpdate(false);
+        setLastCheckTime('');
+        await refreshConfig();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '清除失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  // 从URL导入视频源配置
+  const handleImportFromUrl = async () => {
+    if (!importUrl.trim()) {
+      showError('请输入导入URL', showAlert);
+      return;
+    }
+
+    await withLoading('importSources', async () => {
+      try {
+        const resp = await fetch('/api/admin/source/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: importUrl,
+            saveSubscription: true,
+            autoUpdate: autoUpdate,
+          }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error(
+              '导入超时，可能是订阅源响应较慢或包含大量数据。请稍后重试或检查订阅链接是否可访问。'
+            );
+          }
+          throw new Error(
+            data.error ||
+              `导入失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        const data = await resp.json();
+        if (data.sources && data.sources.length > 0) {
+          const formatInfo = data.format
+            ? ` (格式: ${data.format.toUpperCase()})`
+            : '';
+          showSuccess(
+            data.message ||
+              `成功导入 ${data.sources.length} 个视频源${formatInfo}`,
+            showAlert
+          );
+          // 刷新配置以获取最新数据
+          await refreshConfig();
+
+          // 更新订阅URL为当前导入的URL
+          setSubscriptionUrl(importUrl);
+          setLastCheckTime(new Date().toISOString());
+          setImportUrl('');
+          setShowImportForm(false);
+        } else {
+          showError('导入失败：未获取到视频源数据', showAlert);
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '导入失败', showAlert);
+        throw err;
+      }
+    });
   };
 
   // 有效性检测函数
@@ -3740,6 +3898,171 @@ const VideoSourceConfig = ({
 
   return (
     <div className='space-y-6'>
+      {/* 导入视频源表单 */}
+      {showImportForm && (
+        <div className='p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-4'>
+          <div className='flex items-center justify-between'>
+            <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+              从URL导入视频源
+            </h4>
+            <button
+              onClick={() => {
+                setShowImportForm(false);
+                setImportUrl('');
+              }}
+              className='text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors'
+            >
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </button>
+          </div>
+          <div className='space-y-3'>
+            <input
+              type='url'
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              placeholder='https://example.com/sources.txt'
+              className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-transparent'
+            />
+            <p className='text-xs text-gray-500 dark:text-gray-400'>
+              支持格式：JSON、M3U 播放列表、TXT 文本配置
+            </p>
+            {/* 自动更新开关 */}
+            <div className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg'>
+              <div>
+                <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  自动更新
+                </label>
+                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                  启用后系统将定期自动拉取最新配置
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() => setAutoUpdate(!autoUpdate)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  autoUpdate ? buttonStyles.toggleOn : buttonStyles.toggleOff
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full ${
+                    buttonStyles.toggleThumb
+                  } transition-transform ${
+                    autoUpdate
+                      ? buttonStyles.toggleThumbOn
+                      : buttonStyles.toggleThumbOff
+                  }`}
+                />
+              </button>
+            </div>
+            <button
+              onClick={handleImportFromUrl}
+              disabled={isLoading('importSources') || !importUrl.trim()}
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                isLoading('importSources') || !importUrl.trim()
+                  ? buttonStyles.disabled
+                  : buttonStyles.success
+              }`}
+            >
+              {isLoading('importSources') ? (
+                <div className='flex items-center justify-center gap-2'>
+                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                  导入中…
+                </div>
+              ) : (
+                '导入视频源'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 订阅配置显示 */}
+      {subscriptionUrl && !showImportForm && (
+        <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3'>
+          <div className='flex items-center justify-between'>
+            <div className='flex-1'>
+              <div className='flex items-center gap-2'>
+                <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                  订阅配置
+                </h4>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                    autoUpdate
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-300'
+                  }`}
+                >
+                  {autoUpdate ? '自动更新已启用' : '自动更新已禁用'}
+                </span>
+              </div>
+              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1 break-all'>
+                {subscriptionUrl}
+              </p>
+              {lastCheckTime && (
+                <p className='text-xs text-gray-400 dark:text-gray-500 mt-1'>
+                  最后更新: {new Date(lastCheckTime).toLocaleString('zh-CN')}
+                </p>
+              )}
+            </div>
+            <div className='flex items-center gap-2'>
+              <button
+                type='button'
+                onClick={() => setAutoUpdate(!autoUpdate)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  autoUpdate ? buttonStyles.warning : buttonStyles.success
+                }`}
+              >
+                {autoUpdate ? '禁用自动更新' : '启用自动更新'}
+              </button>
+              <button
+                onClick={handleSaveSubscription}
+                disabled={isLoading('saveSourceSubscription')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isLoading('saveSourceSubscription')
+                    ? buttonStyles.disabled
+                    : buttonStyles.primary
+                }`}
+              >
+                {isLoading('saveSourceSubscription') ? '保存中...' : '保存配置'}
+              </button>
+              <button
+                onClick={() => {
+                  if (
+                    confirm(
+                      '确定要清除订阅配置吗？\n\n这将删除所有通过订阅导入的视频源，但会保留手动添加的视频源。'
+                    )
+                  ) {
+                    handleClearSubscription();
+                  }
+                }}
+                disabled={isLoading('clearSourceSubscription')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isLoading('clearSourceSubscription')
+                    ? buttonStyles.disabled
+                    : buttonStyles.danger
+                }`}
+              >
+                {isLoading('clearSourceSubscription')
+                  ? '清除中...'
+                  : '清除配置'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 添加视频源表单 */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
@@ -3809,26 +4132,46 @@ const VideoSourceConfig = ({
               <div className='hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600'></div>
             </>
           )}
-          {/* 当没有选中项时显示搜索框 */}
+          {/* 当没有选中项时显示搜索框和导入配置按钮 */}
           {selectedSources.size === 0 && (
-            <input
-              type='text'
-              placeholder='搜索视频源...'
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-48'
-              style={{ outline: 'none', boxShadow: 'none' }}
-              onFocus={(e) => {
-                e.target.style.outline = 'none';
-                e.target.style.boxShadow = 'none';
-              }}
-            />
+            <>
+              <input
+                type='text'
+                placeholder='搜索视频源...'
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-48'
+                style={{ outline: 'none', boxShadow: 'none' }}
+                onFocus={(e) => {
+                  e.target.style.outline = 'none';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              <button
+                onClick={() => {
+                  setShowImportForm(!showImportForm);
+                  if (showImportForm) {
+                    setImportUrl('');
+                  }
+                  // 关闭添加表单
+                  if (showAddForm) {
+                    setShowAddForm(false);
+                    clearNewSourceValidation();
+                  }
+                }}
+                className={`w-full sm:w-auto text-center ${
+                  showImportForm ? buttonStyles.secondary : buttonStyles.primary
+                }`}
+              >
+                {showImportForm ? '取消导入' : '导入配置'}
+              </button>
+            </>
           )}
-          <div className='flex items-center gap-2'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
             <button
               onClick={() => setShowValidationModal(true)}
               disabled={isValidating}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors flex items-center space-x-1 ${
+              className={`px-3 py-1 text-sm rounded-lg transition-colors flex items-center justify-center space-x-1 w-full sm:w-auto ${
                 isValidating ? buttonStyles.disabled : buttonStyles.primary
               }`}
             >
@@ -3848,10 +4191,15 @@ const VideoSourceConfig = ({
                 if (!showAddForm) {
                   clearNewSourceValidation();
                 }
+                // 关闭导入表单
+                if (showImportForm) {
+                  setShowImportForm(false);
+                  setImportUrl('');
+                }
               }}
-              className={
+              className={`w-full sm:w-auto text-center ${
                 showAddForm ? buttonStyles.secondary : buttonStyles.success
-              }
+              }`}
             >
               {showAddForm ? '取消' : '添加视频源'}
             </button>
@@ -4202,13 +4550,17 @@ const VideoSourceConfig = ({
                   className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
                 />
               </div>
-              <div className='w-24 flex-shrink-0 px-2'>名称</div>
-              <div className='w-20 flex-shrink-0 px-2'>KEY</div>
-              <div className='w-64 flex-shrink-0 px-2'>API 地址</div>
-              <div className='flex-1 min-w-0 px-2'>DETAIL 地址</div>
-              <div className='w-20 flex-shrink-0 px-2'>状态</div>
-              <div className='w-28 flex-shrink-0 px-2'>有效性</div>
-              <div className='w-52 flex-shrink-0 px-2'>操作</div>
+              <div className='w-24 flex-shrink-0 px-2 text-left'>名称</div>
+              <div className='w-20 flex-shrink-0 px-2 text-left min-w-[5rem]'>
+                KEY
+              </div>
+              <div className='w-64 flex-shrink-0 px-2 text-left min-w-[16rem]'>
+                API 地址
+              </div>
+              <div className='flex-1 min-w-0 px-2 text-left'>DETAIL 地址</div>
+              <div className='w-20 flex-shrink-0 px-2 text-left'>状态</div>
+              <div className='w-28 flex-shrink-0 px-2 text-left'>有效性</div>
+              <div className='w-52 flex-shrink-0 px-2 text-left'>操作</div>
             </div>
           </div>
 
@@ -4807,246 +5159,8 @@ const CategoryConfig = ({
 };
 
 // 新增配置文件组件
-const ConfigFileComponent = ({
-  config,
-  refreshConfig,
-}: {
-  config: AdminConfig | null;
-  refreshConfig: () => Promise<void>;
-}) => {
-  const { alertModal, showAlert, hideAlert } = useAlertModal();
-  const { isLoading, withLoading } = useLoadingState();
-  const [configContent, setConfigContent] = useState('');
-  const [subscriptionUrl, setSubscriptionUrl] = useState('');
-  const [autoUpdate, setAutoUpdate] = useState(false);
-  const [lastCheckTime, setLastCheckTime] = useState<string>('');
+// 配置文件组件已移除，功能已整合到视频源和直播源配置中
 
-  useEffect(() => {
-    if (config?.ConfigFile) {
-      setConfigContent(config.ConfigFile);
-    }
-    if (config?.ConfigSubscribtion) {
-      setSubscriptionUrl(config.ConfigSubscribtion.URL);
-      setAutoUpdate(config.ConfigSubscribtion.AutoUpdate);
-      setLastCheckTime(config.ConfigSubscribtion.LastCheck || '');
-    }
-  }, [config]);
-
-  // 拉取订阅配置
-  const handleFetchConfig = async () => {
-    if (!subscriptionUrl.trim()) {
-      showError('请输入订阅URL', showAlert);
-      return;
-    }
-
-    await withLoading('fetchConfig', async () => {
-      try {
-        const resp = await fetch('/api/admin/config_subscription/fetch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: subscriptionUrl }),
-        });
-
-        if (!resp.ok) {
-          const data = await resp.json().catch(() => ({}));
-          throw new Error(data.error || `拉取失败: ${resp.status}`);
-        }
-
-        const data = await resp.json();
-        if (data.configContent) {
-          setConfigContent(data.configContent);
-          // 更新本地配置的最后检查时间
-          const currentTime = new Date().toISOString();
-          setLastCheckTime(currentTime);
-          showSuccess('配置拉取成功', showAlert);
-        } else {
-          showError('拉取失败：未获取到配置内容', showAlert);
-        }
-      } catch (err) {
-        showError(err instanceof Error ? err.message : '拉取失败', showAlert);
-        throw err;
-      }
-    });
-  };
-
-  // 保存配置文件
-  const handleSave = async () => {
-    await withLoading('saveConfig', async () => {
-      try {
-        const resp = await fetch('/api/admin/config_file', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            configFile: configContent,
-            subscriptionUrl,
-            autoUpdate,
-            lastCheckTime: lastCheckTime || new Date().toISOString(),
-          }),
-        });
-
-        if (!resp.ok) {
-          const data = await resp.json().catch(() => ({}));
-          throw new Error(data.error || `保存失败: ${resp.status}`);
-        }
-
-        showSuccess('配置文件保存成功', showAlert);
-        await refreshConfig();
-      } catch (err) {
-        showError(err instanceof Error ? err.message : '保存失败', showAlert);
-        throw err;
-      }
-    });
-  };
-
-  if (!config) {
-    return (
-      <div className='text-center text-gray-500 dark:text-gray-400'>
-        加载中...
-      </div>
-    );
-  }
-
-  return (
-    <div className='space-y-4'>
-      {/* 配置订阅区域 */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm'>
-        <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
-            配置订阅
-          </h3>
-          <div className='text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-full'>
-            最后更新:{' '}
-            {lastCheckTime
-              ? new Date(lastCheckTime).toLocaleString('zh-CN')
-              : '从未更新'}
-          </div>
-        </div>
-
-        <div className='space-y-6'>
-          {/* 订阅URL输入 */}
-          <div>
-            <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
-              订阅URL
-            </label>
-            <input
-              type='url'
-              value={subscriptionUrl}
-              onChange={(e) => setSubscriptionUrl(e.target.value)}
-              placeholder='https://example.com/config.json'
-              disabled={false}
-              className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm hover:border-gray-400 dark:hover:border-gray-500'
-            />
-            <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
-              输入配置文件的订阅地址，要求 JSON 格式，且使用 Base58 编码
-            </p>
-          </div>
-
-          {/* 拉取配置按钮 */}
-          <div className='pt-2'>
-            <button
-              onClick={handleFetchConfig}
-              disabled={isLoading('fetchConfig') || !subscriptionUrl.trim()}
-              className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-                isLoading('fetchConfig') || !subscriptionUrl.trim()
-                  ? buttonStyles.disabled
-                  : buttonStyles.success
-              }`}
-            >
-              {isLoading('fetchConfig') ? (
-                <div className='flex items-center justify-center gap-2'>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  拉取中…
-                </div>
-              ) : (
-                '拉取配置'
-              )}
-            </button>
-          </div>
-
-          {/* 自动更新开关 */}
-          <div className='flex items-center justify-between'>
-            <div>
-              <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                自动更新
-              </label>
-              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                启用后系统将定期自动拉取最新配置
-              </p>
-            </div>
-            <button
-              type='button'
-              onClick={() => setAutoUpdate(!autoUpdate)}
-              disabled={false}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                autoUpdate ? buttonStyles.toggleOn : buttonStyles.toggleOff
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full ${
-                  buttonStyles.toggleThumb
-                } transition-transform ${
-                  autoUpdate
-                    ? buttonStyles.toggleThumbOn
-                    : buttonStyles.toggleThumbOff
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 配置文件编辑区域 */}
-      <div className='space-y-4'>
-        <div className='relative'>
-          <textarea
-            value={configContent}
-            onChange={(e) => setConfigContent(e.target.value)}
-            rows={20}
-            placeholder='请输入配置文件内容（JSON 格式）...'
-            disabled={false}
-            className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm leading-relaxed resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500'
-            style={{
-              fontFamily:
-                'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            }}
-            spellCheck={false}
-            data-gramm={false}
-          />
-        </div>
-
-        <div className='flex items-center justify-between'>
-          <div className='text-xs text-gray-500 dark:text-gray-400'>
-            支持 JSON 格式，用于配置视频源和自定义分类
-          </div>
-          <button
-            onClick={handleSave}
-            disabled={isLoading('saveConfig')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              isLoading('saveConfig')
-                ? buttonStyles.disabled
-                : buttonStyles.success
-            }`}
-          >
-            {isLoading('saveConfig') ? '保存中…' : '保存'}
-          </button>
-        </div>
-      </div>
-
-      {/* 通用弹窗组件 */}
-      <AlertModal
-        isOpen={alertModal.isOpen}
-        onClose={hideAlert}
-        type={alertModal.type}
-        title={alertModal.title}
-        message={alertModal.message}
-        timer={alertModal.timer}
-        showConfirm={alertModal.showConfirm}
-      />
-    </div>
-  );
-};
-
-// 新增站点配置组件
 const SiteConfigComponent = ({
   config,
   refreshConfig,
@@ -5675,6 +5789,40 @@ const LiveSourceConfig = ({
     from: 'custom',
   });
 
+  // 订阅配置相关状态
+  const [subscriptionUrl, setSubscriptionUrl] = useState('');
+  const [autoUpdate, setAutoUpdate] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<string>('');
+
+  // 导入配置相关状态
+  const [showImportForm, setShowImportForm] = useState(false);
+  const [importUrl, setImportUrl] = useState('');
+
+  // 批量选择状态
+  const [selectedLiveSources, setSelectedLiveSources] = useState<Set<string>>(
+    new Set()
+  );
+
+  // 有效性检测相关状态
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<
+    Array<{
+      key: string;
+      name: string;
+      status: 'valid' | 'invalid' | 'validating';
+      message: string;
+      channelCount?: number;
+    }>
+  >([]);
+
+  // 单个直播源检测状态
+  const [isSingleValidating, setIsSingleValidating] = useState(false);
+  const [singleValidationResult, setSingleValidationResult] = useState<{
+    status: 'valid' | 'invalid' | 'validating' | null;
+    message: string;
+    channelCount?: number;
+  }>({ status: null, message: '' });
+
   // dnd-kit 传感器
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -5692,10 +5840,27 @@ const LiveSourceConfig = ({
 
   // 初始化
   useEffect(() => {
+    console.log('[LiveSourceConfig] config 更新:', {
+      hasConfig: !!config,
+      hasLiveConfig: !!config?.LiveConfig,
+      liveConfigLength: config?.LiveConfig?.length || 0,
+      liveConfig: config?.LiveConfig,
+    });
+
     if (config?.LiveConfig) {
       setLiveSources(config.LiveConfig);
       // 进入时重置 orderChanged
       setOrderChanged(false);
+    }
+    if (config?.LiveSubscription) {
+      setSubscriptionUrl(config.LiveSubscription.URL);
+      setAutoUpdate(config.LiveSubscription.AutoUpdate);
+      setLastCheckTime(config.LiveSubscription.LastCheck || '');
+    } else {
+      // 如果订阅配置不存在，清空状态
+      setSubscriptionUrl('');
+      setAutoUpdate(false);
+      setLastCheckTime('');
     }
   }, [config]);
 
@@ -5728,7 +5893,8 @@ const LiveSourceConfig = ({
         throw new Error(data.error || `操作失败: ${resp.status}`);
       }
 
-      // 成功后刷新配置
+      // 刷新配置以获取最新数据
+      await resp.json(); // 消费响应体
       await refreshConfig();
     } catch (err) {
       showError(err instanceof Error ? err.message : '操作失败', showAlert);
@@ -5787,6 +5953,223 @@ const LiveSourceConfig = ({
         setIsRefreshing(false);
       }
     });
+  };
+
+  // 批量操作
+  const handleBatchOperation = async (
+    action: 'batch_enable' | 'batch_disable' | 'batch_delete'
+  ) => {
+    if (selectedLiveSources.size === 0) return;
+
+    const keys = Array.from(selectedLiveSources);
+    await withLoading(`batchLiveSource_${action}`, async () => {
+      try {
+        const resp = await fetch('/api/admin/live', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, keys }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          throw new Error(data.error || `操作失败: ${resp.status}`);
+        }
+
+        await refreshConfig();
+        setSelectedLiveSources(new Set());
+        showSuccess(
+          action === 'batch_enable'
+            ? '批量启用成功'
+            : action === 'batch_disable'
+            ? '批量禁用成功'
+            : '批量删除成功',
+          showAlert
+        );
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '操作失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  // 获取检测状态
+  const getValidationStatus = (key: string) => {
+    const result = validationResults.find((r) => r.key === key);
+    if (!result) return null;
+
+    if (result.status === 'validating') {
+      return {
+        text: '检测中',
+        icon: '⏳',
+        className:
+          'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
+        message: '正在检测直播源...',
+      };
+    } else if (result.status === 'valid') {
+      return {
+        text: '可用',
+        icon: '✓',
+        className:
+          'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300',
+        message: `检测通过，频道数: ${result.channelCount || 0}`,
+      };
+    } else {
+      return {
+        text: '不可用',
+        icon: '✗',
+        className:
+          'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
+        message: result.message || '检测失败',
+      };
+    }
+  };
+
+  // 批量检测直播源
+  const handleValidateLiveSources = async () => {
+    const sourcesToValidate = liveSources.filter((s) => !s.disabled);
+
+    if (sourcesToValidate.length === 0) {
+      showAlert({
+        type: 'warning',
+        title: '没有可检测的直播源',
+        message: '请确保至少有一个启用的直播源',
+        showConfirm: true,
+      });
+      return;
+    }
+
+    setIsValidating(true);
+    setValidationResults(
+      sourcesToValidate.map((s) => ({
+        key: s.key,
+        name: s.name,
+        status: 'validating' as const,
+        message: '等待检测...',
+      }))
+    );
+
+    // 逐个检测
+    for (const source of sourcesToValidate) {
+      try {
+        // 使用channels API来检测直播源是否可用
+        const response = await fetch(
+          `/api/live/channels?source=${encodeURIComponent(source.key)}`
+        );
+
+        const data = await response.json();
+
+        if (data.success && data.data && Array.isArray(data.data)) {
+          const channelCount = data.data.length;
+          setValidationResults((prev) =>
+            prev.map((r) =>
+              r.key === source.key
+                ? {
+                    ...r,
+                    status: channelCount > 0 ? 'valid' : 'invalid',
+                    message:
+                      channelCount > 0
+                        ? `检测通过，频道数: ${channelCount}`
+                        : '未找到可用频道',
+                    channelCount: channelCount,
+                  }
+                : r
+            )
+          );
+        } else {
+          setValidationResults((prev) =>
+            prev.map((r) =>
+              r.key === source.key
+                ? {
+                    ...r,
+                    status: 'invalid' as const,
+                    message: data.error || '检测失败',
+                  }
+                : r
+            )
+          );
+        }
+      } catch (error) {
+        setValidationResults((prev) =>
+          prev.map((r) =>
+            r.key === source.key
+              ? {
+                  ...r,
+                  status: 'invalid' as const,
+                  message: '网络错误或服务异常',
+                }
+              : r
+          )
+        );
+      }
+    }
+
+    setIsValidating(false);
+  };
+
+  // 单个直播源检测
+  const handleValidateSingleLiveSource = async () => {
+    if (!editingLiveSource?.url) {
+      showAlert({
+        type: 'warning',
+        title: '直播源URL不能为空',
+        message: '请输入直播源URL',
+        showConfirm: true,
+      });
+      return;
+    }
+
+    setIsSingleValidating(true);
+    setSingleValidationResult({
+      status: 'validating',
+      message: '正在检测...',
+    });
+
+    try {
+      const response = await fetch('/api/live/precheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: editingLiveSource.url }),
+      });
+
+      const data = await response.json();
+
+      setSingleValidationResult({
+        status: data.success ? 'valid' : 'invalid',
+        message: data.success
+          ? `检测通过，频道数: ${data.channelCount || 0}`
+          : data.error || '检测失败',
+        channelCount: data.channelCount,
+      });
+    } catch (error) {
+      setSingleValidationResult({
+        status: 'invalid',
+        message: '网络错误或服务异常',
+      });
+    } finally {
+      setIsSingleValidating(false);
+    }
+  };
+
+  // 全选/取消全选
+  const handleSelectAll = () => {
+    if (selectedLiveSources.size === filteredLiveSources.length) {
+      setSelectedLiveSources(new Set());
+    } else {
+      setSelectedLiveSources(
+        new Set(filteredLiveSources.map((source) => source.key))
+      );
+    }
+  };
+
+  // 切换单个选择
+  const handleToggleSelect = (key: string) => {
+    const newSelected = new Set(selectedLiveSources);
+    if (newSelected.has(key)) {
+      newSelected.delete(key);
+    } else {
+      newSelected.add(key);
+    }
+    setSelectedLiveSources(newSelected);
   };
 
   const handleAddLiveSource = () => {
@@ -5859,6 +6242,147 @@ const LiveSourceConfig = ({
       });
   };
 
+  // 保存订阅配置
+  const handleSaveSubscription = async () => {
+    await withLoading('saveLiveSubscription', async () => {
+      try {
+        const resp = await fetch('/api/admin/live/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: subscriptionUrl,
+            autoUpdate: autoUpdate,
+            lastCheck: lastCheckTime || new Date().toISOString(),
+          }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error('保存超时，操作可能已完成。请刷新页面查看状态。');
+          }
+          throw new Error(
+            data.error ||
+              `保存失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        showSuccess('订阅配置保存成功', showAlert);
+        await refreshConfig();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '保存失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  // 清除订阅配置
+  const handleClearSubscription = async () => {
+    await withLoading('clearLiveSubscription', async () => {
+      try {
+        const resp = await fetch('/api/admin/live/subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: '',
+            autoUpdate: false,
+            lastCheck: '',
+          }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error(
+              '清除超时，可能是数据量较大。操作可能已部分完成，请刷新页面查看状态。'
+            );
+          }
+          throw new Error(
+            data.error ||
+              `清除失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        showSuccess('订阅配置已清除', showAlert);
+        setSubscriptionUrl('');
+        setAutoUpdate(false);
+        setLastCheckTime('');
+        await refreshConfig();
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '清除失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
+  // 从URL导入直播源配置
+  const handleImportFromUrl = async () => {
+    if (!importUrl.trim()) {
+      showError('请输入导入URL', showAlert);
+      return;
+    }
+
+    await withLoading('importLiveSources', async () => {
+      try {
+        const resp = await fetch('/api/admin/live/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: importUrl,
+            saveSubscription: true,
+            autoUpdate: autoUpdate,
+          }),
+        }).catch((error) => {
+          // 处理网络错误
+          throw new Error(
+            '无法连接到服务器，请检查网络连接或服务器是否正常运行'
+          );
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json().catch(() => ({}));
+          // 特殊处理504超时错误
+          if (resp.status === 504) {
+            throw new Error(
+              '导入超时，可能是订阅源响应较慢或包含大量数据。请稍后重试或检查订阅链接是否可访问。'
+            );
+          }
+          throw new Error(
+            data.error ||
+              `导入失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+          );
+        }
+
+        const data = await resp.json();
+        if (data.sources && data.sources.length > 0) {
+          const formatInfo = data.format
+            ? ` (格式: ${data.format.toUpperCase()})`
+            : '';
+          showSuccess(
+            data.message ||
+              `成功导入 ${data.sources.length} 个直播源${formatInfo}`,
+            showAlert
+          );
+          // 刷新配置以获取最新数据
+          await refreshConfig();
+
+          // 更新订阅URL为当前导入的URL
+          setSubscriptionUrl(importUrl);
+          setLastCheckTime(new Date().toISOString());
+          setImportUrl('');
+          setShowImportForm(false);
+        } else {
+          showError('导入失败：未获取到直播源数据', showAlert);
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : '导入失败', showAlert);
+        throw err;
+      }
+    });
+  };
+
   // 可拖拽行封装 (dnd-kit)
   const DraggableRow = ({ liveSource }: { liveSource: LiveDataSource }) => {
     const { attributes, listeners, setNodeRef, transform, transition } =
@@ -5883,31 +6407,28 @@ const LiveSourceConfig = ({
         >
           <GripVertical size={16} />
         </div>
-        <div className='w-24 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
+        <div className='w-10 flex-shrink-0 flex justify-center'>
+          <input
+            type='checkbox'
+            checked={selectedLiveSources.has(liveSource.key)}
+            onChange={() => handleToggleSelect(liveSource.key)}
+            className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer'
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+        <div className='w-28 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
           {liveSource.name}
         </div>
-        <div className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
+        <div className='w-32 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'>
           {liveSource.key}
         </div>
         <div
-          className='flex-1 min-w-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
+          className='flex-1 min-w-[180px] px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
           title={liveSource.url}
         >
           {liveSource.url}
         </div>
-        <div
-          className='w-32 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
-          title={liveSource.epg || '-'}
-        >
-          {liveSource.epg || '-'}
-        </div>
-        <div
-          className='w-28 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis'
-          title={liveSource.ua || '-'}
-        >
-          {liveSource.ua || '-'}
-        </div>
-        <div className='w-20 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 text-center'>
+        <div className='w-16 flex-shrink-0 px-2 text-sm text-gray-900 dark:text-gray-100 text-center'>
           {liveSource.channelNumber && liveSource.channelNumber > 0
             ? liveSource.channelNumber
             : '-'}
@@ -5923,11 +6444,32 @@ const LiveSourceConfig = ({
             {!liveSource.disabled ? '启用中' : '已禁用'}
           </span>
         </div>
-        <div className='w-64 flex-shrink-0 px-2 flex justify-end gap-2'>
+        {/* 有效性 */}
+        <div className='w-28 flex-shrink-0 px-2'>
+          {(() => {
+            const status = getValidationStatus(liveSource.key);
+            if (!status) {
+              return (
+                <span className='px-2 py-1 text-xs rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 whitespace-nowrap'>
+                  未检测
+                </span>
+              );
+            }
+            return (
+              <span
+                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${status.className}`}
+                title={status.message}
+              >
+                {status.icon} {status.text}
+              </span>
+            );
+          })()}
+        </div>
+        <div className='w-56 flex-shrink-0 px-2 flex gap-2'>
           <button
             onClick={() => handleToggleEnable(liveSource.key)}
             disabled={isLoading(`toggleLiveSource_${liveSource.key}`)}
-            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+            className={`flex-1 inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-medium ${
               !liveSource.disabled
                 ? buttonStyles.roundedDanger
                 : buttonStyles.roundedSuccess
@@ -5939,32 +6481,32 @@ const LiveSourceConfig = ({
           >
             {!liveSource.disabled ? '禁用' : '启用'}
           </button>
-          {liveSource.from !== 'config' && (
-            <>
-              <button
-                onClick={() => setEditingLiveSource(liveSource)}
-                disabled={isLoading(`editLiveSource_${liveSource.key}`)}
-                className={`${buttonStyles.roundedPrimary} ${
-                  isLoading(`editLiveSource_${liveSource.key}`)
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                编辑
-              </button>
-              <button
-                onClick={() => handleDelete(liveSource.key)}
-                disabled={isLoading(`deleteLiveSource_${liveSource.key}`)}
-                className={`${buttonStyles.roundedSecondary} ${
-                  isLoading(`deleteLiveSource_${liveSource.key}`)
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                删除
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => setEditingLiveSource(liveSource)}
+            disabled={isLoading(`editLiveSource_${liveSource.key}`)}
+            className={`flex-1 inline-flex items-center justify-center ${
+              buttonStyles.roundedPrimary
+            } ${
+              isLoading(`editLiveSource_${liveSource.key}`)
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
+          >
+            编辑
+          </button>
+          <button
+            onClick={() => handleDelete(liveSource.key)}
+            disabled={isLoading(`deleteLiveSource_${liveSource.key}`)}
+            className={`flex-1 inline-flex items-center justify-center ${
+              buttonStyles.roundedSecondary
+            } ${
+              isLoading(`deleteLiveSource_${liveSource.key}`)
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
+          >
+            删除
+          </button>
         </div>
       </div>
     );
@@ -5980,28 +6522,261 @@ const LiveSourceConfig = ({
 
   return (
     <div className='space-y-6'>
+      {/* 导入直播源表单 */}
+      {showImportForm && (
+        <div className='p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-4'>
+          <div className='flex items-center justify-between'>
+            <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+              从URL导入直播源
+            </h4>
+            <button
+              onClick={() => {
+                setShowImportForm(false);
+                setImportUrl('');
+              }}
+              className='text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors'
+            >
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </button>
+          </div>
+          <div className='space-y-3'>
+            <input
+              type='url'
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              placeholder='https://example.com/live.m3u'
+              className='w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-transparent'
+            />
+            <p className='text-xs text-gray-500 dark:text-gray-400'>
+              支持格式：JSON、M3U 播放列表、TXT 文本配置
+            </p>
+            {/* 自动更新开关 */}
+            <div className='flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg'>
+              <div>
+                <label className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  自动更新
+                </label>
+                <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                  启用后系统将定期自动拉取最新配置
+                </p>
+              </div>
+              <button
+                type='button'
+                onClick={() => setAutoUpdate(!autoUpdate)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  autoUpdate ? buttonStyles.toggleOn : buttonStyles.toggleOff
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full ${
+                    buttonStyles.toggleThumb
+                  } transition-transform ${
+                    autoUpdate
+                      ? buttonStyles.toggleThumbOn
+                      : buttonStyles.toggleThumbOff
+                  }`}
+                />
+              </button>
+            </div>
+            <button
+              onClick={handleImportFromUrl}
+              disabled={isLoading('importLiveSources') || !importUrl.trim()}
+              className={`w-full px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                isLoading('importLiveSources') || !importUrl.trim()
+                  ? buttonStyles.disabled
+                  : buttonStyles.success
+              }`}
+            >
+              {isLoading('importLiveSources') ? (
+                <div className='flex items-center justify-center gap-2'>
+                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                  导入中…
+                </div>
+              ) : (
+                '导入直播源'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 订阅配置显示 */}
+      {subscriptionUrl && !showImportForm && (
+        <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3'>
+          <div className='flex items-center justify-between'>
+            <div className='flex-1'>
+              <div className='flex items-center gap-2'>
+                <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                  订阅配置
+                </h4>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                    autoUpdate
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-300'
+                  }`}
+                >
+                  {autoUpdate ? '自动更新已启用' : '自动更新已禁用'}
+                </span>
+              </div>
+              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1 break-all'>
+                {subscriptionUrl}
+              </p>
+              {lastCheckTime && (
+                <p className='text-xs text-gray-400 dark:text-gray-500 mt-1'>
+                  最后更新: {new Date(lastCheckTime).toLocaleString('zh-CN')}
+                </p>
+              )}
+            </div>
+            <div className='flex items-center gap-2'>
+              <button
+                type='button'
+                onClick={() => setAutoUpdate(!autoUpdate)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  autoUpdate ? buttonStyles.warning : buttonStyles.success
+                }`}
+              >
+                {autoUpdate ? '禁用自动更新' : '启用自动更新'}
+              </button>
+              <button
+                onClick={handleSaveSubscription}
+                disabled={isLoading('saveLiveSubscription')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isLoading('saveLiveSubscription')
+                    ? buttonStyles.disabled
+                    : buttonStyles.primary
+                }`}
+              >
+                {isLoading('saveLiveSubscription') ? '保存中...' : '保存配置'}
+              </button>
+              <button
+                onClick={() => {
+                  if (
+                    confirm(
+                      '确定要清除订阅配置吗？\n\n这将删除所有通过订阅导入的直播源，但会保留手动添加的直播源。'
+                    )
+                  ) {
+                    handleClearSubscription();
+                  }
+                }}
+                disabled={isLoading('clearLiveSubscription')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                  isLoading('clearLiveSubscription')
+                    ? buttonStyles.disabled
+                    : buttonStyles.danger
+                }`}
+              >
+                {isLoading('clearLiveSubscription') ? '清除中...' : '清除配置'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 标题和搜索栏 */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
           直播源列表 ({liveSources.length})
         </h4>
         <div className='flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2'>
-          <input
-            type='text'
-            placeholder='搜索名称、KEY、地址...'
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-64'
-            style={{ outline: 'none', boxShadow: 'none' }}
-            onFocus={(e) => {
-              e.target.style.outline = 'none';
-              e.target.style.boxShadow = 'none';
+          {/* 批量操作按钮 */}
+          {selectedLiveSources.size > 0 && (
+            <>
+              <div className='flex flex-wrap items-center gap-3'>
+                <span className='text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap'>
+                  已选择 {selectedLiveSources.size} 个直播源
+                </span>
+                <button
+                  onClick={() => handleBatchOperation('batch_enable')}
+                  disabled={isLoading('batchLiveSource_batch_enable')}
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
+                    isLoading('batchLiveSource_batch_enable')
+                      ? buttonStyles.disabled
+                      : buttonStyles.success
+                  }`}
+                >
+                  {isLoading('batchLiveSource_batch_enable')
+                    ? '启用中...'
+                    : '批量启用'}
+                </button>
+                <button
+                  onClick={() => handleBatchOperation('batch_disable')}
+                  disabled={isLoading('batchLiveSource_batch_disable')}
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
+                    isLoading('batchLiveSource_batch_disable')
+                      ? buttonStyles.disabled
+                      : buttonStyles.warning
+                  }`}
+                >
+                  {isLoading('batchLiveSource_batch_disable')
+                    ? '禁用中...'
+                    : '批量禁用'}
+                </button>
+                <button
+                  onClick={() => handleBatchOperation('batch_delete')}
+                  disabled={isLoading('batchLiveSource_batch_delete')}
+                  className={`px-3 py-1 text-sm whitespace-nowrap ${
+                    isLoading('batchLiveSource_batch_delete')
+                      ? buttonStyles.disabled
+                      : buttonStyles.danger
+                  }`}
+                >
+                  {isLoading('batchLiveSource_batch_delete')
+                    ? '删除中...'
+                    : '批量删除'}
+                </button>
+              </div>
+              <div className='hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600'></div>
+            </>
+          )}
+          {/* 当没有选中项时显示搜索框和其他按钮 */}
+          {selectedLiveSources.size === 0 && (
+            <input
+              type='text'
+              placeholder='搜索名称、KEY、地址...'
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className='px-[10px] py-[5px] text-sm border border-gray-300 focus:!border-blue-500 dark:border-gray-600 dark:focus:!border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 w-full sm:w-64'
+              style={{ outline: 'none', boxShadow: 'none' }}
+              onFocus={(e) => {
+                e.target.style.outline = 'none';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          )}
+          <button
+            onClick={() => {
+              setShowImportForm(!showImportForm);
+              if (showImportForm) {
+                setImportUrl('');
+              }
+              // 关闭添加表单
+              if (showAddForm) {
+                setShowAddForm(false);
+              }
             }}
-          />
+            className={`w-full sm:w-auto text-center ${
+              showImportForm ? buttonStyles.secondary : buttonStyles.primary
+            }`}
+          >
+            {showImportForm ? '取消导入' : '导入配置'}
+          </button>
           <button
             onClick={handleRefreshLiveSources}
             disabled={isRefreshing || isLoading('refreshLiveSources')}
-            className={`px-3 py-1.5 text-sm font-medium flex items-center space-x-2 ${
+            className={`w-full sm:w-auto px-3 py-1.5 text-sm font-medium flex items-center justify-center space-x-2 ${
               isRefreshing || isLoading('refreshLiveSources')
                 ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white rounded-lg'
                 : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors'
@@ -6014,10 +6789,26 @@ const LiveSourceConfig = ({
             </span>
           </button>
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className={
+            onClick={handleValidateLiveSources}
+            disabled={isValidating}
+            className={`w-full sm:w-auto px-3 py-1.5 text-sm font-medium ${
+              isValidating ? buttonStyles.disabled : buttonStyles.primary
+            }`}
+          >
+            {isValidating ? '检测中...' : '有效性检测'}
+          </button>
+          <button
+            onClick={() => {
+              setShowAddForm(!showAddForm);
+              // 关闭导入表单
+              if (showImportForm) {
+                setShowImportForm(false);
+                setImportUrl('');
+              }
+            }}
+            className={`w-full sm:w-auto text-center ${
               showAddForm ? buttonStyles.secondary : buttonStyles.success
-            }
+            }`}
           >
             {showAddForm ? '取消' : '添加直播源'}
           </button>
@@ -6183,6 +6974,38 @@ const LiveSourceConfig = ({
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
               />
             </div>
+
+            {/* 有效性检测结果显示 */}
+            {singleValidationResult.status && (
+              <div className='col-span-full mt-4 p-3 rounded-lg border'>
+                <div className='space-y-2'>
+                  <div className='flex items-center space-x-2'>
+                    <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                      检测结果:
+                    </span>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        singleValidationResult.status === 'valid'
+                          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                          : singleValidationResult.status === 'validating'
+                          ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                          : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                      }`}
+                    >
+                      {singleValidationResult.status === 'valid' && '✓ '}
+                      {singleValidationResult.status === 'validating' && '⏳ '}
+                      {singleValidationResult.status === 'invalid' && '✗ '}
+                      {singleValidationResult.message}
+                    </span>
+                  </div>
+                  {singleValidationResult.channelCount !== undefined && (
+                    <div className='text-xs text-gray-600 dark:text-gray-400'>
+                      频道数: {singleValidationResult.channelCount}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <div className='flex justify-end space-x-2'>
             <button
@@ -6190,6 +7013,25 @@ const LiveSourceConfig = ({
               className={buttonStyles.secondary}
             >
               取消
+            </button>
+            <button
+              onClick={handleValidateSingleLiveSource}
+              disabled={
+                !editingLiveSource.url ||
+                isSingleValidating ||
+                isLoading('validateSingleLiveSource')
+              }
+              className={`${
+                !editingLiveSource.url ||
+                isSingleValidating ||
+                isLoading('validateSingleLiveSource')
+                  ? buttonStyles.disabled
+                  : buttonStyles.primary
+              }`}
+            >
+              {isSingleValidating || isLoading('validateSingleLiveSource')
+                ? '检测中...'
+                : '有效性检测'}
             </button>
             <button
               onClick={handleEditLiveSource}
@@ -6222,31 +7064,39 @@ const LiveSourceConfig = ({
       >
         <div className='border border-gray-200 dark:border-gray-700 rounded-lg max-h-[28rem] overflow-y-auto overflow-x-auto md:overflow-x-hidden relative'>
           {/* 表头 */}
-          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-[1200px] md:min-w-0'>
+          <div className='sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 min-w-[800px] md:min-w-0'>
             <div className='flex items-center px-2 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
               <div className='w-6 flex-shrink-0 flex justify-center'></div>
-              <div className='w-24 flex-shrink-0 px-2 whitespace-nowrap'>
+              <div className='w-10 flex-shrink-0 flex justify-center'>
+                <input
+                  type='checkbox'
+                  checked={
+                    filteredLiveSources.length > 0 &&
+                    selectedLiveSources.size === filteredLiveSources.length
+                  }
+                  onChange={handleSelectAll}
+                  className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer'
+                />
+              </div>
+              <div className='w-28 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 名称
               </div>
-              <div className='w-20 flex-shrink-0 px-2 whitespace-nowrap'>
+              <div className='w-32 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 KEY
               </div>
-              <div className='flex-1 min-w-0 px-2 whitespace-nowrap'>
+              <div className='flex-1 min-w-[180px] px-2 whitespace-nowrap text-left'>
                 M3U地址
               </div>
-              <div className='w-32 flex-shrink-0 px-2 whitespace-nowrap'>
-                节目单地址
-              </div>
-              <div className='w-28 flex-shrink-0 px-2 whitespace-nowrap'>
-                自定义UA
-              </div>
-              <div className='w-20 flex-shrink-0 px-2 text-center whitespace-nowrap'>
+              <div className='w-16 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 频道数
               </div>
-              <div className='w-20 flex-shrink-0 px-2 whitespace-nowrap'>
+              <div className='w-20 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 状态
               </div>
-              <div className='w-64 flex-shrink-0 px-2 text-right whitespace-nowrap'>
+              <div className='w-28 flex-shrink-0 px-2 whitespace-nowrap text-left'>
+                有效性
+              </div>
+              <div className='w-56 flex-shrink-0 px-2 whitespace-nowrap text-left'>
                 操作
               </div>
             </div>
@@ -6257,7 +7107,7 @@ const LiveSourceConfig = ({
             items={filteredLiveSources.map((s) => s.key)}
             strategy={verticalListSortingStrategy}
           >
-            <div className='divide-y divide-gray-200 dark:divide-gray-700 min-w-[1200px] md:min-w-0'>
+            <div className='divide-y divide-gray-200 dark:divide-gray-700 min-w-[800px] md:min-w-0'>
               {filteredLiveSources.length > 0 ? (
                 filteredLiveSources.map((liveSource) => (
                   <DraggableRow key={liveSource.key} liveSource={liveSource} />
@@ -6317,7 +7167,6 @@ function AdminPageClient() {
     liveSource: false,
     siteConfig: false,
     categoryConfig: false,
-    configFile: false,
     dataMigration: false,
     themeManager: false,
   });
@@ -6359,6 +7208,12 @@ function AdminPageClient() {
       }
 
       const data = (await response.json()) as AdminConfigResult;
+      console.log('[fetchConfig] 配置获取成功:', {
+        hasConfig: !!data.Config,
+        hasLiveConfig: !!data.Config?.LiveConfig,
+        liveConfigLength: data.Config?.LiveConfig?.length || 0,
+        role: data.Role,
+      });
       setConfig(data.Config);
       setRole(data.Role);
     } catch (err) {
@@ -6423,7 +7278,7 @@ function AdminPageClient() {
               管理员设置
             </h1>
             <div className='space-y-4'>
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: 7 }).map((_, index) => (
                 <div
                   key={index}
                   className='h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'
@@ -6459,26 +7314,6 @@ function AdminPageClient() {
               </button>
             )}
           </div>
-
-          {/* 配置文件标签 - 仅站长可见 */}
-          {role === 'owner' && (
-            <CollapsibleTab
-              title='配置文件'
-              icon={
-                <FileText
-                  size={20}
-                  className='text-gray-600 dark:text-gray-400'
-                />
-              }
-              isExpanded={expandedTabs.configFile}
-              onToggle={() => toggleTab('configFile')}
-            >
-              <ConfigFileComponent
-                config={config}
-                refreshConfig={fetchConfig}
-              />
-            </CollapsibleTab>
-          )}
 
           {/* 站点配置标签 */}
           <CollapsibleTab
