@@ -46,19 +46,25 @@ function createRetryWrapper(
   ): Promise<T> {
     for (let i = 0; i < maxRetries; i++) {
       try {
-        return await operation();
+        // 添加5秒超时控制
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('操作超时')), 5000);
+        });
+
+        return await Promise.race([operation(), timeoutPromise]);
       } catch (err: any) {
         const isLastAttempt = i === maxRetries - 1;
         const isConnectionError =
           err.message?.includes('Connection') ||
           err.message?.includes('ECONNREFUSED') ||
           err.message?.includes('ENOTFOUND') ||
+          err.message?.includes('超时') ||
           err.code === 'ECONNRESET' ||
           err.code === 'EPIPE';
 
         if (isConnectionError && !isLastAttempt) {
-          // 使用更短的重试间隔：100ms, 200ms, 300ms
-          const retryDelay = 100 * (i + 1);
+          // 使用更短的重试间隔：50ms, 100ms, 150ms
+          const retryDelay = 50 * (i + 1);
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
 
           // 尝试重新连接

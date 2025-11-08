@@ -446,13 +446,12 @@ export async function getConfig(): Promise<AdminConfig> {
   // 读 db
   let adminConfig: AdminConfig | null = null;
   let needsSave = false;
-
   let isTimeout = false;
 
   try {
-    // 添加15秒超时控制（给数据库操作足够的时间）
+    // 添加10秒超时控制（缩短超时时间，提高响应速度）
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('数据库操作超时')), 15000);
+      setTimeout(() => reject(new Error('数据库操作超时')), 10000);
     });
 
     adminConfig = await Promise.race([db.getAdminConfig(), timeoutPromise]);
@@ -460,6 +459,9 @@ export async function getConfig(): Promise<AdminConfig> {
     // 判断是否为超时错误
     if (e instanceof Error && e.message.includes('超时')) {
       isTimeout = true;
+      console.warn('[Config] 数据库连接超时，使用降级配置');
+    } else {
+      console.error('[Config] 获取配置失败:', e);
     }
   }
 
@@ -479,13 +481,40 @@ export async function getConfig(): Promise<AdminConfig> {
     adminConfig = await getInitConfig(configFileContent);
     needsSave = true;
   } else if (isTimeout) {
-    // 超时情况：抛出错误，不返回空配置，避免数据丢失风险
-    throw new Error('数据库连接超时，请稍后重试');
+    // 超时情况：使用降级配置，避免页面崩溃
+    console.warn('[Config] 使用降级配置（基于环境变量和config.json）');
+
+    let configFileContent = '';
+    try {
+      const configPath = path.join(process.cwd(), 'config.json');
+      if (fs.existsSync(configPath)) {
+        configFileContent = fs.readFileSync(configPath, 'utf-8');
+      }
+    } catch (e) {
+      // 静默处理读取错误
+    }
+
+    adminConfig = await getInitConfig(configFileContent);
+
+    // 后台异步重试获取配置（不阻塞当前请求）
+    setTimeout(async () => {
+      try {
+        const retryConfig = await db.getAdminConfig();
+        if (retryConfig) {
+          cachedConfig = configSelfCheck(retryConfig);
+          console.log('[Config] 后台重试成功，已更新缓存配置');
+        }
+      } catch (retryError) {
+        console.error('[Config] 后台重试失败:', retryError);
+      }
+    }, 1000);
   }
 
   // 确保 adminConfig 不为 null
   if (!adminConfig) {
-    throw new Error('无法获取配置');
+    console.error('[Config] 无法获取配置，使用默认配置');
+    // 使用最小默认配置
+    adminConfig = await getInitConfig('');
   }
 
   // 执行配置自检
@@ -496,7 +525,10 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // 只在初始化时保存到数据库，避免覆盖已有数据
   if (needsSave) {
-    await db.saveAdminConfig(cachedConfig);
+    // 异步保存，不阻塞返回
+    db.saveAdminConfig(cachedConfig).catch((err) => {
+      console.error('[Config] 保存配置失败:', err);
+    });
   }
 
   return cachedConfig;
@@ -739,6 +771,19 @@ export async function saveAdminConfig(config: AdminConfig): Promise<void> {
   }
   if (!config.CustomCategories) {
     config.CustomCategories = [];
+  }
+
+  // 去重LiveConfig（防止重复）
+  if (config.LiveConfig.length > 0) {
+    const seen = new Set<string>();
+    config.LiveConfig = config.LiveConfig.filter((source) => {
+      if (seen.has(source.key)) {
+        console.warn(`[Config] 检测到重复的直播源key: ${source.key}，已移除`);
+        return false;
+      }
+      seen.add(source.key);
+      return true;
+    });
   }
 
   // 更新缓存

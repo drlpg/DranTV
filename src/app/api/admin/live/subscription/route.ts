@@ -53,81 +53,8 @@ export async function POST(request: NextRequest) {
       LastCheck: new Date().toISOString(),
     };
 
-    // 订阅URL本身就是M3U文件地址，不需要解析
-    // 直接将订阅URL作为一个直播源添加
-    console.log(`添加订阅URL作为直播源: ${url}`);
-
-    // 删除旧的订阅导入的直播源
-    if (adminConfig.LiveConfig) {
-      adminConfig.LiveConfig = adminConfig.LiveConfig.filter(
-        (source) => source.from !== 'subscription'
-      );
-    } else {
-      adminConfig.LiveConfig = [];
-    }
-
-    // 从URL提取名称
-    const urlParts = url.split('/');
-    const fileName = decodeURIComponent(urlParts[urlParts.length - 1]);
-    const sourceName = fileName.replace('.m3u', '');
-
-    // 生成友好的key
-    const sourceKey = sourceName
-      .toLowerCase()
-      .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '');
-
-    // 添加订阅URL作为直播源
-    const newSource = {
-      key: sourceKey || 'subscription',
-      name: sourceName || '订阅直播源',
-      url: url,
-      from: 'subscription' as const,
-      channelNumber: 0,
-      disabled: false,
-    };
-
-    adminConfig.LiveConfig.push(newSource);
-
-    console.log(`成功添加订阅直播源: ${sourceName} (${sourceKey})`);
-
-    // 检查是否有保存的频道数据
-    const savedChannelsKey = `live_channels_${sourceKey}`;
-    const savedChannels = await db.get(savedChannelsKey);
-
-    if (savedChannels) {
-      // 如果有保存的频道数据，使用保存的频道数
-      try {
-        const parsedChannels = JSON.parse(savedChannels);
-        const enabledCount = parsedChannels.filter(
-          (ch: any) => !ch.disabled
-        ).length;
-        newSource.channelNumber = enabledCount;
-        console.log(
-          `使用保存的频道数: ${enabledCount} (总数: ${parsedChannels.length})`
-        );
-      } catch (error) {
-        console.error('解析保存的频道数据失败，将重新获取:', error);
-        // 解析失败，重新获取
-        try {
-          const channelCount = await refreshLiveChannels(newSource);
-          newSource.channelNumber = channelCount;
-          console.log(`已获取频道数: ${channelCount}`);
-        } catch (refreshError) {
-          console.warn('获取频道数失败，将在首次访问时加载:', refreshError);
-        }
-      }
-    } else {
-      // 没有保存的数据，立即获取频道数
-      try {
-        const channelCount = await refreshLiveChannels(newSource);
-        newSource.channelNumber = channelCount;
-        console.log(`已获取频道数: ${channelCount}`);
-      } catch (refreshError) {
-        console.warn('获取频道数失败，将在首次访问时加载:', refreshError);
-      }
-    }
+    // 订阅配置只更新订阅信息，不修改LiveConfig
+    // LiveConfig的管理由导入API和直播源管理API负责
 
     // 保存配置
     await db.saveAdminConfig(adminConfig);
@@ -137,10 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `订阅配置保存成功，已导入 ${
-        adminConfig.LiveConfig?.filter((s) => s.from === 'subscription')
-          .length || 0
-      } 个直播源`,
+      message: '订阅配置保存成功',
     });
   } catch (error) {
     console.error('保存直播源订阅配置失败:', error);

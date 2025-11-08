@@ -47,19 +47,22 @@ function LoginPageClient() {
   // 禁用移动端滚动和橡皮筋效果
   usePreventScroll(true);
 
-  // 在客户端挂载后设置配置并生成机器码
+  // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const runtimeConfig = (window as any).RUNTIME_CONFIG;
-      const storageType = runtimeConfig?.STORAGE_TYPE;
-      const requireDeviceCode = runtimeConfig?.REQUIRE_DEVICE_CODE;
+    const fetchConfigAndGenerateMachineInfo = async () => {
+      try {
+        // 从API获取服务器配置
+        const response = await fetch('/api/server-config');
+        const serverConfig = await response.json();
 
-      setShouldAskUsername(storageType && storageType !== 'localstorage');
-      setDeviceCodeEnabled(requireDeviceCode !== false); // 默认启用，除非明确设置为 false
+        const storageType = serverConfig?.StorageType;
+        const requireDeviceCode = serverConfig?.RequireDeviceCode;
 
-      // 只有在启用设备码功能时才生成机器码和设备信息
-      const generateMachineInfo = async () => {
-        if (requireDeviceCode !== false && MachineCode.isSupported()) {
+        setShouldAskUsername(storageType && storageType !== 'localstorage');
+        setDeviceCodeEnabled(requireDeviceCode === true); // 只有明确设置为 true 才启用
+
+        // 只有在启用设备码功能时才生成机器码和设备信息
+        if (requireDeviceCode === true && MachineCode.isSupported()) {
           try {
             const code = await MachineCode.generateMachineCode();
             const info = await MachineCode.getDeviceInfo();
@@ -70,10 +73,17 @@ function LoginPageClient() {
             console.error('生成机器码失败:', error);
           }
         }
-      };
+      } catch (error) {
+        console.error('获取服务器配置失败:', error);
+        // 降级处理：使用环境变量
+        const storageType =
+          process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+        setShouldAskUsername(storageType !== 'localstorage');
+        setDeviceCodeEnabled(false); // 默认禁用
+      }
+    };
 
-      generateMachineInfo();
-    }
+    fetchConfigAndGenerateMachineInfo();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -284,16 +294,7 @@ function LoginPageClient() {
           {/* 登录按钮 */}
           <button
             type='submit'
-            disabled={
-              !password ||
-              loading ||
-              (shouldAskUsername && !username) ||
-              (deviceCodeEnabled &&
-                machineCodeGenerated &&
-                shouldAskUsername &&
-                !requireMachineCode &&
-                !bindMachineCode)
-            }
+            disabled={!password || loading || (shouldAskUsername && !username)}
             className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
           >
             {loading ? '登录中...' : '登录'}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminConfig, saveAdminConfig } from '@/lib/config';
 import { checkAuth } from '@/lib/auth';
+import { refreshLiveChannels } from '@/lib/live';
 
 // 解析M3U格式的直播源列表
 function parseM3U(
@@ -192,6 +193,7 @@ export async function POST(request: NextRequest) {
       epg?: string;
       disabled?: boolean;
       from: 'config' | 'custom' | 'subscription';
+      channelNumber?: number;
     }> = [];
 
     // 尝试解析为JSON
@@ -242,14 +244,43 @@ export async function POST(request: NextRequest) {
         configContent.trim().startsWith('#EXTM3U') ||
         configContent.includes('#EXTINF')
       ) {
-        // M3U格式
+        // M3U格式 - 整个M3U文件作为一个直播源
         format = 'm3u';
-        const parsedSources = parseM3U(configContent);
-        sources = parsedSources.map((item) => ({
-          ...item,
-          disabled: false,
-          from: 'subscription' as const,
-        }));
+
+        // 从URL中提取名称
+        const urlParts = url.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0];
+        const sourceName =
+          fileName.replace(/\.(m3u|m3u8)$/i, '') || '导入的直播源';
+
+        // 生成唯一key
+        const timestamp = Date.now();
+        const sourceKey =
+          sourceName
+            .toLowerCase()
+            .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+            .substring(0, 20) + `_${timestamp}`;
+
+        // 提取EPG URL（如果有）
+        let epgUrl = '';
+        const epgMatch = configContent.match(
+          /#EXTM3U[^\n]*(?:x-tvg-url|url-tvg)="([^"]+)"/
+        );
+        if (epgMatch) {
+          epgUrl = epgMatch[1];
+        }
+
+        sources = [
+          {
+            name: sourceName,
+            key: sourceKey,
+            url: url, // 使用原始URL，不是解析后的内容
+            epg: epgUrl || undefined,
+            disabled: false,
+            from: 'subscription' as const,
+            channelNumber: 0, // 初始为0，将在首次访问或后台任务中更新
+          },
+        ];
       } else {
         // TXT格式
         format = 'txt';
@@ -299,6 +330,33 @@ export async function POST(request: NextRequest) {
     await saveAdminConfig(adminConfig);
 
     console.log(`成功导入 ${newSources.length} 个直播源，格式: ${format}`);
+
+    // 异步后台更新频道数（不阻塞响应）
+    if (format === 'm3u') {
+      Promise.all(
+        newSources.map(async (source) => {
+          try {
+            const channelCount = await refreshLiveChannels(source);
+            // 重新获取配置并更新
+            const latestConfig = await getAdminConfig();
+            const liveSource = latestConfig.LiveConfig?.find(
+              (s) => s.key === source.key
+            );
+            if (liveSource) {
+              liveSource.channelNumber = channelCount;
+              await saveAdminConfig(latestConfig);
+              console.log(
+                `后台更新频道数成功: ${source.name} (${channelCount})`
+              );
+            }
+          } catch (error) {
+            console.warn(`后台更新频道数失败: ${source.name}`, error);
+          }
+        })
+      ).catch(() => {
+        // 静默处理错误
+      });
+    }
 
     return NextResponse.json({
       success: true,

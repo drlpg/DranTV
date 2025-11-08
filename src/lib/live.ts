@@ -14,6 +14,7 @@ export interface LiveChannels {
     logo: string;
     group: string;
     url: string;
+    resolution?: string;
   }[];
   epgUrl: string;
   epgs: {
@@ -357,6 +358,7 @@ function parseM3U(
     logo: string;
     group: string;
     url: string;
+    resolution?: string;
   }[];
 } {
   const channels: {
@@ -366,7 +368,17 @@ function parseM3U(
     logo: string;
     group: string;
     url: string;
+    resolution?: string;
   }[] = [];
+
+  // 提取分辨率的辅助函数
+  const extractResolution = (text: string): string | undefined => {
+    const resolutionMatch = text.match(/(\d{3,4}[pP]|4K|8K|HD|FHD|UHD)/i);
+    if (resolutionMatch) {
+      return resolutionMatch[1].toUpperCase();
+    }
+    return undefined;
+  };
 
   const lines = m3uContent
     .split('\n')
@@ -417,6 +429,9 @@ function parseM3U(
 
         // 只有当有名称和URL时才添加到结果中
         if (name && url) {
+          // 尝试从名称或URL中提取分辨率
+          const resolution = extractResolution(name) || extractResolution(url);
+
           channels.push({
             id: `${sourceKey}-${channelIndex}`,
             tvgId,
@@ -424,6 +439,7 @@ function parseM3U(
             logo,
             group,
             url,
+            resolution,
           });
           channelIndex++;
         }

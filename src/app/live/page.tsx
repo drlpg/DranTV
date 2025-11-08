@@ -35,6 +35,7 @@ interface LiveChannel {
   logo: string;
   group: string;
   url: string;
+  resolution?: string;
 }
 
 // 直播源接口
@@ -262,18 +263,38 @@ function LivePageClient() {
       setLoadingStage('fetching');
       setLoadingMessage('正在获取直播源...');
 
-      // 获取 AdminConfig 中的直播源信息
-      const response = await fetch('/api/live/sources');
+      // 获取 AdminConfig 中的直播源信息，添加超时控制
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      const response = await fetch('/api/live/sources', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
+        console.warn('获取直播源响应异常:', response.status);
+        // 即使响应不OK，也尝试解析数据（后端可能返回了降级数据）
+        try {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            setLiveSources(result.data);
+            if (result.data.length === 0) {
+              setLoadingMessage('暂无可用的直播源');
+            }
+            setLoading(false);
+            return;
+          }
+        } catch (parseError) {
+          // 解析失败，继续抛出错误
+        }
         throw new Error('获取直播源失败');
       }
 
       const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || '获取直播源失败');
-      }
 
-      const sources = result.data;
+      // 即使success为false，也检查是否有data
+      const sources = result.data || [];
       setLiveSources(sources);
 
       if (sources.length > 0) {
@@ -294,6 +315,8 @@ function LivePageClient() {
           setCurrentSource(firstSource);
           await fetchChannels(firstSource);
         }
+      } else {
+        setLoadingMessage('暂无可用的直播源');
       }
 
       setLoadingStage('ready');
@@ -306,6 +329,7 @@ function LivePageClient() {
       console.error('获取直播源失败:', err);
       // 不设置错误，而是显示空状态
       setLiveSources([]);
+      setLoadingMessage('获取直播源失败，请稍后重试');
       setLoading(false);
     } finally {
       // 移除 URL 搜索参数中的 source 和 id
@@ -363,6 +387,7 @@ function LivePageClient() {
         logo: channel.logo,
         group: channel.group || '其他',
         url: channel.url,
+        resolution: channel.resolution,
       }));
 
       setCurrentChannels(channels);
@@ -557,10 +582,10 @@ function LivePageClient() {
         containerRect.height / 2 +
         elementRect.height / 2;
 
-      // 平滑滚动到目标位置
+      // 立即滚动到目标位置（移除动画）
       container.scrollTo({
         top: Math.max(0, scrollTop),
-        behavior: 'smooth',
+        behavior: 'auto',
       });
     }
   };
@@ -1299,7 +1324,7 @@ function LivePageClient() {
           </div>
 
           <div
-            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] transition-all duration-300 ease-in-out ${
+            className={`grid gap-4 lg:h-[500px] xl:h-[650px] 2xl:h-[750px] ${
               isChannelListCollapsed
                 ? 'grid-cols-1'
                 : 'grid-cols-1 md:grid-cols-4'
@@ -1307,7 +1332,7 @@ function LivePageClient() {
           >
             {/* 播放器 */}
             <div
-              className={`h-full transition-all duration-300 ease-in-out ${
+              className={`h-full ${
                 isChannelListCollapsed ? 'col-span-1' : 'md:col-span-3'
               }`}
             >
@@ -1374,10 +1399,10 @@ function LivePageClient() {
 
             {/* 频道列表 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`h-[300px] lg:h-full md:overflow-hidden ${
                 isChannelListCollapsed
-                  ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
-                  : 'md:col-span-1 lg:opacity-100 lg:scale-100'
+                  ? 'md:col-span-1 lg:hidden'
+                  : 'md:col-span-1'
               }`}
             >
               <div className='md:ml-2 pr-0 h-full rounded-xl bg-black/5 dark:bg-white/3 flex flex-col border border-gray-300 dark:border-white/30 overflow-x-hidden overflow-y-hidden'>
@@ -1522,20 +1547,24 @@ function LivePageClient() {
                                 data-channel-id={channel.id}
                                 onClick={() => handleChannelChange(channel)}
                                 disabled={isSwitchingSource}
-                                className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                                style={{
+                                  transition:
+                                    'background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease',
+                                }}
+                                className={`w-full p-3 rounded-lg text-left border ${
                                   isSwitchingSource
-                                    ? 'opacity-50 cursor-not-allowed'
+                                    ? 'opacity-50 cursor-not-allowed border-gray-300 dark:border-white/20'
                                     : isActive
-                                    ? 'bg-blue-500 text-white dark:bg-blue-600'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300/60 border border-gray-300 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/17 dark:border-white/20'
+                                    ? 'bg-blue-500 text-white dark:bg-blue-600 border-blue-500 dark:border-blue-600'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300/60 border-gray-300 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/25 dark:border-white/20'
                                 }`}
                               >
-                                <div className='flex items-center gap-3'>
+                                <div className='flex items-start gap-3'>
                                   <div
                                     className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border ${
                                       isActive
                                         ? 'bg-white/20 border-white/30'
-                                        : 'bg-gray-300/80 dark:bg-gray-600/80 border-gray-300 dark:border-gray-600'
+                                        : 'bg-gray-400 dark:bg-gray-700 border-gray-400 dark:border-gray-700'
                                     }`}
                                   >
                                     {channel.logo ? (
@@ -1546,6 +1575,42 @@ function LivePageClient() {
                                         alt={channel.name}
                                         className='w-full h-full rounded object-contain'
                                         loading='lazy'
+                                        onError={(e) => {
+                                          const target =
+                                            e.target as HTMLImageElement;
+                                          target.style.display = 'none';
+                                          const parent = target.parentElement;
+                                          if (
+                                            parent &&
+                                            !parent.querySelector('svg')
+                                          ) {
+                                            const icon =
+                                              document.createElementNS(
+                                                'http://www.w3.org/2000/svg',
+                                                'svg'
+                                              );
+                                            icon.setAttribute(
+                                              'class',
+                                              `w-5 h-5 ${
+                                                isActive
+                                                  ? 'text-white'
+                                                  : 'text-gray-500'
+                                              }`
+                                            );
+                                            icon.setAttribute('fill', 'none');
+                                            icon.setAttribute(
+                                              'viewBox',
+                                              '0 0 24 24'
+                                            );
+                                            icon.setAttribute(
+                                              'stroke',
+                                              'currentColor'
+                                            );
+                                            icon.innerHTML =
+                                              '<rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>';
+                                            parent.appendChild(icon);
+                                          }
+                                        }}
                                       />
                                     ) : (
                                       <Tv
@@ -1557,27 +1622,40 @@ function LivePageClient() {
                                       />
                                     )}
                                   </div>
-                                  <div className='flex-1 min-w-0'>
-                                    <div
-                                      className={`text-sm font-medium truncate ${
-                                        isActive
-                                          ? 'text-white'
-                                          : 'text-gray-900 dark:text-gray-100'
-                                      }`}
-                                      title={channel.name}
-                                    >
-                                      {channel.name}
+                                  <div className='flex-1 min-w-0 flex items-end justify-between'>
+                                    <div className='flex-1 min-w-0'>
+                                      <div
+                                        className={`text-sm font-medium truncate ${
+                                          isActive
+                                            ? 'text-white'
+                                            : 'text-gray-900 dark:text-gray-100'
+                                        }`}
+                                        title={channel.name}
+                                      >
+                                        {channel.name}
+                                      </div>
+                                      <div
+                                        className={`text-xs mt-1 ${
+                                          isActive
+                                            ? 'text-white/80'
+                                            : 'text-gray-500 dark:text-gray-400'
+                                        }`}
+                                        title={channel.group}
+                                      >
+                                        {channel.group}
+                                      </div>
                                     </div>
-                                    <div
-                                      className={`text-xs mt-1 ${
-                                        isActive
-                                          ? 'text-white/80'
-                                          : 'text-gray-500 dark:text-gray-400'
-                                      }`}
-                                      title={channel.group}
-                                    >
-                                      {channel.group}
-                                    </div>
+                                    {channel.resolution && (
+                                      <div
+                                        className={`text-xs flex-shrink-0 ml-2 px-1.5 py-0.5 rounded ${
+                                          isActive
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                                        }`}
+                                      >
+                                        {channel.resolution}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </button>
@@ -1617,7 +1695,7 @@ function LivePageClient() {
                               onClick={() =>
                                 !isCurrentSource && handleSourceChange(source)
                               }
-                              className={`flex items-start gap-3 px-3 py-3 rounded-lg transition-colors select-none duration-200 relative
+                              className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors select-none duration-200 relative
                                 ${
                                   isCurrentSource
                                     ? 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 border'
@@ -1630,15 +1708,17 @@ function LivePageClient() {
                               </div>
 
                               {/* 信息 */}
-                              <div className='flex-1 min-w-0'>
-                                <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
-                                  {source.name}
-                                </div>
-                                <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                                  {!source.channelNumber ||
-                                  source.channelNumber === 0
-                                    ? '-'
-                                    : `${source.channelNumber} 个频道`}
+                              <div className='flex-1 min-w-0 flex items-end justify-between'>
+                                <div className='flex-1 min-w-0'>
+                                  <div className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
+                                    {source.name}
+                                  </div>
+                                  <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                                    {!source.channelNumber ||
+                                    source.channelNumber === 0
+                                      ? '-'
+                                      : `${source.channelNumber} 个频道`}
+                                  </div>
                                 </div>
                               </div>
 
@@ -1688,6 +1768,28 @@ function LivePageClient() {
                         alt={currentChannel.name}
                         className='w-full h-full rounded object-contain'
                         loading='lazy'
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('svg')) {
+                            const icon = document.createElementNS(
+                              'http://www.w3.org/2000/svg',
+                              'svg'
+                            );
+                            icon.setAttribute(
+                              'class',
+                              'w-10 h-10 text-gray-500'
+                            );
+                            icon.setAttribute('fill', 'none');
+                            icon.setAttribute('viewBox', '0 0 24 24');
+                            icon.setAttribute('stroke', 'currentColor');
+                            icon.setAttribute('stroke-width', '2');
+                            icon.innerHTML =
+                              '<rect width="20" height="15" x="2" y="7" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>';
+                            parent.appendChild(icon);
+                          }
+                        }}
                       />
                     ) : (
                       <Tv className='w-10 h-10 text-gray-500' />

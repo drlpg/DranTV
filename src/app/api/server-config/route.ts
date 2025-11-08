@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
     SiteName: config.SiteConfig.SiteName,
     StorageType: process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
     Version: CURRENT_VERSION,
+    RequireDeviceCode: config.SiteConfig.RequireDeviceCode ?? false,
+    FluidSearch: config.SiteConfig.FluidSearch ?? true,
+    DisableYellowFilter: config.SiteConfig.DisableYellowFilter ?? false,
   };
   return NextResponse.json(result);
 }

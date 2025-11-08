@@ -19,10 +19,17 @@ export async function GET(request: NextRequest) {
     // 添加超时控制
     const configPromise = getConfig();
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('获取配置超时')), 5000);
+      setTimeout(() => reject(new Error('获取配置超时')), 3000);
     });
 
-    const config = await Promise.race([configPromise, timeoutPromise]);
+    let config;
+    try {
+      config = await Promise.race([configPromise, timeoutPromise]);
+    } catch (configError) {
+      // 配置获取超时，尝试直接获取（有降级策略）
+      console.warn('[Precheck] 配置获取超时，尝试直接获取');
+      config = await getConfig();
+    }
 
     const liveSource = config.LiveConfig?.find((s: any) => s.key === source);
     if (!liveSource) {

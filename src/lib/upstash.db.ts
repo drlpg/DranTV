@@ -33,9 +33,9 @@ async function withRetry<T>(
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      // 为每个操作添加8秒超时
+      // 为每个操作添加5秒超时（缩短超时时间）
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('操作超时')), 8000);
+        setTimeout(() => reject(new Error('操作超时')), 5000);
       });
 
       return await Promise.race([operation(), timeoutPromise]);
@@ -51,8 +51,8 @@ async function withRetry<T>(
         err.name === 'UpstashError';
 
       if (isConnectionError && !isLastAttempt) {
-        // 使用更短的重试间隔：100ms, 200ms
-        const retryDelay = 100 * (i + 1);
+        // 使用更短的重试间隔：50ms, 100ms
+        const retryDelay = 50 * (i + 1);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         continue;
       }

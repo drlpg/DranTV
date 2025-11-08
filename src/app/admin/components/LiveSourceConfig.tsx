@@ -443,12 +443,19 @@ const LiveSourceConfig = ({
   };
 
   // 关闭频道管理弹窗（不保存）
-  const handleCloseChannelModal = () => {
+  const handleCloseChannelModal = async () => {
     setShowChannelModal(false);
     setCurrentLiveSourceKey('');
     setChannels([]);
     setSelectedChannels(new Set());
     setChannelSearchKeyword('');
+
+    // 刷新配置以更新频道数
+    try {
+      await refreshConfig();
+    } catch (err) {
+      console.warn('刷新配置失败:', err);
+    }
   };
 
   // 保存所有配置修改
