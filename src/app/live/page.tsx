@@ -292,9 +292,14 @@ function LivePageClient() {
       }
 
       const result = await response.json();
+      console.log('[Live] API响应:', {
+        success: result.success,
+        sourceCount: result.data?.length || 0,
+      });
 
       // 即使success为false，也检查是否有data
       const sources = result.data || [];
+      console.log('[Live] 设置直播源:', sources.length, '个');
       setLiveSources(sources);
 
       if (sources.length > 0) {

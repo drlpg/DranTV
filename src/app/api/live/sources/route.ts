@@ -47,6 +47,16 @@ export async function GET(request: NextRequest) {
     );
 
     console.log(`[Live Sources API] 返回 ${liveSources.length} 个直播源`);
+    if (liveSources.length > 0) {
+      console.log(
+        '[Live Sources API] 直播源列表:',
+        liveSources.map((s) => ({
+          key: s.key,
+          name: s.name,
+          disabled: s.disabled,
+        }))
+      );
+    }
 
     return NextResponse.json(
       {
