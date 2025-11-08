@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.41",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化登录相关代码，移除调试日志和冗余代码",
+    "简化 server-config API 逻辑"
+    ],
+    fixed: [
+    "修复登录页面未使用的变量警告"
+    ]
+  },
+  {
     version: "1.0.40",
     date: "2025-11-08",
     added: [

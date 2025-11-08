@@ -24,9 +24,6 @@ function VersionDisplay() {
 }
 
 function LoginPageClient() {
-  // 组件渲染时立即输出日志
-  console.log('[Login] LoginPageClient 渲染 -', new Date().toISOString());
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
@@ -43,7 +40,7 @@ function LoginPageClient() {
   const [machineCodeGenerated, setMachineCodeGenerated] = useState(false);
   const [, setShowBindOption] = useState(false);
   const [bindMachineCode, setBindMachineCode] = useState(false);
-  const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true); // 站点是否启用设备码功能
+  const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true);
 
   const { siteName } = useSite();
 
@@ -52,38 +49,16 @@ function LoginPageClient() {
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
-    // 使用 alert 确保能看到执行
-    if (typeof window !== 'undefined') {
-      console.log('[Login] useEffect 执行 - 时间:', new Date().toISOString());
-      console.log('[Login] window 对象存在:', !!window);
-    }
-
     const fetchConfigAndGenerateMachineInfo = async () => {
       try {
-        console.log('[Login] 开始获取服务器配置...');
-        // 从API获取服务器配置
         const response = await fetch('/api/server-config');
-        console.log('[Login] API响应状态:', response.status);
         const serverConfig = await response.json();
-        console.log('[Login] 服务器配置原始数据:', serverConfig);
 
-        const storageType = serverConfig?.StorageType || 'localstorage';
         const requireDeviceCode = serverConfig?.RequireDeviceCode;
 
-        console.log('[Login] 服务器配置:', { storageType, requireDeviceCode });
-
         // 始终显示用户名输入框（所有模式统一）
-        const shouldShowUsername = true;
-        console.log(
-          '[Login] 是否显示用户名输入框:',
-          shouldShowUsername,
-          '(storageType:',
-          storageType,
-          ')'
-        );
-
-        setShouldAskUsername(shouldShowUsername);
-        setDeviceCodeEnabled(requireDeviceCode === true); // 只有明确设置为 true 才启用
+        setShouldAskUsername(true);
+        setDeviceCodeEnabled(requireDeviceCode === true);
 
         // 只有在启用设备码功能时才生成机器码和设备信息
         if (requireDeviceCode === true && MachineCode.isSupported()) {
@@ -98,19 +73,13 @@ function LoginPageClient() {
           }
         }
       } catch (error) {
-        console.error('[Login] 获取服务器配置失败:', error);
-        // 降级处理：使用环境变量
-        const storageType =
-          process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-        console.log('[Login] 降级处理，使用环境变量:', storageType);
-        const shouldShowUsername = storageType !== 'localstorage';
-        console.log('[Login] 降级模式 - 是否显示用户名:', shouldShowUsername);
-        setShouldAskUsername(shouldShowUsername);
-        setDeviceCodeEnabled(false); // 默认禁用
+        console.error('获取服务器配置失败:', error);
+        // 降级处理：始终显示用户名输入框
+        setShouldAskUsername(true);
+        setDeviceCodeEnabled(false);
       }
     };
 
-    console.log('[Login] 调用 fetchConfigAndGenerateMachineInfo');
     fetchConfigAndGenerateMachineInfo();
   }, []);
 
