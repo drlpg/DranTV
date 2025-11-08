@@ -49,11 +49,15 @@ function LoginPageClient() {
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
+    console.log('[Login] useEffect 执行');
     const fetchConfigAndGenerateMachineInfo = async () => {
       try {
+        console.log('[Login] 开始获取服务器配置...');
         // 从API获取服务器配置
         const response = await fetch('/api/server-config');
+        console.log('[Login] API响应状态:', response.status);
         const serverConfig = await response.json();
+        console.log('[Login] 服务器配置原始数据:', serverConfig);
 
         const storageType = serverConfig?.StorageType || 'localstorage';
         const requireDeviceCode = serverConfig?.RequireDeviceCode;
@@ -86,15 +90,19 @@ function LoginPageClient() {
           }
         }
       } catch (error) {
-        console.error('获取服务器配置失败:', error);
+        console.error('[Login] 获取服务器配置失败:', error);
         // 降级处理：使用环境变量
         const storageType =
           process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
-        setShouldAskUsername(storageType !== 'localstorage');
+        console.log('[Login] 降级处理，使用环境变量:', storageType);
+        const shouldShowUsername = storageType !== 'localstorage';
+        console.log('[Login] 降级模式 - 是否显示用户名:', shouldShowUsername);
+        setShouldAskUsername(shouldShowUsername);
         setDeviceCodeEnabled(false); // 默认禁用
       }
     };
 
+    console.log('[Login] 调用 fetchConfigAndGenerateMachineInfo');
     fetchConfigAndGenerateMachineInfo();
   }, []);
 
