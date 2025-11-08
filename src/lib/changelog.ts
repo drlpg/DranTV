@@ -11,6 +11,50 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.40",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "修改 localstorage 模式登录逻辑，统一显示用户名和密码输入框",
+    "localstorage 模式现在支持用户名验证（如果配置了 LOGIN_USERNAME）",
+    "统一所有存储模式的登录界面体验"
+    ],
+    fixed: [
+    "修复 localstorage 模式只显示密码输入框的问题"
+    ]
+  },
+  {
+    version: "1.0.39",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化 server-config API，同时支持 STORAGE_TYPE 和 NEXT_PUBLIC_STORAGE_TYPE",
+    "添加详细的环境变量日志输出"
+    ],
+    fixed: [
+    "修复服务器端 API 无法读取 NEXT_PUBLIC_STORAGE_TYPE 环境变量的问题",
+    "添加 STORAGE_TYPE 环境变量支持，优先使用运行时变量"
+    ]
+  },
+  {
+    version: "1.0.38",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "修复 Railway 部署时 NEXT_PUBLIC_STORAGE_TYPE 环境变量未生效问题",
+    "触发重新构建以应用环境变量配置"
+    ]
+  },
+  {
     version: "1.0.37",
     date: "2025-11-08",
     added: [
