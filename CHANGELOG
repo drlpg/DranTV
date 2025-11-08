@@ -1,3 +1,15 @@
+## [1.0.39] - 2025-11-08
+
+### Fixed
+
+- 修复服务器端 API 无法读取 NEXT_PUBLIC_STORAGE_TYPE 环境变量的问题
+- 添加 STORAGE_TYPE 环境变量支持，优先使用运行时变量
+
+### Changed
+
+- 优化 server-config API，同时支持 STORAGE_TYPE 和 NEXT_PUBLIC_STORAGE_TYPE
+- 添加详细的环境变量日志输出
+
 ## [1.0.38] - 2025-11-08
 
 ### Fixed
