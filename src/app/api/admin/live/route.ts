@@ -83,7 +83,16 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // 删除内存缓存
         deleteCachedLiveChannels(key);
+
+        // 删除数据库中保存的频道数据
+        try {
+          await db.delete(`live_channels_${key}`);
+          console.log(`[Admin Live API] 已删除频道数据: live_channels_${key}`);
+        } catch (error) {
+          console.error(`[Admin Live API] 删除频道数据失败:`, error);
+        }
 
         config.LiveConfig.splice(deleteIndex, 1);
 
@@ -223,13 +232,25 @@ export async function POST(request: NextRequest) {
         });
 
         // 批量删除
-        keysToDelete.forEach((key) => {
+        for (const key of keysToDelete) {
           const idx = config.LiveConfig?.findIndex((l) => l.key === key);
           if (idx !== undefined && idx !== -1) {
+            // 删除内存缓存
             deleteCachedLiveChannels(key);
+
+            // 删除数据库中保存的频道数据
+            try {
+              await db.delete(`live_channels_${key}`);
+              console.log(
+                `[Admin Live API] 已删除频道数据: live_channels_${key}`
+              );
+            } catch (error) {
+              console.error(`[Admin Live API] 删除频道数据失败:`, error);
+            }
+
             config.LiveConfig?.splice(idx, 1);
           }
-        });
+        }
 
         // 如果删除后没有直播源了，清除订阅配置
         if (config.LiveConfig && config.LiveConfig.length === 0) {

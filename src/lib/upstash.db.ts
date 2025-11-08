@@ -1033,7 +1033,9 @@ export class UpstashRedisStorage implements IStorage {
   }
 
   async set(key: string, value: string): Promise<void> {
-    await withRetry(() => this.client.set(key, value));
+    // 确保value是字符串类型，避免Upstash自动序列化
+    const stringValue = typeof value === 'string' ? value : String(value);
+    await withRetry(() => this.client.set(key, stringValue));
   }
 
   async delete(key: string): Promise<void> {
@@ -1065,9 +1067,13 @@ function getUpstashRedisClient(): Redis {
         retries: 2, // 减少重试次数
         backoff: (retryCount: number) => 200 * retryCount, // 线性退避：200ms, 400ms
       },
-      // 添加请求超时
-      automaticDeserialization: true,
+      // 禁用自动反序列化，保持字符串原样存储
+      automaticDeserialization: false,
     });
+
+    console.log(
+      '[Upstash] 创建新的客户端实例，automaticDeserialization: false'
+    );
 
     (global as any)[globalKey] = client;
   }

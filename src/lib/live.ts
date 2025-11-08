@@ -39,6 +39,7 @@ export function clearAllCachedLiveChannels() {
 export async function getCachedLiveChannels(
   key: string
 ): Promise<LiveChannels | null> {
+  // 如果没有缓存，先从M3U加载
   if (!cachedLiveChannels[key]) {
     let config;
     try {
@@ -64,6 +65,28 @@ export async function getCachedLiveChannels(
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '未知错误';
       throw new Error(`刷新直播源失败: ${errorMsg}`);
+    }
+  }
+
+  // 每次都检查数据库中是否有保存的修改版本（优先使用）
+  const dbKey = `live_channels_${key}`;
+  const savedChannels = await db.get(dbKey);
+
+  if (savedChannels) {
+    try {
+      const parsedChannels = JSON.parse(savedChannels);
+      // 使用保存的频道列表替换缓存中的频道列表
+      if (cachedLiveChannels[key]) {
+        cachedLiveChannels[key] = {
+          ...cachedLiveChannels[key],
+          channels: parsedChannels,
+          channelNumber: parsedChannels.filter((ch: any) => !ch.disabled)
+            .length,
+        };
+      }
+    } catch (error) {
+      // 如果解析失败，使用原始缓存
+      console.error('[Live] 解析保存的频道数据失败:', error);
     }
   }
 

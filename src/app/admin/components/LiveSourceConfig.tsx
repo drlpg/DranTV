@@ -140,13 +140,6 @@ const LiveSourceConfig = ({
 
   // 初始化
   useEffect(() => {
-    console.log('[LiveSourceConfig] config 更新:', {
-      hasConfig: !!config,
-      hasLiveConfig: !!config?.LiveConfig,
-      liveConfigLength: config?.LiveConfig?.length || 0,
-      liveConfig: config?.LiveConfig,
-    });
-
     if (config?.LiveConfig) {
       setLiveSources(config.LiveConfig);
       // 进入时重置 orderChanged
@@ -415,9 +408,15 @@ const LiveSourceConfig = ({
     setSelectedChannels(new Set());
 
     try {
-      const response = await fetch(
-        `/api/live/channels?source=${encodeURIComponent(liveSourceKey)}`
-      );
+      const url = `/api/live/channels?source=${encodeURIComponent(
+        liveSourceKey
+      )}`;
+      const response = await fetch(url, {
+        cache: 'no-store', // 禁用缓存
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       const data = await response.json();
 
       if (data.success && data.data && Array.isArray(data.data)) {
@@ -431,6 +430,7 @@ const LiveSourceConfig = ({
         });
       }
     } catch (error) {
+      console.error('[LiveSourceConfig] 获取频道失败:', error);
       showAlert({
         type: 'error',
         title: '获取频道失败',
@@ -442,26 +442,107 @@ const LiveSourceConfig = ({
     }
   };
 
-  // 关闭频道管理弹窗并更新频道数
+  // 关闭频道管理弹窗（不保存）
   const handleCloseChannelModal = () => {
-    // 计算当前启用的频道数
-    const enabledChannelCount = channels.filter((ch) => !ch.disabled).length;
-
-    // 更新本地直播源列表的频道数
-    setLiveSources((prev) =>
-      prev.map((source) =>
-        source.key === currentLiveSourceKey
-          ? { ...source, channelNumber: enabledChannelCount }
-          : source
-      )
-    );
-
-    // 关闭弹窗
     setShowChannelModal(false);
     setCurrentLiveSourceKey('');
     setChannels([]);
     setSelectedChannels(new Set());
     setChannelSearchKeyword('');
+  };
+
+  // 保存所有配置修改
+  const handleSaveAllConfig = async () => {
+    // 验证必要数据
+    if (!currentLiveSourceKey) {
+      showAlert({
+        type: 'error',
+        title: '保存失败',
+        message: '未找到直播源标识',
+        showConfirm: true,
+      });
+      return;
+    }
+
+    if (!channels || channels.length === 0) {
+      showAlert({
+        type: 'warning',
+        title: '提示',
+        message: '没有频道数据需要保存',
+        showConfirm: true,
+      });
+      return;
+    }
+
+    await withLoading('saveLiveSubscription', async () => {
+      try {
+        // 1. 保存频道修改到数据库
+        const channelResponse = await fetch('/api/live/channels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sourceKey: currentLiveSourceKey,
+            channels: channels,
+          }),
+        });
+
+        if (!channelResponse.ok) {
+          const data = await channelResponse.json().catch(() => ({}));
+          throw new Error(data.error || '保存频道失败');
+        }
+
+        // 2. 如果有订阅配置，保存订阅配置
+        if (subscriptionUrl) {
+          const subscriptionResponse = await fetch(
+            '/api/admin/live/subscription',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                url: subscriptionUrl,
+                autoUpdate: autoUpdate,
+                lastCheck: lastCheckTime || new Date().toISOString(),
+              }),
+            }
+          );
+
+          if (!subscriptionResponse.ok) {
+            const data = await subscriptionResponse.json().catch(() => ({}));
+            if (subscriptionResponse.status === 504) {
+              throw new Error('保存超时，操作可能已完成。请刷新页面查看状态。');
+            }
+            throw new Error(
+              data.error ||
+                `保存失败 (${subscriptionResponse.status}): ${
+                  subscriptionResponse.statusText || '未知错误'
+                }`
+            );
+          }
+        }
+
+        // 刷新配置（后端已经更新了频道数，刷新后会自动同步）
+        await refreshConfig();
+
+        showAlert({
+          type: 'success',
+          title: '保存成功',
+          message: '配置已保存',
+          timer: 1500,
+        });
+
+        // 关闭弹窗
+        handleCloseChannelModal();
+      } catch (error) {
+        console.error('[LiveSourceConfig] 保存配置失败:', error);
+        showAlert({
+          type: 'error',
+          title: '保存失败',
+          message: error instanceof Error ? error.message : '保存配置失败',
+          showConfirm: true,
+        });
+        throw error;
+      }
+    });
   };
 
   // 过滤频道列表
@@ -484,31 +565,11 @@ const LiveSourceConfig = ({
         ch.id === channelId ? { ...ch, disabled: !ch.disabled } : ch
       )
     );
-    // 显示操作成功提示
-    const channel = channels.find((ch) => ch.id === channelId);
-    if (channel) {
-      showAlert({
-        type: 'success',
-        title: '操作成功',
-        message: `频道"${channel.name}"已${channel.disabled ? '启用' : '禁用'}`,
-        timer: 1500,
-      });
-    }
   };
 
   // 删除频道
   const handleDeleteChannel = (channelId: string) => {
-    const channel = channels.find((ch) => ch.id === channelId);
     setChannels((prev) => prev.filter((ch) => ch.id !== channelId));
-    // 显示操作成功提示
-    if (channel) {
-      showAlert({
-        type: 'success',
-        title: '删除成功',
-        message: `频道"${channel.name}"已删除`,
-        timer: 1500,
-      });
-    }
   };
 
   // 批量操作频道
@@ -516,8 +577,6 @@ const LiveSourceConfig = ({
     action: 'enable' | 'disable' | 'delete'
   ) => {
     if (selectedChannels.size === 0) return;
-
-    const count = selectedChannels.size;
 
     if (action === 'delete') {
       setChannels((prev) => prev.filter((ch) => !selectedChannels.has(ch.id)));
@@ -531,19 +590,6 @@ const LiveSourceConfig = ({
       );
     }
     setSelectedChannels(new Set());
-
-    // 显示操作成功提示
-    showAlert({
-      type: 'success',
-      title: '批量操作成功',
-      message:
-        action === 'enable'
-          ? `已启用 ${count} 个频道`
-          : action === 'disable'
-          ? `已禁用 ${count} 个频道`
-          : `已删除 ${count} 个频道`,
-      timer: 1500,
-    });
   };
 
   // 全选/取消全选频道（基于过滤后的列表）
@@ -1091,79 +1137,6 @@ const LiveSourceConfig = ({
         </div>
       )}
 
-      {/* 订阅配置显示 */}
-      {subscriptionUrl && !showImportForm && (
-        <div className='p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-3'>
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
-            <div className='flex-1'>
-              <div className='flex flex-wrap items-center gap-2'>
-                <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-                  订阅配置
-                </h4>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
-                    autoUpdate
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-300'
-                  }`}
-                >
-                  {autoUpdate ? '自动更新已启用' : '自动更新已禁用'}
-                </span>
-              </div>
-              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1 break-all'>
-                {subscriptionUrl}
-              </p>
-              {lastCheckTime && (
-                <p className='text-xs text-gray-400 dark:text-gray-500 mt-1'>
-                  最后更新: {new Date(lastCheckTime).toLocaleString('zh-CN')}
-                </p>
-              )}
-            </div>
-            <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto'>
-              <button
-                type='button'
-                onClick={() => setAutoUpdate(!autoUpdate)}
-                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  autoUpdate ? buttonStyles.warning : buttonStyles.success
-                }`}
-              >
-                {autoUpdate ? '禁用自动更新' : '启用自动更新'}
-              </button>
-              <button
-                onClick={handleSaveSubscription}
-                disabled={isLoading('saveLiveSubscription')}
-                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  isLoading('saveLiveSubscription')
-                    ? buttonStyles.disabled
-                    : buttonStyles.primary
-                }`}
-              >
-                {isLoading('saveLiveSubscription') ? '保存中...' : '保存配置'}
-              </button>
-              <button
-                onClick={() => {
-                  if (
-                    confirm(
-                      '确定要清除订阅配置吗？\n\n这将删除所有通过订阅导入的直播源，但会保留手动添加的直播源。'
-                    )
-                  ) {
-                    handleClearSubscription();
-                  }
-                }}
-                disabled={isLoading('clearLiveSubscription')}
-                className={`px-3 py-2 sm:py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  isLoading('clearLiveSubscription')
-                    ? buttonStyles.disabled
-                    : buttonStyles.danger
-                }`}
-              >
-                {isLoading('clearLiveSubscription') ? '清除中...' : '清除配置'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 标题和搜索栏 */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
@@ -1626,13 +1599,13 @@ const LiveSourceConfig = ({
             onClick={handleCloseChannelModal}
           >
             <div
-              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col'
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden'
               onClick={(e) => e.stopPropagation()}
             >
               {/* 弹窗标题 */}
               <div className='flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700'>
                 <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0'>
-                  频道管理
+                  直播源管理
                 </h3>
                 <div className='flex items-center gap-3 flex-1 justify-end'>
                   <input
@@ -1782,32 +1755,94 @@ const LiveSourceConfig = ({
                 )}
               </div>
 
-              {/* 底部批量操作栏 */}
-              {selectedChannels.size > 0 && (
-                <div className='flex flex-wrap items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border-t border-gray-200 dark:border-gray-700'>
-                  <span className='text-sm text-gray-600 dark:text-gray-400'>
-                    已选择 {selectedChannels.size} 个频道
-                  </span>
-                  <button
-                    onClick={() => handleBatchChannelOperation('enable')}
-                    className={`px-3 py-1 text-sm ${buttonStyles.success}`}
-                  >
-                    批量启用
-                  </button>
-                  <button
-                    onClick={() => handleBatchChannelOperation('disable')}
-                    className={`px-3 py-1 text-sm ${buttonStyles.warning}`}
-                  >
-                    批量禁用
-                  </button>
-                  <button
-                    onClick={() => handleBatchChannelOperation('delete')}
-                    className={`px-3 py-1 text-sm ${buttonStyles.danger}`}
-                  >
-                    批量删除
-                  </button>
-                </div>
-              )}
+              {/* 底部操作栏 */}
+              <div className='border-t border-gray-200 dark:border-gray-700'>
+                {/* 批量操作栏 */}
+                {selectedChannels.size > 0 && (
+                  <div className='flex flex-wrap items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20'>
+                    <span className='text-sm text-gray-600 dark:text-gray-400'>
+                      已选择 {selectedChannels.size} 个频道
+                    </span>
+                    <button
+                      onClick={() => handleBatchChannelOperation('enable')}
+                      className={`px-3 py-1 text-sm ${buttonStyles.success}`}
+                    >
+                      批量启用
+                    </button>
+                    <button
+                      onClick={() => handleBatchChannelOperation('disable')}
+                      className={`px-3 py-1 text-sm ${buttonStyles.warning}`}
+                    >
+                      批量禁用
+                    </button>
+                    <button
+                      onClick={() => handleBatchChannelOperation('delete')}
+                      className={`px-3 py-1 text-sm ${buttonStyles.danger}`}
+                    >
+                      批量删除
+                    </button>
+                  </div>
+                )}
+
+                {/* 订阅配置区域 */}
+                {subscriptionUrl && (
+                  <div className='p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700'>
+                    <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+                      <div className='flex-1'>
+                        <div className='flex flex-wrap items-center gap-2'>
+                          <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                            订阅配置
+                          </h4>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                              autoUpdate
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-300'
+                            }`}
+                          >
+                            {autoUpdate ? '自动更新已启用' : '自动更新已禁用'}
+                          </span>
+                        </div>
+                        <p className='text-xs text-gray-500 dark:text-gray-400 mt-1 break-all'>
+                          {subscriptionUrl}
+                        </p>
+                        {lastCheckTime && (
+                          <p className='text-xs text-gray-400 dark:text-gray-500 mt-1'>
+                            最后更新:{' '}
+                            {new Date(lastCheckTime).toLocaleString('zh-CN')}
+                          </p>
+                        )}
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <button
+                          type='button'
+                          onClick={() => setAutoUpdate(!autoUpdate)}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                            autoUpdate
+                              ? buttonStyles.warning
+                              : buttonStyles.success
+                          }`}
+                        >
+                          {autoUpdate ? '禁用自动更新' : '启用自动更新'}
+                        </button>
+                        <button
+                          onClick={handleSaveAllConfig}
+                          disabled={isLoading('saveLiveSubscription')}
+                          className={`px-6 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+                            isLoading('saveLiveSubscription')
+                              ? buttonStyles.disabled
+                              : buttonStyles.primary
+                          }`}
+                        >
+                          {isLoading('saveLiveSubscription')
+                            ? '保存中...'
+                            : '保存配置'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>,
           document.body

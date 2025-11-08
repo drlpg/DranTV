@@ -35,6 +35,8 @@ const SiteConfigComponent = ({
   const [isDoubanDropdownOpen, setIsDoubanDropdownOpen] = useState(false);
   const [isDoubanImageProxyDropdownOpen, setIsDoubanImageProxyDropdownOpen] =
     useState(false);
+  const [originalSettings, setOriginalSettings] =
+    useState<SiteConfigType | null>(null);
 
   const doubanDataSourceOptions = [
     { value: 'direct', label: '直连（服务器直接请求豆瓣）' },
@@ -50,16 +52,33 @@ const SiteConfigComponent = ({
   useEffect(() => {
     if (config?.SiteConfig) {
       setSiteSettings(config.SiteConfig);
+      setOriginalSettings(config.SiteConfig);
     }
   }, [config]);
 
+  const hasChanges = () => {
+    if (!originalSettings) return false;
+    return JSON.stringify(siteSettings) !== JSON.stringify(originalSettings);
+  };
+
   const handleSave = async () => {
+    // 检查是否有改动
+    if (!hasChanges()) {
+      showAlert({
+        type: 'info',
+        title: '提示',
+        message: '没有任何改动，无需保存',
+        timer: 2000,
+      });
+      return;
+    }
+
     await withLoading('saveSiteConfig', async () => {
       try {
         const response = await fetch('/api/admin/site', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ siteConfig: siteSettings }),
+          body: JSON.stringify(siteSettings),
         });
 
         if (!response.ok) {
@@ -67,6 +86,7 @@ const SiteConfigComponent = ({
         }
 
         showSuccess('站点配置已保存', showAlert);
+        setOriginalSettings(siteSettings);
         await refreshConfig();
       } catch (error) {
         showError(
@@ -194,7 +214,7 @@ const SiteConfigComponent = ({
                   </div>
                 )}
               </div>
-              <div className='mt-1 flex items-center justify-between'>
+              <div className='mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1'>
                 <p className='text-xs text-gray-500 dark:text-gray-400'>
                   选择获取豆瓣数据的方式
                 </p>
@@ -263,7 +283,7 @@ const SiteConfigComponent = ({
                   </div>
                 )}
               </div>
-              <div className='mt-1 flex items-center justify-between'>
+              <div className='mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1'>
                 <p className='text-xs text-gray-500 dark:text-gray-400'>
                   选择获取豆瓣图片的方式
                 </p>
@@ -350,13 +370,13 @@ const SiteConfigComponent = ({
           </div>
 
           <div className='space-y-4'>
-            <div className='flex items-center justify-between gap-4'>
+            <div className='flex items-start justify-between gap-4'>
               <div className='flex-1 max-w-[calc(100%-60px)]'>
                 <div className='text-sm font-medium text-gray-700 dark:text-gray-300'>
                   启用设备码验证
                 </div>
                 <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                  启用后用户登录时需要绑定设备码，提升账户安全性。禁用后用户可以直接登录无需绑定设备码。
+                  启用后用户登录时需要绑定设备码，提升账户安全性。
                 </div>
               </div>
               <button
@@ -366,7 +386,7 @@ const SiteConfigComponent = ({
                     RequireDeviceCode: !prev.RequireDeviceCode,
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                   siteSettings.RequireDeviceCode
                     ? 'bg-blue-600'
                     : 'bg-gray-200 dark:bg-gray-700'
@@ -382,7 +402,7 @@ const SiteConfigComponent = ({
               </button>
             </div>
 
-            <div className='flex items-center justify-between gap-4'>
+            <div className='flex items-start justify-between gap-4'>
               <div className='flex-1 max-w-[calc(100%-60px)]'>
                 <div className='text-sm font-medium text-gray-700 dark:text-gray-300'>
                   禁用黄色过滤器
@@ -398,7 +418,7 @@ const SiteConfigComponent = ({
                     DisableYellowFilter: !prev.DisableYellowFilter,
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                   siteSettings.DisableYellowFilter
                     ? 'bg-blue-600'
                     : 'bg-gray-200 dark:bg-gray-700'
@@ -414,7 +434,7 @@ const SiteConfigComponent = ({
               </button>
             </div>
 
-            <div className='flex items-center justify-between gap-4'>
+            <div className='flex items-start justify-between gap-4'>
               <div className='flex-1 max-w-[calc(100%-60px)]'>
                 <div className='text-sm font-medium text-gray-700 dark:text-gray-300'>
                   启用流式搜索
@@ -430,7 +450,7 @@ const SiteConfigComponent = ({
                     FluidSearch: !prev.FluidSearch,
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
                   siteSettings.FluidSearch
                     ? 'bg-blue-600'
                     : 'bg-gray-200 dark:bg-gray-700'

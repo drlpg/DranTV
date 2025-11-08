@@ -92,13 +92,41 @@ export async function POST(request: NextRequest) {
 
     console.log(`成功添加订阅直播源: ${sourceName} (${sourceKey})`);
 
-    // 立即获取频道数
-    try {
-      const channelCount = await refreshLiveChannels(newSource);
-      newSource.channelNumber = channelCount;
-      console.log(`已获取频道数: ${channelCount}`);
-    } catch (refreshError) {
-      console.warn('获取频道数失败，将在首次访问时加载:', refreshError);
+    // 检查是否有保存的频道数据
+    const savedChannelsKey = `live_channels_${sourceKey}`;
+    const savedChannels = await db.get(savedChannelsKey);
+
+    if (savedChannels) {
+      // 如果有保存的频道数据，使用保存的频道数
+      try {
+        const parsedChannels = JSON.parse(savedChannels);
+        const enabledCount = parsedChannels.filter(
+          (ch: any) => !ch.disabled
+        ).length;
+        newSource.channelNumber = enabledCount;
+        console.log(
+          `使用保存的频道数: ${enabledCount} (总数: ${parsedChannels.length})`
+        );
+      } catch (error) {
+        console.error('解析保存的频道数据失败，将重新获取:', error);
+        // 解析失败，重新获取
+        try {
+          const channelCount = await refreshLiveChannels(newSource);
+          newSource.channelNumber = channelCount;
+          console.log(`已获取频道数: ${channelCount}`);
+        } catch (refreshError) {
+          console.warn('获取频道数失败，将在首次访问时加载:', refreshError);
+        }
+      }
+    } else {
+      // 没有保存的数据，立即获取频道数
+      try {
+        const channelCount = await refreshLiveChannels(newSource);
+        newSource.channelNumber = channelCount;
+        console.log(`已获取频道数: ${channelCount}`);
+      } catch (refreshError) {
+        console.warn('获取频道数失败，将在首次访问时加载:', refreshError);
+      }
     }
 
     // 保存配置

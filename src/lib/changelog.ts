@@ -11,6 +11,21 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.36",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化站点配置功能开关布局，开关按钮与功能标题垂直居中",
+    "优化设备码验证提示文字，移除冗余描述"
+    ],
+    fixed: [
+    "修复站点配置保存失败的问题（数据格式不匹配）",
+    "修复站点配置未改动时仍可保存的问题，新增空状态提示"
+    ]
+  },
+  {
     version: "1.0.35",
     date: "2025-11-08",
     added: [

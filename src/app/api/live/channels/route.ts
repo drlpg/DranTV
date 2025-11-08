@@ -1,8 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { getCachedLiveChannels } from '@/lib/live';
+import { getCachedLiveChannels, deleteCachedLiveChannels } from '@/lib/live';
+import { db } from '@/lib/db';
+import { getConfig, setCachedConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { sourceKey, channels } = body;
+
+    if (!sourceKey || !channels) {
+      console.error('[Channels API POST] 缺少必要参数');
+      return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+    }
+
+    // 保存修改后的频道列表到数据库
+    const dbKey = `live_channels_${sourceKey}`;
+    const jsonString = JSON.stringify(channels);
+
+    // 先删除旧数据（如果存在），确保没有残留
+    try {
+      await db.delete(dbKey);
+    } catch (error) {
+      // 忽略删除错误，可能是数据不存在
+    }
+
+    // 保存新数据
+    await db.set(dbKey, jsonString);
+
+    // 清除内存缓存，强制下次重新加载（会从数据库读取保存的版本）
+    deleteCachedLiveChannels(sourceKey);
+
+    // 更新配置中的频道数
+    try {
+      const config = await getConfig();
+
+      if (config?.LiveConfig) {
+        const liveSource = config.LiveConfig.find((s) => s.key === sourceKey);
+        if (liveSource) {
+          const enabledCount = channels.filter(
+            (ch: any) => !ch.disabled
+          ).length;
+          liveSource.channelNumber = enabledCount;
+
+          // 保存更新后的配置
+          await db.saveAdminConfig(config);
+          await setCachedConfig(config);
+        }
+      }
+    } catch (error) {
+      console.error('[Channels API] 更新频道数失败:', error);
+      // 不抛出错误，因为频道数据已经保存成功
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '频道保存成功',
+    });
+  } catch (error) {
+    console.error('[Channels API POST] 保存频道失败:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : '保存频道失败',
+      },
+      { status: 500 }
+    );
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +93,7 @@ export async function GET(request: NextRequest) {
         timeoutPromise,
       ]);
     } catch (fetchError) {
-      console.error('[Channels API] 获取频道数据时出错:', fetchError);
+      console.error('[Channels API] 获取频道数据失败:', fetchError);
       const errorMsg =
         fetchError instanceof Error ? fetchError.message : '获取频道数据失败';
       return NextResponse.json(
@@ -41,7 +108,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (!channelData) {
-      console.warn(`[Channels API] 频道信息未找到: ${sourceKey}`);
       return NextResponse.json(
         {
           success: false,
