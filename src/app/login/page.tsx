@@ -58,7 +58,13 @@ function LoginPageClient() {
         const storageType = serverConfig?.StorageType;
         const requireDeviceCode = serverConfig?.RequireDeviceCode;
 
-        setShouldAskUsername(storageType && storageType !== 'localstorage');
+        console.log('[Login] 服务器配置:', { storageType, requireDeviceCode });
+
+        const shouldShowUsername =
+          storageType && storageType !== 'localstorage';
+        console.log('[Login] 是否显示用户名输入框:', shouldShowUsername);
+
+        setShouldAskUsername(shouldShowUsername);
         setDeviceCodeEnabled(requireDeviceCode === true); // 只有明确设置为 true 才启用
 
         // 只有在启用设备码功能时才生成机器码和设备信息
