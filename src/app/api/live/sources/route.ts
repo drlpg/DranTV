@@ -5,13 +5,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
-export const maxDuration = 10; // 设置最大执行时间为10秒
+export const maxDuration = 15; // 设置最大执行时间为15秒
 
 export async function GET(request: NextRequest) {
   try {
-    // 添加5秒超时控制（缩短超时时间）
+    // 添加10秒超时控制
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('请求超时')), 5000);
+      setTimeout(() => reject(new Error('配置获取超时')), 10000);
     });
 
     const configPromise = getConfig();

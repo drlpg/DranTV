@@ -265,10 +265,14 @@ function LivePageClient() {
 
       // 获取 AdminConfig 中的直播源信息，添加超时控制
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => {
+        console.warn('[Live] 请求超时，中止请求');
+        controller.abort();
+      }, 15000); // 增加到15秒
 
       const response = await fetch('/api/live/sources', {
         signal: controller.signal,
+        cache: 'no-store',
       });
       clearTimeout(timeoutId);
 
@@ -332,9 +336,20 @@ function LivePageClient() {
       }, 1000);
     } catch (err) {
       console.error('获取直播源失败:', err);
+
+      // 根据错误类型显示不同的提示
+      let errorMessage = '获取直播源失败，请稍后重试';
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          errorMessage = '请求超时，请检查网络连接或稍后重试';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = '网络连接失败，请检查网络设置';
+        }
+      }
+
       // 不设置错误，而是显示空状态
       setLiveSources([]);
-      setLoadingMessage('获取直播源失败，请稍后重试');
+      setLoadingMessage(errorMessage);
       setLoading(false);
     } finally {
       // 移除 URL 搜索参数中的 source 和 id
