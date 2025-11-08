@@ -70,8 +70,53 @@ async function generateAuthCookie(
   return encodeURIComponent(JSON.stringify(authData));
 }
 
+// 验证 Turnstile token
+async function verifyTurnstile(token: string): Promise<boolean> {
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+  if (!secretKey) {
+    // 如果未配置密钥，跳过验证
+    return true;
+  }
+
+  try {
+    const response = await fetch(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          secret: secretKey,
+          response: token,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    return data.success === true;
+  } catch (error) {
+    console.error('Turnstile 验证失败:', error);
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
+    const { turnstileToken } = body;
+
+    // 验证 Turnstile token
+    if (turnstileToken) {
+      const isValid = await verifyTurnstile(turnstileToken);
+      if (!isValid) {
+        return NextResponse.json(
+          { error: '人机验证失败，请重试' },
+          { status: 403 }
+        );
+      }
+    }
+
     // 本地 / localStorage 模式——校验用户名和密码
     if (STORAGE_TYPE === 'localstorage') {
       const envUsername = process.env.LOGIN_USERNAME;
@@ -93,7 +138,7 @@ export async function POST(req: NextRequest) {
         return response;
       }
 
-      const { username, password } = await req.json();
+      const { username, password } = body;
 
       // 验证用户名（如果配置了）
       if (envUsername && username !== envUsername) {
@@ -138,7 +183,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 数据库 / redis 模式——校验用户名并尝试连接数据库
-    const { username, password, machineCode } = await req.json();
+    const { username, password, machineCode } = body;
 
     if (!username || typeof username !== 'string') {
       return NextResponse.json({ error: '用户名不能为空' }, { status: 400 });

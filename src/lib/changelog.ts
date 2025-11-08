@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.42",
+    date: "2025-11-08",
+    added: [
+    "新增登录表单 Cloudflare Turnstile 人机验证功能",
+    "支持自动主题适配和响应式设计"
+    ],
+    changed: [
+    "优化登录安全性，防止机器人暴力破解"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "1.0.41",
     date: "2025-11-08",
     added: [

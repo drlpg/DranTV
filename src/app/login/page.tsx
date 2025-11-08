@@ -42,10 +42,36 @@ function LoginPageClient() {
   const [bindMachineCode, setBindMachineCode] = useState(false);
   const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true);
 
+  // Turnstile 验证相关状态
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+
   const { siteName } = useSite();
 
   // 禁用移动端滚动和橡皮筋效果
   usePreventScroll(true);
+
+  // 加载 Turnstile 脚本
+  useEffect(() => {
+    // 设置全局回调函数
+    (window as any).onTurnstileSuccess = (token: string) => {
+      setTurnstileToken(token);
+    };
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => setTurnstileLoaded(true);
+    document.head.appendChild(script);
+
+    return () => {
+      delete (window as any).onTurnstileSuccess;
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
@@ -89,12 +115,19 @@ function LoginPageClient() {
 
     if (!password || (shouldAskUsername && !username)) return;
 
+    // 验证 Turnstile token
+    if (!turnstileToken) {
+      setError('请完成人机验证');
+      return;
+    }
+
     try {
       setLoading(true);
 
       // 构建请求数据
       const requestData: any = {
         password,
+        turnstileToken,
         ...(shouldAskUsername ? { username } : {}),
       };
 
@@ -284,6 +317,21 @@ function LoginPageClient() {
             </div>
           )}
 
+          {/* Turnstile 人机验证 */}
+          {turnstileLoaded && (
+            <div className='flex justify-center'>
+              <div
+                className='cf-turnstile'
+                data-sitekey={
+                  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
+                  '1x00000000000000000000AA'
+                }
+                data-callback='onTurnstileSuccess'
+                data-theme='auto'
+              />
+            </div>
+          )}
+
           {error && (
             <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
           )}
@@ -291,7 +339,12 @@ function LoginPageClient() {
           {/* 登录按钮 */}
           <button
             type='submit'
-            disabled={!password || loading || (shouldAskUsername && !username)}
+            disabled={
+              !password ||
+              loading ||
+              (shouldAskUsername && !username) ||
+              !turnstileToken
+            }
             className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
           >
             {loading ? '登录中...' : '登录'}
