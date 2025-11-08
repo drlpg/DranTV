@@ -59,7 +59,10 @@ async function generateAuthCookie(
   if (username && process.env.LOGIN_PASSWORD) {
     authData.username = username;
     // 使用密码作为密钥对用户名进行签名
-    const signature = await generateSignature(username, process.env.LOGIN_PASSWORD);
+    const signature = await generateSignature(
+      username,
+      process.env.LOGIN_PASSWORD
+    );
     authData.signature = signature;
     authData.timestamp = Date.now(); // 添加时间戳防重放攻击
   }
@@ -69,8 +72,9 @@ async function generateAuthCookie(
 
 export async function POST(req: NextRequest) {
   try {
-    // 本地 / localStorage 模式——仅校验固定密码
+    // 本地 / localStorage 模式——校验用户名和密码
     if (STORAGE_TYPE === 'localstorage') {
+      const envUsername = process.env.LOGIN_USERNAME;
       const envPassword = process.env.LOGIN_PASSWORD;
 
       // 未配置 PASSWORD 时直接放行
@@ -89,14 +93,24 @@ export async function POST(req: NextRequest) {
         return response;
       }
 
-      const { password } = await req.json();
+      const { username, password } = await req.json();
+
+      // 验证用户名（如果配置了）
+      if (envUsername && username !== envUsername) {
+        return NextResponse.json(
+          { ok: false, error: '用户名或密码错误' },
+          { status: 401 }
+        );
+      }
+
+      // 验证密码
       if (typeof password !== 'string') {
         return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
       }
 
       if (password !== envPassword) {
         return NextResponse.json(
-          { ok: false, error: '密码错误' },
+          { ok: false, error: '用户名或密码错误' },
           { status: 401 }
         );
       }
@@ -104,9 +118,9 @@ export async function POST(req: NextRequest) {
       // 验证成功，设置认证cookie
       const response = NextResponse.json({ ok: true });
       const cookieValue = await generateAuthCookie(
-        undefined,
+        username || envUsername,
         password,
-        'user',
+        'owner',
         true
       ); // localstorage 模式包含 password
       const expires = new Date();

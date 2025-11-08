@@ -1,3 +1,15 @@
+## [1.0.40] - 2025-11-08
+
+### Changed
+
+- 修改 localstorage 模式登录逻辑，统一显示用户名和密码输入框
+- localstorage 模式现在支持用户名验证（如果配置了 LOGIN_USERNAME）
+- 统一所有存储模式的登录界面体验
+
+### Fixed
+
+- 修复 localstorage 模式只显示密码输入框的问题
+
 ## [1.0.39] - 2025-11-08
 
 ### Fixed

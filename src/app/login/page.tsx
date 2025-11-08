@@ -72,8 +72,8 @@ function LoginPageClient() {
 
         console.log('[Login] 服务器配置:', { storageType, requireDeviceCode });
 
-        // 如果storageType不是localstorage，则显示用户名输入框
-        const shouldShowUsername = storageType !== 'localstorage';
+        // 始终显示用户名输入框（所有模式统一）
+        const shouldShowUsername = true;
         console.log(
           '[Login] 是否显示用户名输入框:',
           shouldShowUsername,
