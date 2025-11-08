@@ -9,13 +9,20 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const config = await getConfig();
+  const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+
+  console.log('[Server Config API] NEXT_PUBLIC_STORAGE_TYPE:', storageType);
+
   const result = {
     SiteName: config.SiteConfig.SiteName,
-    StorageType: process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
+    StorageType: storageType,
     Version: CURRENT_VERSION,
     RequireDeviceCode: config.SiteConfig.RequireDeviceCode ?? false,
     FluidSearch: config.SiteConfig.FluidSearch ?? true,
     DisableYellowFilter: config.SiteConfig.DisableYellowFilter ?? false,
   };
+
+  console.log('[Server Config API] 返回配置:', result);
+
   return NextResponse.json(result);
 }

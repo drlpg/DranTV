@@ -55,14 +55,20 @@ function LoginPageClient() {
         const response = await fetch('/api/server-config');
         const serverConfig = await response.json();
 
-        const storageType = serverConfig?.StorageType;
+        const storageType = serverConfig?.StorageType || 'localstorage';
         const requireDeviceCode = serverConfig?.RequireDeviceCode;
 
         console.log('[Login] 服务器配置:', { storageType, requireDeviceCode });
 
-        const shouldShowUsername =
-          storageType && storageType !== 'localstorage';
-        console.log('[Login] 是否显示用户名输入框:', shouldShowUsername);
+        // 如果storageType不是localstorage，则显示用户名输入框
+        const shouldShowUsername = storageType !== 'localstorage';
+        console.log(
+          '[Login] 是否显示用户名输入框:',
+          shouldShowUsername,
+          '(storageType:',
+          storageType,
+          ')'
+        );
 
         setShouldAskUsername(shouldShowUsername);
         setDeviceCodeEnabled(requireDeviceCode === true); // 只有明确设置为 true 才启用
