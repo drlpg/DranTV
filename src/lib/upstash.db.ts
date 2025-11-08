@@ -33,9 +33,9 @@ async function withRetry<T>(
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      // 为每个操作添加5秒超时（缩短超时时间）
+      // 为每个操作添加15秒超时
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('操作超时')), 5000);
+        setTimeout(() => reject(new Error('操作超时')), 15000);
       });
 
       return await Promise.race([operation(), timeoutPromise]);

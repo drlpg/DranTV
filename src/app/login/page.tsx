@@ -24,6 +24,9 @@ function VersionDisplay() {
 }
 
 function LoginPageClient() {
+  // 组件渲染时立即输出日志
+  console.log('[Login] LoginPageClient 渲染 -', new Date().toISOString());
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
@@ -49,7 +52,12 @@ function LoginPageClient() {
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
-    console.log('[Login] useEffect 执行');
+    // 使用 alert 确保能看到执行
+    if (typeof window !== 'undefined') {
+      console.log('[Login] useEffect 执行 - 时间:', new Date().toISOString());
+      console.log('[Login] window 对象存在:', !!window);
+    }
+
     const fetchConfigAndGenerateMachineInfo = async () => {
       try {
         console.log('[Login] 开始获取服务器配置...');
