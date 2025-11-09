@@ -18,12 +18,12 @@ export const changelog: ChangelogEntry[] = [
     ],
     changed: [
     "清理临时调试代码和测试文件",
-    "优化 Dockerfile，添加必要的配置文件复制"
+    "优化 Dockerfile，添加必要的配置文件复制（tsconfig.json, pnpm-lock.yaml）"
     ],
     fixed: [
-    "修复 Railway 环境变量读取问题",
+    "修复 Docker 部署环境变量读取问题",
     "优化 Docker 构建配置，确保 standalone 模式正常工作",
-    "修复 Next.js 启动脚本，使用标准启动方式"
+    "修复 Next.js 生产环境启动脚本，使用标准启动方式"
     ]
   },
   {
