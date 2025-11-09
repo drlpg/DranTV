@@ -27,13 +27,14 @@ export async function GET(request: NextRequest) {
 
     if (!config) {
       console.error('[Live Sources API] 配置为空');
-      // 返回空数组而不是错误，避免前端崩溃
       return NextResponse.json(
         {
-          success: true,
+          success: false,
+          error: '无法获取配置',
           data: [],
         },
         {
+          status: 500,
           headers: {
             'Cache-Control': 'no-store, no-cache, must-revalidate',
           },
@@ -41,19 +42,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 检查是否使用了降级配置
+    if (!config.LiveConfig || config.LiveConfig.length === 0) {
+      console.warn('[Live Sources API] LiveConfig 为空，可能使用了降级配置');
+      console.warn('[Live Sources API] 请检查数据库连接是否正常');
+    }
+
     // 过滤出所有非 disabled 的直播源
-    const liveSources = (config.LiveConfig || []).filter(
-      (source) => !source.disabled
+    const allLiveSources = config.LiveConfig || [];
+    console.log(
+      `[Live Sources API] 配置中共有 ${allLiveSources.length} 个直播源`
     );
 
-    console.log(`[Live Sources API] 返回 ${liveSources.length} 个直播源`);
-    if (liveSources.length > 0) {
+    const liveSources = allLiveSources.filter((source) => !source.disabled);
+
+    console.log(
+      `[Live Sources API] 过滤后返回 ${liveSources.length} 个启用的直播源`
+    );
+    if (allLiveSources.length > 0) {
       console.log(
-        '[Live Sources API] 直播源列表:',
-        liveSources.map((s) => ({
+        '[Live Sources API] 所有直播源状态:',
+        allLiveSources.map((s) => ({
           key: s.key,
           name: s.name,
-          disabled: s.disabled,
+          disabled: s.disabled || false,
         }))
       );
     }
