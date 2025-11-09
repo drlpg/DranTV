@@ -30,53 +30,133 @@ function LoginPageClient() {
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [shouldAskUsername, setShouldAskUsername] = useState(false);
+  const [shouldAskUsername, setShouldAskUsername] = useState(true);
 
   // 机器码相关状态
   const [machineCode, setMachineCode] = useState<string>('');
   const [deviceInfo, setDeviceInfo] = useState<string>('');
-  const [, setShowMachineCodeInput] = useState(false);
   const [requireMachineCode, setRequireMachineCode] = useState(false);
   const [machineCodeGenerated, setMachineCodeGenerated] = useState(false);
-  const [, setShowBindOption] = useState(false);
   const [bindMachineCode, setBindMachineCode] = useState(false);
   const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true);
 
   // Turnstile 验证相关状态
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const [turnstileEnabled, setTurnstileEnabled] = useState(false);
 
   const { siteName } = useSite();
 
   // 禁用移动端滚动和橡皮筋效果
   usePreventScroll(true);
 
+  // 检查是否启用 Turnstile
+  useEffect(() => {
+    const siteKey = (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY;
+    if (siteKey && siteKey !== '') {
+      setTurnstileEnabled(true);
+    }
+  }, []);
+
   // 加载 Turnstile 脚本
   useEffect(() => {
+    if (!turnstileEnabled) return;
+
+    let mounted = true;
+    let checkInterval: NodeJS.Timeout;
+
+    // 检查是否已经加载
+    if ((window as any).turnstile) {
+      setTurnstileLoaded(true);
+      return;
+    }
+
     // 设置全局回调函数
     (window as any).onTurnstileSuccess = (token: string) => {
-      setTurnstileToken(token);
+      if (mounted) {
+        setTurnstileToken(token);
+      }
     };
+
+    // 检查是否已存在脚本
+    const existingScript = document.querySelector(
+      'script[src*="challenges.cloudflare.com/turnstile"]'
+    );
+    if (existingScript) {
+      checkInterval = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkInterval);
+          if (mounted) {
+            setTurnstileLoaded(true);
+          }
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkInterval);
+      }, 10000);
+      return;
+    }
 
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      setTurnstileLoaded(true);
+      // 等待 turnstile 对象可用
+      checkInterval = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkInterval);
+          if (mounted) {
+            setTurnstileLoaded(true);
+          }
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkInterval);
+      }, 10000);
     };
-    script.onerror = () => {
-      setError('人机验证加载失败，请刷新页面重试');
+    script.onerror = (e) => {
+      console.error('[Turnstile] Script load error:', e);
     };
     document.head.appendChild(script);
 
     return () => {
-      delete (window as any).onTurnstileSuccess;
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
+      mounted = false;
+      if (checkInterval) {
+        clearInterval(checkInterval);
       }
+      delete (window as any).onTurnstileSuccess;
     };
-  }, []);
+  }, [turnstileEnabled]);
+
+  // 手动渲染 Turnstile（当 DOM 准备好时）
+  useEffect(() => {
+    if (!turnstileLoaded || !turnstileEnabled) return;
+
+    // 等待 DOM 元素渲染
+    const timer = setTimeout(() => {
+      const container = document.getElementById('turnstile-container');
+      if (container && (window as any).turnstile) {
+        // 检查是否已经渲染
+        if (container.children.length === 0) {
+          try {
+            (window as any).turnstile.render('#turnstile-container', {
+              sitekey: (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY,
+              callback: (window as any).onTurnstileSuccess,
+              theme: 'auto',
+              size: 'flexible',
+            });
+          } catch (error) {
+            console.error('[Turnstile] Render error:', error);
+          }
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [turnstileLoaded, turnstileEnabled]);
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
@@ -120,10 +200,21 @@ function LoginPageClient() {
 
     if (!password || (shouldAskUsername && !username)) return;
 
-    // 要求完成 Turnstile 验证
-    if (!turnstileToken) {
+    // 要求完成 Turnstile 验证（仅在启用时）
+    if (turnstileEnabled && turnstileLoaded && !turnstileToken) {
       setError('请完成人机验证');
       return;
+    }
+
+    // 如果 Turnstile 未启用或未加载，记录日志
+    if (!turnstileEnabled) {
+      console.log(
+        '[Login] Turnstile disabled, proceeding without verification'
+      );
+    } else if (!turnstileLoaded) {
+      console.warn(
+        '[Login] Turnstile not loaded, proceeding without verification'
+      );
     }
 
     try {
@@ -181,7 +272,6 @@ function LoginPageClient() {
         // 处理机器码相关错误
         if (data.requireMachineCode) {
           setRequireMachineCode(true);
-          setShowMachineCodeInput(true);
           setError('该账户已绑定设备，请验证机器码');
         } else if (data.machineCodeMismatch) {
           setError('机器码不匹配，此账户只能在绑定的设备上使用');
@@ -211,7 +301,7 @@ function LoginPageClient() {
       </div>
 
       {/* Logo 和标题 - 移动端居中，桌面端左上角 */}
-      <div className='flex items-center justify-center gap-2 mb-8 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
+      <div className='flex items-center justify-center gap-2 mb-24 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
         <img
           src='/logo.png'
           alt='Logo'
@@ -323,15 +413,17 @@ function LoginPageClient() {
           )}
 
           {/* Turnstile 人机验证 */}
-          {turnstileLoaded && (
-            <div className='flex justify-center'>
+          {turnstileEnabled && turnstileLoaded && (
+            <div className='w-full'>
               <div
+                id='turnstile-container'
                 className='cf-turnstile'
                 data-sitekey={
                   (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
                 }
                 data-callback='onTurnstileSuccess'
                 data-theme='auto'
+                data-size='flexible'
               />
             </div>
           )}
@@ -349,7 +441,7 @@ function LoginPageClient() {
               (shouldAskUsername && !username) ||
               !turnstileToken
             }
-            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
+            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6'
           >
             {loading ? '登录中...' : '登录'}
           </button>
