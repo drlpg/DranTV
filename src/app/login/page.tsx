@@ -58,15 +58,20 @@ function LoginPageClient() {
     console.log('=== Turnstile useEffect 开始执行 ===');
     console.log('window.RUNTIME_CONFIG:', (window as any).RUNTIME_CONFIG);
 
-    // 获取 Site Key
-    const siteKey = (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY || '';
+    // 获取 Site Key，默认使用 Cloudflare 测试密钥
+    const siteKey =
+      (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY ||
+      '1x00000000000000000000AA';
 
     console.log('Turnstile Site Key:', siteKey);
 
-    // 如果没有配置有效的 Site Key，跳过 Turnstile 验证
-    if (!siteKey || siteKey === '') {
-      console.log('未配置 Turnstile Site Key，跳过人机验证');
-      setTurnstileToken('bypass'); // 设置一个绕过标记
+    // 如果明确设置为空，跳过 Turnstile 验证
+    if (
+      (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY === '' ||
+      (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY === null
+    ) {
+      console.log('Turnstile 已禁用，跳过人机验证');
+      setTurnstileToken('bypass');
       return;
     }
 
