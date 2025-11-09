@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.44",
+    date: "2025-11-09",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化登录页面 Turnstile 组件宽度，与输入框保持一致",
+    "调整 Turnstile 组件与登录按钮间距为 24px"
+    ],
+    fixed: [
+    "清理登录页面冗余状态变量，提升代码质量"
+    ]
+  },
+  {
     version: "1.0.43",
     date: "2025-11-09",
     added: [

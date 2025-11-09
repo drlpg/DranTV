@@ -35,10 +35,8 @@ function LoginPageClient() {
   // 机器码相关状态
   const [machineCode, setMachineCode] = useState<string>('');
   const [deviceInfo, setDeviceInfo] = useState<string>('');
-  const [, setShowMachineCodeInput] = useState(false);
   const [requireMachineCode, setRequireMachineCode] = useState(false);
   const [machineCodeGenerated, setMachineCodeGenerated] = useState(false);
-  const [, setShowBindOption] = useState(false);
   const [bindMachineCode, setBindMachineCode] = useState(false);
   const [deviceCodeEnabled, setDeviceCodeEnabled] = useState(true);
 
@@ -181,7 +179,6 @@ function LoginPageClient() {
         // 处理机器码相关错误
         if (data.requireMachineCode) {
           setRequireMachineCode(true);
-          setShowMachineCodeInput(true);
           setError('该账户已绑定设备，请验证机器码');
         } else if (data.machineCodeMismatch) {
           setError('机器码不匹配，此账户只能在绑定的设备上使用');
@@ -211,7 +208,7 @@ function LoginPageClient() {
       </div>
 
       {/* Logo 和标题 - 移动端居中，桌面端左上角 */}
-      <div className='flex items-center justify-center gap-2 mb-8 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
+      <div className='flex items-center justify-center gap-2 mb-24 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
         <img
           src='/logo.png'
           alt='Logo'
@@ -324,7 +321,7 @@ function LoginPageClient() {
 
           {/* Turnstile 人机验证 */}
           {turnstileLoaded && (
-            <div className='flex justify-center'>
+            <div className='w-full'>
               <div
                 className='cf-turnstile'
                 data-sitekey={
@@ -332,6 +329,7 @@ function LoginPageClient() {
                 }
                 data-callback='onTurnstileSuccess'
                 data-theme='auto'
+                data-size='flexible'
               />
             </div>
           )}
@@ -349,7 +347,7 @@ function LoginPageClient() {
               (shouldAskUsername && !username) ||
               !turnstileToken
             }
-            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
+            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6'
           >
             {loading ? '登录中...' : '登录'}
           </button>
