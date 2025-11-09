@@ -51,6 +51,12 @@ function LoginPageClient() {
 
   // 加载 Turnstile 脚本
   useEffect(() => {
+    // 检查是否已经加载
+    if ((window as any).turnstile) {
+      setTurnstileLoaded(true);
+      return;
+    }
+
     // 设置全局回调函数
     (window as any).onTurnstileSuccess = (token: string) => {
       setTurnstileToken(token);
@@ -61,7 +67,21 @@ function LoginPageClient() {
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      setTurnstileLoaded(true);
+      // 等待 turnstile 对象可用
+      const checkTurnstile = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkTurnstile);
+          setTurnstileLoaded(true);
+        }
+      }, 100);
+
+      // 10秒后超时
+      setTimeout(() => {
+        clearInterval(checkTurnstile);
+        if (!(window as any).turnstile) {
+          setError('人机验证初始化超时，请刷新页面重试');
+        }
+      }, 10000);
     };
     script.onerror = () => {
       setError('人机验证加载失败，请刷新页面重试');
@@ -320,8 +340,8 @@ function LoginPageClient() {
           )}
 
           {/* Turnstile 人机验证 */}
-          {turnstileLoaded && (
-            <div className='w-full'>
+          <div className='w-full'>
+            {turnstileLoaded ? (
               <div
                 className='cf-turnstile'
                 data-sitekey={
@@ -331,8 +351,12 @@ function LoginPageClient() {
                 data-theme='auto'
                 data-size='flexible'
               />
-            </div>
-          )}
+            ) : (
+              <div className='flex items-center justify-center py-4 text-sm text-gray-500 dark:text-gray-400'>
+                正在加载人机验证...
+              </div>
+            )}
+          </div>
 
           {error && (
             <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
