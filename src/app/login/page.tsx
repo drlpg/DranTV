@@ -24,6 +24,8 @@ function VersionDisplay() {
 }
 
 function LoginPageClient() {
+  console.log('LoginPageClient 组件渲染');
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
@@ -53,52 +55,49 @@ function LoginPageClient() {
 
   // 加载 Turnstile 脚本
   useEffect(() => {
-    // 等待 RUNTIME_CONFIG 加载
-    const initTurnstile = () => {
-      // 获取 Site Key
-      const siteKey = (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY || '';
+    console.log('=== Turnstile useEffect 开始执行 ===');
+    console.log('window.RUNTIME_CONFIG:', (window as any).RUNTIME_CONFIG);
 
-      console.log('Turnstile Site Key:', siteKey);
-      console.log('RUNTIME_CONFIG:', (window as any).RUNTIME_CONFIG);
+    // 获取 Site Key
+    const siteKey = (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY || '';
 
-      // 如果没有配置有效的 Site Key，跳过 Turnstile 验证
-      if (!siteKey || siteKey === '') {
-        console.log('未配置 Turnstile Site Key，跳过人机验证');
-        setTurnstileToken('bypass'); // 设置一个绕过标记
-        return;
-      }
+    console.log('Turnstile Site Key:', siteKey);
 
-      // 设置全局回调函数
-      (window as any).onTurnstileSuccess = (token: string) => {
-        console.log('Turnstile 验证成功');
-        setTurnstileToken(token);
-      };
+    // 如果没有配置有效的 Site Key，跳过 Turnstile 验证
+    if (!siteKey || siteKey === '') {
+      console.log('未配置 Turnstile Site Key，跳过人机验证');
+      setTurnstileToken('bypass'); // 设置一个绕过标记
+      return;
+    }
 
-      const script = document.createElement('script');
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        console.log('Turnstile 脚本加载成功');
-        setTurnstileLoaded(true);
-      };
-      script.onerror = () => {
-        console.error('Turnstile 脚本加载失败');
-        setError('人机验证加载失败，请刷新页面重试');
-      };
-      document.head.appendChild(script);
+    // 设置全局回调函数
+    (window as any).onTurnstileSuccess = (token: string) => {
+      console.log('Turnstile 验证成功，token:', token);
+      setTurnstileToken(token);
     };
 
-    // 检查 RUNTIME_CONFIG 是否已加载
-    if ((window as any).RUNTIME_CONFIG) {
-      initTurnstile();
-    } else {
-      // 如果还没加载，等待一下
-      const timer = setTimeout(() => {
-        initTurnstile();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    console.log('开始加载 Turnstile 脚本...');
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      console.log('✅ Turnstile 脚本加载成功');
+      setTurnstileLoaded(true);
+    };
+    script.onerror = (e) => {
+      console.error('❌ Turnstile 脚本加载失败:', e);
+      setError('人机验证加载失败，请刷新页面重试');
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      console.log('Turnstile useEffect 清理');
+      delete (window as any).onTurnstileSuccess;
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
   }, []);
 
   // 在客户端挂载后从API获取配置并生成机器码
