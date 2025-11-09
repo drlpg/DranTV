@@ -17,7 +17,7 @@ import { usePreventScroll } from '@/hooks/usePreventScroll';
 // 版本显示组件
 function VersionDisplay() {
   return (
-    <div className='absolute bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400'>
+    <div className='absolute bottom-8 md:bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 dark:text-gray-400'>
       <span className='font-mono'>v{CURRENT_VERSION}</span>
     </div>
   );
@@ -294,158 +294,170 @@ function LoginPageClient() {
   };
 
   return (
-    <div className='fixed inset-0 flex flex-col items-center justify-center px-5 overflow-hidden md:relative md:h-screen'>
+    <div className='fixed inset-0 flex items-center justify-center px-5 overflow-hidden md:relative md:h-screen'>
       <GlobalThemeLoader />
       <div className='absolute top-4 right-4 z-20'>
         <ThemeToggle />
       </div>
 
-      {/* Logo 和标题 - 移动端居中，桌面端左上角 */}
-      <div className='flex items-center justify-center gap-2 mb-24 z-10 md:absolute md:top-4 md:left-4 md:mb-0'>
-        <img
-          src='/logo.png'
-          alt='Logo'
-          className='h-8 w-auto object-contain md:h-6'
-        />
-        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-2xl font-normal md:text-lg'>
+      {/* 桌面端 Logo - 左上角 */}
+      <div className='hidden md:flex absolute top-4 left-4 items-center gap-2 z-10'>
+        <img src='/logo.png' alt='Logo' className='h-6 w-auto object-contain' />
+        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-lg font-normal'>
           {siteName}
         </h1>
       </div>
 
-      <div
-        className='relative z-10 w-full max-w-sm sm:max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-9'
-        data-scrollable='true'
-      >
-        <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-xl sm:text-2xl font-normal mb-5 sm:mb-6'>
-          登录或注册
-        </h1>
-        <form onSubmit={handleSubmit} className='space-y-5'>
-          {shouldAskUsername && (
+      {/* 移动端居中容器 */}
+      <div className='flex flex-col items-center z-10 w-full max-w-sm sm:max-w-md'>
+        {/* 移动端 Logo - 表单上方 */}
+        <div className='flex md:hidden items-center justify-center gap-2 mb-8'>
+          <img
+            src='/logo.png'
+            alt='Logo'
+            className='h-8 w-auto object-contain'
+          />
+          <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-2xl font-normal'>
+            {siteName}
+          </h1>
+        </div>
+
+        {/* 表单容器 */}
+        <div
+          className='relative w-full max-h-[calc(100vh-2rem)] overflow-y-auto rounded-3xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-9'
+          data-scrollable='true'
+        >
+          <h1 className='text-gray-900 dark:text-gray-100 tracking-tight text-center text-xl sm:text-2xl font-normal mb-5 sm:mb-6'>
+            登录或注册
+          </h1>
+          <form onSubmit={handleSubmit} className='space-y-5'>
+            {shouldAskUsername && (
+              <div className='relative'>
+                <input
+                  id='username'
+                  type='text'
+                  autoComplete='username'
+                  className='peer block w-full rounded-lg border border-gray-200 dark:border-gray-700 pt-6 pb-1.5 px-4 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent transition-colors'
+                  placeholder='用户名'
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <label
+                  htmlFor='username'
+                  className={`absolute left-4 transition-all duration-200 pointer-events-none ${
+                    username
+                      ? 'top-2 text-xs text-blue-600 dark:text-blue-400'
+                      : 'top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400'
+                  } peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400`}
+                >
+                  用户名
+                </label>
+              </div>
+            )}
+
             <div className='relative'>
               <input
-                id='username'
-                type='text'
-                autoComplete='username'
+                id='password'
+                type='password'
+                autoComplete='current-password'
                 className='peer block w-full rounded-lg border border-gray-200 dark:border-gray-700 pt-6 pb-1.5 px-4 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent transition-colors'
-                placeholder='用户名'
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder='密码'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <label
-                htmlFor='username'
+                htmlFor='password'
                 className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-                  username
+                  password
                     ? 'top-2 text-xs text-blue-600 dark:text-blue-400'
                     : 'top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400'
                 } peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400`}
               >
-                用户名
+                密码
               </label>
             </div>
-          )}
 
-          <div className='relative'>
-            <input
-              id='password'
-              type='password'
-              autoComplete='current-password'
-              className='peer block w-full rounded-lg border border-gray-200 dark:border-gray-700 pt-6 pb-1.5 px-4 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-base bg-white/60 dark:bg-zinc-800/60 backdrop-blur placeholder-transparent transition-colors'
-              placeholder='密码'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <label
-              htmlFor='password'
-              className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-                password
-                  ? 'top-2 text-xs text-blue-600 dark:text-blue-400'
-                  : 'top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400'
-              } peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-blue-600 peer-focus:dark:text-blue-400`}
-            >
-              密码
-            </label>
-          </div>
-
-          {/* 机器码信息显示 - 只有在启用设备码功能时才显示 */}
-          {deviceCodeEnabled && machineCodeGenerated && shouldAskUsername && (
-            <div className='space-y-4'>
-              <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
-                <div className='flex items-center space-x-2 mb-2'>
-                  <Shield className='w-4 h-4 text-blue-600 dark:text-blue-400' />
-                  <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
-                    设备识别码
-                  </span>
-                </div>
-                <div className='space-y-2'>
-                  <div className='text-xs font-mono text-gray-700 dark:text-gray-300 break-all'>
-                    {MachineCode.formatMachineCode(machineCode)}
+            {/* 机器码信息显示 - 只有在启用设备码功能时才显示 */}
+            {deviceCodeEnabled && machineCodeGenerated && shouldAskUsername && (
+              <div className='space-y-4'>
+                <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+                  <div className='flex items-center space-x-2 mb-2'>
+                    <Shield className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+                    <span className='text-sm font-medium text-blue-800 dark:text-blue-300'>
+                      设备识别码
+                    </span>
                   </div>
-                  <div className='text-xs text-gray-600 dark:text-gray-400'>
-                    设备信息: {deviceInfo}
+                  <div className='space-y-2'>
+                    <div className='text-xs font-mono text-gray-700 dark:text-gray-300 break-all'>
+                      {MachineCode.formatMachineCode(machineCode)}
+                    </div>
+                    <div className='text-xs text-gray-600 dark:text-gray-400'>
+                      设备信息: {deviceInfo}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* 绑定选项 */}
-              {!requireMachineCode && (
-                <div className='space-y-2'>
-                  <div className='flex items-center space-x-3'>
-                    <input
-                      id='bindMachineCode'
-                      type='checkbox'
-                      checked={bindMachineCode}
-                      onChange={(e) => setBindMachineCode(e.target.checked)}
-                      className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
-                    />
-                    <label
-                      htmlFor='bindMachineCode'
-                      className='text-sm text-gray-700 dark:text-gray-300'
-                    >
-                      绑定此设备（提升账户安全性）
-                    </label>
-                  </div>
-                  {/* <p className='text-xs text-gray-500 dark:text-gray-400 ml-7'>
+                {/* 绑定选项 */}
+                {!requireMachineCode && (
+                  <div className='space-y-2'>
+                    <div className='flex items-center space-x-3'>
+                      <input
+                        id='bindMachineCode'
+                        type='checkbox'
+                        checked={bindMachineCode}
+                        onChange={(e) => setBindMachineCode(e.target.checked)}
+                        className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+                      />
+                      <label
+                        htmlFor='bindMachineCode'
+                        className='text-sm text-gray-700 dark:text-gray-300'
+                      >
+                        绑定此设备（提升账户安全性）
+                      </label>
+                    </div>
+                    {/* <p className='text-xs text-gray-500 dark:text-gray-400 ml-7'>
                     // 管理员可选择不绑定机器码直接登录
                   </p> */}
-                </div>
-              )}
-            </div>
-          )}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Turnstile 人机验证 */}
-          {turnstileEnabled && turnstileLoaded && (
-            <div className='w-full'>
-              <div
-                id='turnstile-container'
-                className='cf-turnstile'
-                data-sitekey={
-                  (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
-                }
-                data-callback='onTurnstileSuccess'
-                data-theme='auto'
-                data-size='flexible'
-              />
-            </div>
-          )}
+            {/* Turnstile 人机验证 */}
+            {turnstileEnabled && turnstileLoaded && (
+              <div className='w-full'>
+                <div
+                  id='turnstile-container'
+                  className='cf-turnstile'
+                  data-sitekey={
+                    (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
+                  }
+                  data-callback='onTurnstileSuccess'
+                  data-theme='auto'
+                  data-size='flexible'
+                />
+              </div>
+            )}
 
-          {error && (
-            <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
-          )}
+            {error && (
+              <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
+            )}
 
-          {/* 登录按钮 */}
-          <button
-            type='submit'
-            disabled={
-              !password ||
-              loading ||
-              (shouldAskUsername && !username) ||
-              !turnstileToken
-            }
-            className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6'
-          >
-            {loading ? '登录中...' : '登录'}
-          </button>
-        </form>
+            {/* 登录按钮 */}
+            <button
+              type='submit'
+              disabled={
+                !password ||
+                loading ||
+                (shouldAskUsername && !username) ||
+                !turnstileToken
+              }
+              className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6'
+            >
+              {loading ? '登录中...' : '登录'}
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* 版本信息显示 */}
