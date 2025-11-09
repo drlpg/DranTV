@@ -40,42 +40,51 @@ const wss = createStandaloneWebSocketServer(wsPort);
 global.getOnlineUsers = getOnlineUsers;
 global.sendMessageToUsers = sendMessageToUsers;
 
-// 启动Next.js服务器
+// 启动Next.js standalone服务器
 console.log('Starting Next.js production server...');
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+const nextServerPath = path.join(__dirname, 'server.js');
 
-const hostname = process.env.HOSTNAME || '0.0.0.0';
-const port = process.env.PORT || 3000;
+// 检查是否存在standalone server.js
+const fs = require('fs');
+if (fs.existsSync(nextServerPath)) {
+  // Docker环境，使用standalone server
+  require(nextServerPath);
+} else {
+  // 非Docker环境，使用标准Next.js启动
+  const { createServer } = require('http');
+  const { parse } = require('url');
+  const next = require('next');
 
-const app = next({
-  dev: false,
-  hostname,
-  port,
-  dir: __dirname,
-});
+  const hostname = process.env.HOSTNAME || '0.0.0.0';
+  const port = process.env.PORT || 3000;
 
-const handle = app.getRequestHandler();
-
-app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('处理请求时出错:', req.url, err);
-      res.statusCode = 500;
-      res.end('内部服务器错误');
-    }
+  const app = next({
+    dev: false,
+    hostname,
+    port,
   });
 
-  server.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`> Next.js服务已启动: http://${hostname}:${port}`);
-    setupServerTasks();
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    const server = createServer(async (req, res) => {
+      try {
+        const parsedUrl = parse(req.url, true);
+        await handle(req, res, parsedUrl);
+      } catch (err) {
+        console.error('处理请求时出错:', req.url, err);
+        res.statusCode = 500;
+        res.end('内部服务器错误');
+      }
+    });
+
+    server.listen(port, (err) => {
+      if (err) throw err;
+      console.log(`> Next.js服务已启动: http://${hostname}:${port}`);
+      setupServerTasks();
+    });
   });
-});
+}
 
 // 设置服务器启动后的任务
 function setupServerTasks() {

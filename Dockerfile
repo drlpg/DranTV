@@ -59,8 +59,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standal
 # 从构建器中复制 public 和 .next/static 目录
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# 从构建器中复制 package.json，standalone 模式需要
+# 从构建器中复制 package.json 和 pnpm-lock.yaml，用于安装额外依赖
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+# 复制 tsconfig.json 以确保路径解析正确
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 
 # 安装必要的WebSocket依赖
 USER root
