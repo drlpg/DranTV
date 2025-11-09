@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
     RequireDeviceCode: config.SiteConfig.RequireDeviceCode ?? false,
     FluidSearch: config.SiteConfig.FluidSearch ?? true,
     DisableYellowFilter: config.SiteConfig.DisableYellowFilter ?? false,
+    // 调试信息
+    _debug: {
+      env_STORAGE_TYPE: process.env.STORAGE_TYPE || 'undefined',
+      env_NEXT_PUBLIC_STORAGE_TYPE:
+        process.env.NEXT_PUBLIC_STORAGE_TYPE || 'undefined',
+    },
   };
 
   return NextResponse.json(result);
