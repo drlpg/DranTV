@@ -260,6 +260,7 @@ function LivePageClient() {
   // 获取直播源列表
   const fetchLiveSources = async () => {
     try {
+      console.log('[Live] 开始获取直播源...');
       setLoadingStage('fetching');
       setLoadingMessage('正在获取直播源...');
 
@@ -270,11 +271,13 @@ function LivePageClient() {
         controller.abort();
       }, 15000); // 增加到15秒
 
+      console.log('[Live] 发送请求到 /api/live/sources');
       const response = await fetch('/api/live/sources', {
         signal: controller.signal,
         cache: 'no-store',
       });
       clearTimeout(timeoutId);
+      console.log('[Live] 收到响应:', response.status, response.ok);
 
       if (!response.ok) {
         console.warn('获取直播源响应异常:', response.status);
@@ -298,11 +301,14 @@ function LivePageClient() {
       const result = await response.json();
       console.log('[Live] API响应:', {
         success: result.success,
+        error: result.error,
         sourceCount: result.data?.length || 0,
+        sources: result.data,
       });
 
       // 即使success为false，也检查是否有data
       const sources = result.data || [];
+      console.log('[Live] 设置直播源数量:', sources.length);
       setLiveSources(sources);
 
       if (sources.length > 0) {
@@ -334,7 +340,12 @@ function LivePageClient() {
         setLoading(false);
       }, 1000);
     } catch (err) {
-      console.error('获取直播源失败:', err);
+      console.error('[Live] 获取直播源失败:', err);
+      console.error('[Live] 错误详情:', {
+        name: err instanceof Error ? err.name : 'Unknown',
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
 
       // 根据错误类型显示不同的提示
       let errorMessage = '获取直播源失败，请稍后重试';
@@ -795,6 +806,7 @@ function LivePageClient() {
 
   // 初始化
   useEffect(() => {
+    console.log('[Live] useEffect 初始化执行');
     fetchLiveSources();
   }, []);
 
