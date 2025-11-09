@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const CURRENT_VERSION = '1.0.45';
+const CURRENT_VERSION = '1.0.46';
 
 // 导出当前版本号供其他地方使用
 export { CURRENT_VERSION };

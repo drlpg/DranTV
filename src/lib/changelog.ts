@@ -11,6 +11,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.46",
+    date: "2025-11-09",
+    added: [
+    "新增 Cloudflare Turnstile 人机验证功能",
+    "支持自动主题适配和响应式设计",
+    "添加手动渲染机制确保组件稳定显示"
+    ],
+    changed: [
+    "优化 CSP 安全策略，支持 Turnstile 和 Google Analytics",
+    "清理登录页面冗余代码和调试日志"
+    ],
+    fixed: [
+    "修复 Turnstile 组件加载和渲染问题",
+    "修复登录页面刷新时聊天图标短暂出现的问题",
+    "修复登录表单初始加载时用户名输入框不显示的问题"
+    ]
+  },
+  {
     version: "1.0.45",
     date: "2025-11-09",
     added: [
