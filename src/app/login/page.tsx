@@ -84,10 +84,20 @@ function LoginPageClient() {
     script.onload = () => {
       console.log('✅ Turnstile 脚本加载成功');
       setTurnstileLoaded(true);
+
+      // 监听 Turnstile 错误
+      (window as any).onTurnstileError = (errorCode: string) => {
+        console.error('❌ Turnstile 验证错误:', errorCode);
+        // 如果 Turnstile 出错，允许用户绕过验证
+        setTurnstileToken('bypass');
+        setError('人机验证暂时不可用，已自动跳过');
+      };
     };
     script.onerror = (e) => {
       console.error('❌ Turnstile 脚本加载失败:', e);
-      setError('人机验证加载失败，请刷新页面重试');
+      // 脚本加载失败时允许绕过
+      setTurnstileToken('bypass');
+      setError('人机验证加载失败，已自动跳过');
     };
     document.head.appendChild(script);
 
@@ -350,7 +360,7 @@ function LoginPageClient() {
           )}
 
           {/* Turnstile 人机验证 */}
-          {turnstileLoaded && (
+          {turnstileLoaded && !turnstileToken && (
             <div className='flex justify-center'>
               <div
                 className='cf-turnstile'
@@ -359,8 +369,16 @@ function LoginPageClient() {
                   '1x00000000000000000000AA'
                 }
                 data-callback='onTurnstileSuccess'
+                data-error-callback='onTurnstileError'
                 data-theme='auto'
               />
+            </div>
+          )}
+
+          {/* 显示 Turnstile 状态 */}
+          {turnstileToken === 'bypass' && (
+            <div className='text-xs text-yellow-600 dark:text-yellow-400 text-center'>
+              ⚠️ 人机验证不可用，已跳过
             </div>
           )}
 
