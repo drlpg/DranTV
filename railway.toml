@@ -1,0 +1,15 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[build.buildArgs]
+NEXT_PUBLIC_STORAGE_TYPE = "${{NEXT_PUBLIC_STORAGE_TYPE}}"
+NEXT_PUBLIC_TURNSTILE_SITE_KEY = "${{NEXT_PUBLIC_TURNSTILE_SITE_KEY}}"
+NEXT_PUBLIC_SITE_NAME = "${{NEXT_PUBLIC_SITE_NAME}}"
+
+[deploy]
+startCommand = "node production-final.js"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
