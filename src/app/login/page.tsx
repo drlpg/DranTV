@@ -43,14 +43,31 @@ function LoginPageClient() {
   // Turnstile 验证相关状态
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const [turnstileEnabled, setTurnstileEnabled] = useState(false);
 
   const { siteName } = useSite();
 
   // 禁用移动端滚动和橡皮筋效果
   usePreventScroll(true);
 
+  // 检查是否启用 Turnstile
+  useEffect(() => {
+    const siteKey = (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY;
+    console.log('[Turnstile] Site key:', siteKey);
+    if (siteKey && siteKey !== '') {
+      setTurnstileEnabled(true);
+    } else {
+      console.log('[Turnstile] Disabled - no site key');
+    }
+  }, []);
+
   // 加载 Turnstile 脚本
   useEffect(() => {
+    if (!turnstileEnabled) {
+      console.log('[Turnstile] Skipping load - disabled');
+      return;
+    }
+
     let mounted = true;
     let checkInterval: NodeJS.Timeout;
 
@@ -89,7 +106,6 @@ function LoginPageClient() {
         clearInterval(checkInterval);
         if (mounted && !(window as any).turnstile) {
           console.error('[Turnstile] Timeout waiting for existing script');
-          setError('人机验证初始化超时，请刷新页面重试');
         }
       }, 10000);
       return;
@@ -118,15 +134,11 @@ function LoginPageClient() {
         clearInterval(checkInterval);
         if (mounted && !(window as any).turnstile) {
           console.error('[Turnstile] API timeout');
-          setError('人机验证初始化超时，请刷新页面重试');
         }
       }, 10000);
     };
     script.onerror = (e) => {
       console.error('[Turnstile] Script load error:', e);
-      if (mounted) {
-        setError('人机验证加载失败，请刷新页面重试');
-      }
     };
     document.head.appendChild(script);
 
@@ -137,7 +149,7 @@ function LoginPageClient() {
       }
       delete (window as any).onTurnstileSuccess;
     };
-  }, []);
+  }, [turnstileEnabled]);
 
   // 在客户端挂载后从API获取配置并生成机器码
   useEffect(() => {
@@ -181,14 +193,18 @@ function LoginPageClient() {
 
     if (!password || (shouldAskUsername && !username)) return;
 
-    // 要求完成 Turnstile 验证
-    if (!turnstileToken && turnstileLoaded) {
+    // 要求完成 Turnstile 验证（仅在启用时）
+    if (turnstileEnabled && turnstileLoaded && !turnstileToken) {
       setError('请完成人机验证');
       return;
     }
 
-    // 如果 Turnstile 未加载，记录警告但允许继续（降级处理）
-    if (!turnstileLoaded) {
+    // 如果 Turnstile 未启用或未加载，记录日志
+    if (!turnstileEnabled) {
+      console.log(
+        '[Login] Turnstile disabled, proceeding without verification'
+      );
+    } else if (!turnstileLoaded) {
       console.warn(
         '[Login] Turnstile not loaded, proceeding without verification'
       );
@@ -390,24 +406,26 @@ function LoginPageClient() {
           )}
 
           {/* Turnstile 人机验证 */}
-          <div className='w-full'>
-            {turnstileLoaded ? (
-              <div
-                id='turnstile-container'
-                className='cf-turnstile'
-                data-sitekey={
-                  (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
-                }
-                data-callback='onTurnstileSuccess'
-                data-theme='auto'
-                data-size='flexible'
-              />
-            ) : (
-              <div className='flex items-center justify-center py-4 text-sm text-gray-500 dark:text-gray-400'>
-                正在加载人机验证...
-              </div>
-            )}
-          </div>
+          {turnstileEnabled && (
+            <div className='w-full'>
+              {turnstileLoaded ? (
+                <div
+                  id='turnstile-container'
+                  className='cf-turnstile'
+                  data-sitekey={
+                    (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
+                  }
+                  data-callback='onTurnstileSuccess'
+                  data-theme='auto'
+                  data-size='flexible'
+                />
+              ) : (
+                <div className='flex items-center justify-center py-4 text-sm text-gray-500 dark:text-gray-400'>
+                  正在加载人机验证...
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <p className='text-sm text-red-600 dark:text-red-400'>{error}</p>
