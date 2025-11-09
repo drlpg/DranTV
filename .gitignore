@@ -51,3 +51,6 @@ scripts/check-db.js
 
 # M3U直播源文件
 *.m3u
+
+# 原项目对比目录
+OrangeTV-main/
