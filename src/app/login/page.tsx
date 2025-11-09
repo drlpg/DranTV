@@ -62,7 +62,13 @@ function LoginPageClient() {
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     script.async = true;
     script.defer = true;
-    script.onload = () => setTurnstileLoaded(true);
+    script.onload = () => {
+      setTurnstileLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Turnstile 脚本加载失败');
+      setError('人机验证加载失败，请刷新页面重试');
+    };
     document.head.appendChild(script);
 
     return () => {
@@ -115,7 +121,7 @@ function LoginPageClient() {
 
     if (!password || (shouldAskUsername && !username)) return;
 
-    // 验证 Turnstile token
+    // 强制要求 Turnstile token
     if (!turnstileToken) {
       setError('请完成人机验证');
       return;
