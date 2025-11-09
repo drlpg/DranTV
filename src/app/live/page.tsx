@@ -1289,7 +1289,7 @@ function LivePageClient() {
 
   return (
     <PageLayout activePath='/live'>
-      <div className='px-4 sm:px-10 py-4 sm:py-8 pb-20 md:pb-8'>
+      <div className='px-4 sm:px-10 py-4 sm:py-8 pb-6 md:pb-8'>
         {/* 播放器和频道列表 */}
         <div className='space-y-2 md:space-y-4'>
           {/* 标题栏 - 包含返回按钮、标题和折叠控制 */}
