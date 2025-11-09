@@ -303,7 +303,6 @@ function LivePageClient() {
 
       // 即使success为false，也检查是否有data
       const sources = result.data || [];
-      console.log('[Live] 设置直播源:', sources.length, '个');
       setLiveSources(sources);
 
       if (sources.length > 0) {
@@ -972,8 +971,6 @@ function LivePageClient() {
       ) {
         return;
       }
-
-      console.log('视频URL:', videoUrl);
 
       // 销毁之前的播放器实例并创建新的
       if (artPlayerRef.current) {
