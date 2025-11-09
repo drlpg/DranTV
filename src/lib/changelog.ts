@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.43",
+    date: "2025-11-09",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "清理临时调试代码和测试文件",
+    "优化 Dockerfile，添加必要的配置文件复制"
+    ],
+    fixed: [
+    "修复 Railway 环境变量读取问题",
+    "优化 Docker 构建配置，确保 standalone 模式正常工作",
+    "修复 Next.js 启动脚本，使用标准启动方式"
+    ]
+  },
+  {
     version: "1.0.42",
     date: "2025-11-08",
     added: [
@@ -100,7 +116,7 @@ export const changelog: ChangelogEntry[] = [
     fixed: [
     "修复订阅保存API清除其他直播源的严重bug",
     "修复导入新直播源后之前直播源被清除的问题",
-    "修复频道保存后清除直播源数据的bug",
+    "修复频道保存后清除直播",
     "修复频道按钮高度不一致问题（border导致）",
     "修复暗色模式频道悬停效果不明显的问题",
     "修复logo代理API参数不匹配问题（source vs DranTV-source）",
