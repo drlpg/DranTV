@@ -121,6 +121,7 @@ export default async function RootLayout({
     FLUID_SEARCH: fluidSearch,
     REQUIRE_DEVICE_CODE: requireDeviceCode,
     WS_URL: process.env.NEXT_PUBLIC_WS_URL || '',
+    TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
   };
 
   return (
