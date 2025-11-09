@@ -13,6 +13,20 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: true, // 启用 SWC 压缩以提升性能
 
+  // 开发环境性能优化
+  typescript: isDev
+    ? {
+        ignoreBuildErrors: true,
+      }
+    : undefined,
+
+  devIndicators: isDev
+    ? {
+        buildActivity: false, // 禁用构建指示器
+        buildActivityPosition: 'bottom-right',
+      }
+    : undefined,
+
   // 配置安全头，允许 Turnstile 脚本加载
   async headers() {
     return [
@@ -35,20 +49,7 @@ const nextConfig = {
         ],
       },
     ];
-  }
-
-  // 开发环境性能优化
-  ...(isDev && {
-    // 禁用类型检查以加快编译
-    typescript: {
-      ignoreBuildErrors: true,
-    },
-    // 优化开发服务器
-    devIndicators: {
-      buildActivity: false, // 禁用构建指示器
-      buildActivityPosition: 'bottom-right',
-    },
-  }),
+  },
 
   experimental: {
     instrumentationHook: process.env.NODE_ENV === 'production',
