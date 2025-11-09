@@ -19,33 +19,25 @@ WORKDIR /app
 # 复制 package.json 和 pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml* ./
 
-# 安装依赖（如果 lockfile 不存在或不匹配，使用 --no-frozen-lockfile）
-RUN pnpm install --no-frozen-lockfile
-
-# 复制其余文件
-COPY . .
+# 安装依赖
+RUN pnpm install --frozen-lockfile
 
 # ---- 第 2 阶段：构建项目 ----
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# 从 deps 阶段复制 node_modules 和所有文件
-COPY --from=deps /app ./
+# 从 deps 阶段复制 node_modules
+COPY --from=deps /app/node_modules ./node_modules
+# 复制全部源代码
+COPY . .
 
 ENV DOCKER_ENV=true
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 生成生产构建（添加详细日志）
-RUN echo "=== 开始构建 ===" && \
-    echo "Node 版本:" && node --version && \
-    echo "pnpm 版本:" && pnpm --version && \
-    echo "当前目录:" && pwd && \
-    echo "目录内容:" && ls -la && \
-    echo "package.json scripts:" && cat package.json | grep -A 10 "scripts" && \
-    echo "=== 执行构建命令 ===" && \
-    pnpm run build 2>&1 || (echo "=== 构建失败 ===" && exit 1)
+# 生成生产构建
+RUN pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
@@ -59,17 +51,24 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 从构建器中复制所有必要文件
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+# 从构建器中复制 standalone 输出
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# 从构建器中复制 scripts 目录
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+# 从构建器中复制启动脚本和WebSocket相关文件
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
+# 从构建器中复制 public 和 .next/static 目录
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# 创建健康检查脚本（在切换用户之前以root权限创建）
+# 安装必要的WebSocket依赖
+USER root
+RUN corepack enable && corepack prepare pnpm@latest --activate && \
+    pnpm install --prod --no-optional ws && \
+    pnpm store prune
+
+# 创建健康检查脚本
 RUN echo '#!/usr/bin/env node\n\
 const http = require("http");\n\
 const options = {\n\
