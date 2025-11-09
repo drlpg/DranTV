@@ -13,6 +13,30 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: true, // 启用 SWC 压缩以提升性能
 
+  // 配置安全头，允许 Turnstile 脚本加载
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https: http:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://challenges.cloudflare.com wss: ws:",
+              "frame-src 'self' https://challenges.cloudflare.com",
+              "worker-src 'self' blob:",
+            ].join('; '),
+          },
+        ],
+      },
+    ];
+  }
+
   // 开发环境性能优化
   ...(isDev && {
     // 禁用类型检查以加快编译
