@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.45",
+    date: "2025-11-09",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "修复登录页面刷新时聊天图标短暂出现的问题",
+    "修复登录表单初始加载时用户名输入框不显示的问题"
+    ]
+  },
+  {
     version: "1.0.44",
     date: "2025-11-09",
     added: [

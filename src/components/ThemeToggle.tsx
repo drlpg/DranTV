@@ -42,8 +42,10 @@ export function ThemeToggle() {
     };
   }, []);
 
+  const isLoginPage = pathname === '/login';
+
   if (!mounted) {
-    return (
+    return isLoginPage ? null : (
       <button
         className='w-10 h-10 p-2 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-500/10 dark:text-gray-300 dark:hover:bg-blue-500/10 transition-colors relative'
         aria-label='Open chat'
@@ -53,8 +55,6 @@ export function ThemeToggle() {
       </button>
     );
   }
-
-  const isLoginPage = pathname === '/login';
 
   return (
     <>

@@ -30,7 +30,7 @@ function LoginPageClient() {
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [shouldAskUsername, setShouldAskUsername] = useState(false);
+  const [shouldAskUsername, setShouldAskUsername] = useState(true);
 
   // 机器码相关状态
   const [machineCode, setMachineCode] = useState<string>('');
