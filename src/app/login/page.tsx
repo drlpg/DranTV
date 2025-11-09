@@ -328,8 +328,7 @@ function LoginPageClient() {
               <div
                 className='cf-turnstile'
                 data-sitekey={
-                  (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY ||
-                  '1x00000000000000000000AA'
+                  (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
                 }
                 data-callback='onTurnstileSuccess'
                 data-theme='auto'
