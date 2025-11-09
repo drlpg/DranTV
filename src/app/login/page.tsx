@@ -53,8 +53,23 @@ function LoginPageClient() {
 
   // 加载 Turnstile 脚本
   useEffect(() => {
+    // 获取 Site Key
+    const siteKey =
+      (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY ||
+      '1x00000000000000000000AA';
+
+    console.log('Turnstile Site Key:', siteKey);
+
+    // 如果没有配置有效的 Site Key，跳过 Turnstile 验证
+    if (!siteKey || siteKey === '') {
+      console.log('未配置 Turnstile Site Key，跳过人机验证');
+      setTurnstileToken('bypass'); // 设置一个绕过标记
+      return;
+    }
+
     // 设置全局回调函数
     (window as any).onTurnstileSuccess = (token: string) => {
+      console.log('Turnstile 验证成功');
       setTurnstileToken(token);
     };
 
@@ -63,6 +78,7 @@ function LoginPageClient() {
     script.async = true;
     script.defer = true;
     script.onload = () => {
+      console.log('Turnstile 脚本加载成功');
       setTurnstileLoaded(true);
     };
     script.onerror = () => {
@@ -121,8 +137,13 @@ function LoginPageClient() {
 
     if (!password || (shouldAskUsername && !username)) return;
 
-    // 强制要求 Turnstile token
-    if (!turnstileToken) {
+    // 只有在配置了 Turnstile 且加载成功时才要求 token
+    const siteKey =
+      (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY ||
+      '1x00000000000000000000AA';
+    const requireTurnstile = siteKey && siteKey !== '' && turnstileLoaded;
+
+    if (requireTurnstile && !turnstileToken) {
       setError('请完成人机验证');
       return;
     }
@@ -349,7 +370,7 @@ function LoginPageClient() {
               !password ||
               loading ||
               (shouldAskUsername && !username) ||
-              !turnstileToken
+              (turnstileLoaded && !turnstileToken)
             }
             className='inline-flex w-full justify-center rounded-lg bg-blue-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700 disabled:cursor-not-allowed disabled:opacity-50 !mt-6 sm:!mt-8'
           >
