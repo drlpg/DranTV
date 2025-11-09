@@ -51,48 +51,91 @@ function LoginPageClient() {
 
   // 加载 Turnstile 脚本
   useEffect(() => {
+    let mounted = true;
+    let checkInterval: NodeJS.Timeout;
+
     // 检查是否已经加载
     if ((window as any).turnstile) {
+      console.log('[Turnstile] Already loaded');
       setTurnstileLoaded(true);
       return;
     }
 
     // 设置全局回调函数
     (window as any).onTurnstileSuccess = (token: string) => {
-      setTurnstileToken(token);
+      console.log('[Turnstile] Token received');
+      if (mounted) {
+        setTurnstileToken(token);
+      }
     };
 
+    // 检查是否已存在脚本
+    const existingScript = document.querySelector(
+      'script[src*="challenges.cloudflare.com/turnstile"]'
+    );
+    if (existingScript) {
+      console.log('[Turnstile] Script already exists, waiting for load');
+      checkInterval = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkInterval);
+          if (mounted) {
+            console.log('[Turnstile] Loaded from existing script');
+            setTurnstileLoaded(true);
+          }
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (mounted && !(window as any).turnstile) {
+          console.error('[Turnstile] Timeout waiting for existing script');
+          setError('人机验证初始化超时，请刷新页面重试');
+        }
+      }, 10000);
+      return;
+    }
+
+    console.log('[Turnstile] Loading script');
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     script.async = true;
     script.defer = true;
     script.onload = () => {
+      console.log('[Turnstile] Script loaded, waiting for API');
       // 等待 turnstile 对象可用
-      const checkTurnstile = setInterval(() => {
+      checkInterval = setInterval(() => {
         if ((window as any).turnstile) {
-          clearInterval(checkTurnstile);
-          setTurnstileLoaded(true);
+          clearInterval(checkInterval);
+          if (mounted) {
+            console.log('[Turnstile] API ready');
+            setTurnstileLoaded(true);
+          }
         }
       }, 100);
 
       // 10秒后超时
       setTimeout(() => {
-        clearInterval(checkTurnstile);
-        if (!(window as any).turnstile) {
+        clearInterval(checkInterval);
+        if (mounted && !(window as any).turnstile) {
+          console.error('[Turnstile] API timeout');
           setError('人机验证初始化超时，请刷新页面重试');
         }
       }, 10000);
     };
-    script.onerror = () => {
-      setError('人机验证加载失败，请刷新页面重试');
+    script.onerror = (e) => {
+      console.error('[Turnstile] Script load error:', e);
+      if (mounted) {
+        setError('人机验证加载失败，请刷新页面重试');
+      }
     };
     document.head.appendChild(script);
 
     return () => {
-      delete (window as any).onTurnstileSuccess;
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
+      mounted = false;
+      if (checkInterval) {
+        clearInterval(checkInterval);
       }
+      delete (window as any).onTurnstileSuccess;
     };
   }, []);
 
@@ -139,9 +182,16 @@ function LoginPageClient() {
     if (!password || (shouldAskUsername && !username)) return;
 
     // 要求完成 Turnstile 验证
-    if (!turnstileToken) {
+    if (!turnstileToken && turnstileLoaded) {
       setError('请完成人机验证');
       return;
+    }
+
+    // 如果 Turnstile 未加载，记录警告但允许继续（降级处理）
+    if (!turnstileLoaded) {
+      console.warn(
+        '[Login] Turnstile not loaded, proceeding without verification'
+      );
     }
 
     try {
@@ -343,6 +393,7 @@ function LoginPageClient() {
           <div className='w-full'>
             {turnstileLoaded ? (
               <div
+                id='turnstile-container'
                 className='cf-turnstile'
                 data-sitekey={
                   (window as any).RUNTIME_CONFIG?.TURNSTILE_SITE_KEY
