@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.47",
+    date: "2025-11-09",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化登录页面移动端布局，表单容器垂直居中",
+    "调整移动端版本号位置，避免被浏览器工具栏遮挡",
+    "优化 CSP 策略，添加豆瓣、Bangumi 和 GitHub 域名支持"
+    ],
+    fixed: [
+    "移除直播页面控制台调试日志",
+    "修复 CSP 阻止外部 API 请求的问题"
+    ]
+  },
+  {
     version: "1.0.46",
     date: "2025-11-09",
     added: [

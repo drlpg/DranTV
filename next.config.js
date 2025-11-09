@@ -43,7 +43,7 @@ const nextConfig = {
               "style-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com",
               "img-src 'self' data: https: http: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://challenges.cloudflare.com https://www.google-analytics.com https://analytics.google.com https://m.douban.cmliussss.net https://api.bgm.tv wss: ws:",
+              "connect-src 'self' https: http: https://challenges.cloudflare.com wss: ws:",
               "frame-src 'self' https://challenges.cloudflare.com",
               "frame-ancestors 'self'",
               "worker-src 'self' blob:",
