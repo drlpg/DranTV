@@ -27,7 +27,6 @@ const nextConfig = {
       }
     : undefined,
 
-  // 配置安全头，允许 Turnstile 脚本加载
   async headers() {
     return [
       {
@@ -41,9 +40,10 @@ const nextConfig = {
               "script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com blob: data:",
               "style-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
               "style-src-elem 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-              "img-src 'self' data: https: http: blob:",
+              "img-src * 'self' data: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https: http: https://challenges.cloudflare.com wss: ws:",
+              "connect-src * 'self' blob: data:",
+              "media-src * 'self' blob: data:",
               "frame-src 'self' https://challenges.cloudflare.com",
               "frame-ancestors 'self'",
               "worker-src 'self' blob:",

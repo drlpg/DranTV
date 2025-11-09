@@ -296,14 +296,15 @@ function PlayPageClient() {
           try {
             // 检查是否有第一集的播放地址
             if (!source.episodes || source.episodes.length === 0) {
-              console.warn(`播放源 ${source.source_name} 没有可用的播放地址`);
               return null;
             }
 
-            const episodeUrl =
-              source.episodes.length > 1
-                ? source.episodes[1]
-                : source.episodes[0];
+            // 始终测试第一集（索引0），确保测速的是用户最可能播放的集数
+            const episodeUrl = source.episodes[0];
+            if (!episodeUrl) {
+              return null;
+            }
+
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
             return {
@@ -346,8 +347,39 @@ function PlayPageClient() {
     setPrecomputedVideoInfo(newVideoInfoMap);
 
     if (successfulResults.length === 0) {
-      console.warn('所有播放源测速都失败，使用第一个播放源');
-      return sources[0];
+      // 按源名称优先级排序（优先选择知名源）
+      const prioritySources = [
+        '电影天堂',
+        '如意',
+        '暴风',
+        '量子',
+        '非凡',
+        '光速',
+      ];
+      const sortedSources = [...sources].sort((a, b) => {
+        const aPriority = prioritySources.findIndex((name) =>
+          a.source_name?.includes(name)
+        );
+        const bPriority = prioritySources.findIndex((name) =>
+          b.source_name?.includes(name)
+        );
+
+        // 如果都在优先列表中，按优先级排序
+        if (aPriority !== -1 && bPriority !== -1) {
+          return aPriority - bPriority;
+        }
+        // 如果只有一个在优先列表中，优先选择它
+        if (aPriority !== -1) return -1;
+        if (bPriority !== -1) return 1;
+        // 都不在优先列表中，保持原顺序
+        return 0;
+      });
+
+      // 返回第一个有有效剧集的源
+      const validSource = sortedSources.find(
+        (s) => s.episodes && s.episodes.length > 0 && s.episodes[0]
+      );
+      return validSource || sources[0];
     }
 
     // 找出所有有效速度的最大值，用于线性映射
