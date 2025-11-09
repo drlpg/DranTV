@@ -53,6 +53,7 @@ const app = next({
   dev: false,
   hostname,
   port,
+  dir: __dirname,
 });
 
 const handle = app.getRequestHandler();

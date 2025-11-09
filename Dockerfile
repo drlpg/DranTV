@@ -59,6 +59,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standal
 # 从构建器中复制 public 和 .next/static 目录
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# 从构建器中复制 package.json，standalone 模式需要
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # 安装必要的WebSocket依赖
 USER root
