@@ -1289,9 +1289,9 @@ function LivePageClient() {
 
   return (
     <PageLayout activePath='/live'>
-      <div className='flex flex-col justify-center gap-3 px-5 lg:px-[3rem] 2xl:px-20 min-h-[calc(100vh-3rem)] py-6'>
+      <div className='px-4 sm:px-10 py-4 sm:py-8 pb-20 md:pb-8'>
         {/* 播放器和频道列表 */}
-        <div className='space-y-2'>
+        <div className='space-y-2 md:space-y-4'>
           {/* 标题栏 - 包含返回按钮、标题和折叠控制 */}
           <div className='hidden lg:flex justify-between items-center'>
             {/* 左侧：返回按钮 */}
