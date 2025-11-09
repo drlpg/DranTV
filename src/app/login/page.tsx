@@ -332,7 +332,6 @@ function LoginPageClient() {
                 }
                 data-callback='onTurnstileSuccess'
                 data-theme='auto'
-                data-appearance='interaction-only'
               />
             </div>
           )}
