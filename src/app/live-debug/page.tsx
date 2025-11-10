@@ -9,6 +9,8 @@ export default function LiveDebugPage() {
   const [testingM3u, setTestingM3u] = useState(false);
   const [sourcesApiTest, setSourcesApiTest] = useState<any>(null);
   const [testingSourcesApi, setTestingSourcesApi] = useState(false);
+  const [realSourcesTest, setRealSourcesTest] = useState<any>(null);
+  const [testingRealSources, setTestingRealSources] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -76,6 +78,22 @@ export default function LiveDebugPage() {
     }
   };
 
+  const testRealSourcesApi = async () => {
+    setTestingRealSources(true);
+    try {
+      const response = await fetch('/api/live/test-real-sources');
+      const data = await response.json();
+      setRealSourcesTest(data);
+    } catch (error) {
+      setRealSourcesTest({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setTestingRealSources(false);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
       <h1>直播源诊断工具</h1>
@@ -126,6 +144,22 @@ export default function LiveDebugPage() {
           }}
         >
           {testingSourcesApi ? '测试API中...' : '测试Sources API'}
+        </button>
+
+        <button
+          onClick={testRealSourcesApi}
+          disabled={testingRealSources}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: testingRealSources ? 'not-allowed' : 'pointer',
+            backgroundColor: testingRealSources ? '#ccc' : '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {testingRealSources ? '测试中...' : '测试真实Sources API'}
         </button>
       </div>
 
@@ -241,6 +275,64 @@ export default function LiveDebugPage() {
             >
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {realSourcesTest && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>真实Sources API测试结果</h2>
+          <div
+            style={{
+              backgroundColor: realSourcesTest.success ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${
+                realSourcesTest.success ? '#c3e6cb' : '#f5c6cb'
+              }`,
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>{realSourcesTest.success ? '✅ 成功' : '❌ 失败'}</h3>
+            {realSourcesTest.success ? (
+              <>
+                <p>
+                  <strong>API响应:</strong>
+                </p>
+                <pre
+                  style={{
+                    backgroundColor: '#f0f0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                  }}
+                >
+                  {JSON.stringify(realSourcesTest.apiResponse, null, 2)}
+                </pre>
+              </>
+            ) : (
+              <p style={{ color: 'red' }}>
+                <strong>错误:</strong> {realSourcesTest.error}
+              </p>
+            )}
+            {realSourcesTest.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {realSourcesTest.logs.join('\n')}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       )}
