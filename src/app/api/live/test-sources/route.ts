@@ -17,21 +17,38 @@ export async function GET(request: NextRequest) {
   log('[Test Sources] 时间: ' + new Date().toISOString());
 
   try {
-    // 直接调用 /api/live/sources
-    log('[Test Sources] 调用 /api/live/sources...');
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const sourcesUrl = `${baseUrl}/api/live/sources`;
-    log('[Test Sources] URL: ' + sourcesUrl);
+    // 直接导入并调用配置获取逻辑
+    log('[Test Sources] 直接调用 getConfig...');
+    const { getConfig } = await import('@/lib/config');
+    const config = await getConfig();
 
-    const response = await fetch(sourcesUrl, {
-      cache: 'no-store',
-    });
+    log('[Test Sources] 配置获取成功');
+    log('[Test Sources] LiveConfig数量: ' + (config.LiveConfig?.length || 0));
 
-    log('[Test Sources] 响应状态: ' + response.status);
-    log('[Test Sources] 响应OK: ' + response.ok);
+    const allLiveSources = config.LiveConfig || [];
+    const liveSources = allLiveSources.filter(
+      (source: any) => !source.disabled
+    );
 
-    const data = await response.json();
-    log('[Test Sources] 响应数据: ' + JSON.stringify(data, null, 2));
+    log('[Test Sources] 启用的直播源数量: ' + liveSources.length);
+    log(
+      '[Test Sources] 直播源列表: ' +
+        JSON.stringify(
+          liveSources.map((s: any) => ({ key: s.key, name: s.name })),
+          null,
+          2
+        )
+    );
+
+    const data = {
+      success: true,
+      data: liveSources,
+      debug: {
+        timestamp: new Date().toISOString(),
+        totalSources: allLiveSources.length,
+        enabledSources: liveSources.length,
+      },
+    };
 
     log('[Test Sources] 测试完成，总耗时: ' + (Date.now() - startTime) + 'ms');
     log('[Test Sources] ========== 测试结束 ==========');
@@ -47,11 +64,15 @@ export async function GET(request: NextRequest) {
       '[Test Sources] ❌ 测试失败: ' +
         (error instanceof Error ? error.message : String(error))
     );
+    if (error instanceof Error && error.stack) {
+      log('[Test Sources] 错误堆栈: ' + error.stack);
+    }
 
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
         logs: logs,
         duration: Date.now() - startTime,
       },
