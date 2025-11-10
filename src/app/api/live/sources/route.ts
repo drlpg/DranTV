@@ -13,20 +13,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // 添加10秒超时控制
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('配置获取超时')), 10000);
-    });
-
-    const configPromise = getConfig();
-
-    let config;
-    try {
-      config = await Promise.race([configPromise, timeoutPromise]);
-    } catch (timeoutError) {
-      // 超时时尝试直接获取配置（getConfig内部有降级策略）
-      config = await getConfig();
-    }
+    // 直接获取配置（getConfig内部已有超时和降级策略）
+    const config = await getConfig();
 
     if (!config) {
       return NextResponse.json(
