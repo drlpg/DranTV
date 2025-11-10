@@ -5,6 +5,8 @@ import { useState } from 'react';
 export default function LiveDebugPage() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [m3uTestResults, setM3uTestResults] = useState<any[]>([]);
+  const [testingM3u, setTestingM3u] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -22,24 +24,76 @@ export default function LiveDebugPage() {
     }
   };
 
+  const testM3uUrls = async () => {
+    if (!debugInfo?.config?.liveSources) {
+      alert('请先运行诊断获取直播源信息');
+      return;
+    }
+
+    setTestingM3u(true);
+    const results: any[] = [];
+
+    for (const source of debugInfo.config.liveSources) {
+      if (source.disabled) continue;
+
+      try {
+        const response = await fetch(
+          `/api/live/test-m3u?url=${encodeURIComponent(source.url || '')}`
+        );
+        const data = await response.json();
+        results.push({
+          source: source.name,
+          ...data,
+        });
+      } catch (error) {
+        results.push({
+          source: source.name,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    setM3uTestResults(results);
+    setTestingM3u(false);
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
       <h1>直播源诊断工具</h1>
-      <button
-        onClick={runDiagnostics}
-        disabled={loading}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          backgroundColor: loading ? '#ccc' : '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-        }}
-      >
-        {loading ? '诊断中...' : '运行诊断'}
-      </button>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button
+          onClick={runDiagnostics}
+          disabled={loading}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            backgroundColor: loading ? '#ccc' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {loading ? '诊断中...' : '运行诊断'}
+        </button>
+
+        <button
+          onClick={testM3uUrls}
+          disabled={testingM3u || !debugInfo}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: testingM3u || !debugInfo ? 'not-allowed' : 'pointer',
+            backgroundColor: testingM3u || !debugInfo ? '#ccc' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {testingM3u ? '测试M3U中...' : '测试M3U访问'}
+        </button>
+      </div>
 
       {debugInfo && (
         <div style={{ marginTop: '20px' }}>
@@ -157,6 +211,86 @@ export default function LiveDebugPage() {
         </div>
       )}
 
+      {m3uTestResults.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>M3U访问测试结果</h2>
+          {m3uTestResults.map((result, index) => (
+            <div
+              key={index}
+              style={{
+                backgroundColor: result.success ? '#d4edda' : '#f8d7da',
+                border: `1px solid ${result.success ? '#c3e6cb' : '#f5c6cb'}`,
+                padding: '15px',
+                borderRadius: '4px',
+                marginBottom: '10px',
+              }}
+            >
+              <h3>
+                {result.success ? '✅' : '❌'} {result.source}
+              </h3>
+              {result.success ? (
+                <>
+                  <p>
+                    <strong>状态:</strong> {result.status}
+                  </p>
+                  <p>
+                    <strong>内容长度:</strong> {result.contentLength} bytes
+                  </p>
+                  <p>
+                    <strong>频道数量:</strong> {result.channelCount}
+                  </p>
+                  <p>
+                    <strong>耗时:</strong> {result.duration}ms
+                  </p>
+                  {result.logs && (
+                    <details>
+                      <summary>查看详细日志</summary>
+                      <pre
+                        style={{
+                          backgroundColor: '#000',
+                          color: '#0f0',
+                          padding: '10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          overflow: 'auto',
+                          marginTop: '10px',
+                        }}
+                      >
+                        {result.logs.join('\n')}
+                      </pre>
+                    </details>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p style={{ color: 'red' }}>
+                    <strong>错误:</strong> {result.error}
+                  </p>
+                  {result.logs && (
+                    <details>
+                      <summary>查看详细日志</summary>
+                      <pre
+                        style={{
+                          backgroundColor: '#000',
+                          color: '#f00',
+                          padding: '10px',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          overflow: 'auto',
+                          marginTop: '10px',
+                        }}
+                      >
+                        {result.logs.join('\n')}
+                      </pre>
+                    </details>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div
         style={{
           marginTop: '20px',
@@ -176,6 +310,7 @@ export default function LiveDebugPage() {
               <li>环境变量配置是否正确</li>
             </ul>
           </li>
+          <li>点击"测试M3U访问"按钮，测试M3U文件是否可以访问</li>
           <li>如果发现问题，根据日志信息进行修复</li>
           <li>修复后重新运行诊断确认</li>
         </ol>
