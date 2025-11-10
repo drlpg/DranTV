@@ -438,8 +438,24 @@ async function getInitConfig(
 }
 
 export async function getConfig(): Promise<AdminConfig> {
+  const startTime = Date.now();
+  console.log('[Config] ========== 开始获取配置 ==========');
+  console.log('[Config] 时间:', new Date().toISOString());
+
   // 直接使用内存缓存
   if (cachedConfig) {
+    console.log('[Config] 使用内存缓存配置');
+    console.log('[Config] 缓存配置摘要:', {
+      sourcesCount: cachedConfig.SourceConfig?.length || 0,
+      liveSourcesCount: cachedConfig.LiveConfig?.length || 0,
+      customCategoriesCount: cachedConfig.CustomCategories?.length || 0,
+    });
+    console.log(
+      '[Config] 获取配置完成（缓存），耗时:',
+      Date.now() - startTime,
+      'ms'
+    );
+    console.log('[Config] ========== 获取配置结束 ==========');
     return cachedConfig;
   }
 
@@ -449,13 +465,30 @@ export async function getConfig(): Promise<AdminConfig> {
   let isTimeout = false;
 
   try {
+    console.log('[Config] 开始从数据库获取配置...');
     // 添加10秒超时控制（缩短超时时间，提高响应速度）
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error('数据库操作超时')), 10000);
     });
 
     adminConfig = await Promise.race([db.getAdminConfig(), timeoutPromise]);
+    console.log(
+      '[Config] 数据库配置获取成功，耗时:',
+      Date.now() - startTime,
+      'ms'
+    );
+    if (adminConfig) {
+      console.log('[Config] 数据库配置摘要:', {
+        sourcesCount: adminConfig.SourceConfig?.length || 0,
+        liveSourcesCount: adminConfig.LiveConfig?.length || 0,
+        customCategoriesCount: adminConfig.CustomCategories?.length || 0,
+      });
+    }
   } catch (e) {
+    console.error('[Config] 数据库操作失败:', e);
+    console.error('[Config] 错误堆栈:', e instanceof Error ? e.stack : 'N/A');
+    console.error('[Config] 耗时:', Date.now() - startTime, 'ms');
+
     // 判断是否为超时错误
     if (e instanceof Error && e.message.includes('超时')) {
       isTimeout = true;
@@ -467,18 +500,28 @@ export async function getConfig(): Promise<AdminConfig> {
 
   // db 中无配置且不是超时，执行一次初始化
   if (!adminConfig && !isTimeout) {
+    console.log('[Config] 数据库中无配置，执行初始化...');
     // 读取config.json文件
     let configFileContent = '';
     try {
       const configPath = path.join(process.cwd(), 'config.json');
+      console.log('[Config] 尝试读取配置文件:', configPath);
       if (fs.existsSync(configPath)) {
         configFileContent = fs.readFileSync(configPath, 'utf-8');
+        console.log(
+          '[Config] 配置文件读取成功，长度:',
+          configFileContent.length
+        );
+      } else {
+        console.warn('[Config] 配置文件不存在');
       }
     } catch (e) {
+      console.error('[Config] 读取配置文件失败:', e);
       // 静默处理读取错误
     }
 
     adminConfig = await getInitConfig(configFileContent);
+    console.log('[Config] 初始化配置完成');
     needsSave = true;
   } else if (isTimeout) {
     // 超时情况：使用降级配置，避免页面崩溃
@@ -487,22 +530,34 @@ export async function getConfig(): Promise<AdminConfig> {
     let configFileContent = '';
     try {
       const configPath = path.join(process.cwd(), 'config.json');
+      console.log('[Config] 尝试读取配置文件:', configPath);
       if (fs.existsSync(configPath)) {
         configFileContent = fs.readFileSync(configPath, 'utf-8');
+        console.log(
+          '[Config] 配置文件读取成功，长度:',
+          configFileContent.length
+        );
+      } else {
+        console.warn('[Config] 配置文件不存在');
       }
     } catch (e) {
+      console.error('[Config] 读取配置文件失败:', e);
       // 静默处理读取错误
     }
 
     adminConfig = await getInitConfig(configFileContent);
+    console.log('[Config] 降级配置初始化完成');
 
     // 后台异步重试获取配置（不阻塞当前请求）
     setTimeout(async () => {
       try {
+        console.log('[Config] 后台重试获取数据库配置...');
         const retryConfig = await db.getAdminConfig();
         if (retryConfig) {
           cachedConfig = configSelfCheck(retryConfig);
           console.log('[Config] 后台重试成功，已更新缓存配置');
+        } else {
+          console.warn('[Config] 后台重试返回空配置');
         }
       } catch (retryError) {
         console.error('[Config] 后台重试失败:', retryError);
@@ -517,20 +572,31 @@ export async function getConfig(): Promise<AdminConfig> {
     adminConfig = await getInitConfig('');
   }
 
+  console.log('[Config] 执行配置自检...');
   // 执行配置自检
   adminConfig = configSelfCheck(adminConfig);
+  console.log('[Config] 配置自检完成');
+  console.log('[Config] 最终配置摘要:', {
+    sourcesCount: adminConfig.SourceConfig?.length || 0,
+    liveSourcesCount: adminConfig.LiveConfig?.length || 0,
+    customCategoriesCount: adminConfig.CustomCategories?.length || 0,
+  });
 
   // 缓存配置
   cachedConfig = adminConfig;
+  console.log('[Config] 配置已缓存到内存');
 
   // 只在初始化时保存到数据库，避免覆盖已有数据
   if (needsSave) {
+    console.log('[Config] 异步保存配置到数据库...');
     // 异步保存，不阻塞返回
     db.saveAdminConfig(cachedConfig).catch((err) => {
       console.error('[Config] 保存配置失败:', err);
     });
   }
 
+  console.log('[Config] 获取配置完成，总耗时:', Date.now() - startTime, 'ms');
+  console.log('[Config] ========== 获取配置结束 ==========');
   return cachedConfig;
 }
 
