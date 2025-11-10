@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
 
@@ -17,9 +18,8 @@ export async function GET(request: NextRequest) {
   log('[Test Sources] 时间: ' + new Date().toISOString());
 
   try {
-    // 直接导入并调用配置获取逻辑
+    // 直接调用配置获取逻辑
     log('[Test Sources] 直接调用 getConfig...');
-    const { getConfig } = await import('@/lib/config');
     const config = await getConfig();
 
     log('[Test Sources] 配置获取成功');
