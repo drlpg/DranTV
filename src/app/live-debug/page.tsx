@@ -141,8 +141,16 @@ export default function LiveDebugPage() {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'monospace' }}>
-      <h1>直播源诊断工具</h1>
+    <div
+      style={{
+        padding: '20px',
+        fontFamily: 'monospace',
+        backgroundColor: '#1a1a1a',
+        minHeight: '100vh',
+        color: '#e0e0e0',
+      }}
+    >
+      <h1 style={{ color: '#ffffff' }}>直播源诊断工具</h1>
       <div style={{ display: 'flex', gap: '10px' }}>
         <button
           onClick={runDiagnostics}
@@ -247,35 +255,36 @@ export default function LiveDebugPage() {
           <h2>诊断结果</h2>
           <div
             style={{
-              backgroundColor: '#f5f5f5',
+              backgroundColor: '#2a2a2a',
               padding: '15px',
               borderRadius: '4px',
               maxHeight: '600px',
               overflow: 'auto',
+              border: '1px solid #444',
             }}
           >
-            <h3>基本信息</h3>
-            <p>
+            <h3 style={{ color: '#ffffff' }}>基本信息</h3>
+            <p style={{ color: '#e0e0e0' }}>
               <strong>状态:</strong> {debugInfo.success ? '✅ 成功' : '❌ 失败'}
             </p>
-            <p>
+            <p style={{ color: '#e0e0e0' }}>
               <strong>时间:</strong> {debugInfo.timestamp}
             </p>
-            <p>
+            <p style={{ color: '#e0e0e0' }}>
               <strong>耗时:</strong> {debugInfo.duration}ms
             </p>
 
             {debugInfo.config && (
               <>
-                <h3>配置信息</h3>
-                <p>
+                <h3 style={{ color: '#ffffff' }}>配置信息</h3>
+                <p style={{ color: '#e0e0e0' }}>
                   <strong>视频源数量:</strong> {debugInfo.config.sourceCount}
                 </p>
-                <p>
+                <p style={{ color: '#e0e0e0' }}>
                   <strong>直播源总数:</strong>{' '}
                   {debugInfo.config.liveSourceCount}
                 </p>
-                <p>
+                <p style={{ color: '#e0e0e0' }}>
                   <strong>启用的直播源:</strong>{' '}
                   {debugInfo.config.enabledLiveSourceCount}
                 </p>
@@ -283,8 +292,8 @@ export default function LiveDebugPage() {
                 {debugInfo.config.liveSources &&
                   debugInfo.config.liveSources.length > 0 && (
                     <>
-                      <h4>直播源列表</h4>
-                      <ul>
+                      <h4 style={{ color: '#ffffff' }}>直播源列表</h4>
+                      <ul style={{ color: '#e0e0e0' }}>
                         {debugInfo.config.liveSources.map(
                           (source: any, index: number) => (
                             <li key={index}>
@@ -305,7 +314,7 @@ export default function LiveDebugPage() {
 
             {debugInfo.logs && debugInfo.logs.length > 0 && (
               <>
-                <h3>详细日志</h3>
+                <h3 style={{ color: '#ffffff' }}>详细日志</h3>
                 <pre
                   style={{
                     backgroundColor: '#000',
@@ -323,17 +332,18 @@ export default function LiveDebugPage() {
 
             {debugInfo.error && (
               <>
-                <h3 style={{ color: 'red' }}>错误信息</h3>
-                <p style={{ color: 'red' }}>{debugInfo.error}</p>
+                <h3 style={{ color: '#ff6b6b' }}>错误信息</h3>
+                <p style={{ color: '#ff6b6b' }}>{debugInfo.error}</p>
                 {debugInfo.errorStack && (
                   <pre
                     style={{
-                      backgroundColor: '#fee',
-                      color: '#c00',
+                      backgroundColor: '#3a1a1a',
+                      color: '#ff6b6b',
                       padding: '10px',
                       borderRadius: '4px',
                       fontSize: '12px',
                       overflow: 'auto',
+                      border: '1px solid #ff6b6b',
                     }}
                   >
                     {debugInfo.errorStack}
@@ -342,14 +352,16 @@ export default function LiveDebugPage() {
               </>
             )}
 
-            <h3>完整响应</h3>
+            <h3 style={{ color: '#ffffff' }}>完整响应</h3>
             <pre
               style={{
-                backgroundColor: '#f0f0f0',
+                backgroundColor: '#1a1a1a',
+                color: '#a0a0a0',
                 padding: '10px',
                 borderRadius: '4px',
                 fontSize: '12px',
                 overflow: 'auto',
+                border: '1px solid #444',
               }}
             >
               {JSON.stringify(debugInfo, null, 2)}
@@ -711,12 +723,13 @@ export default function LiveDebugPage() {
         style={{
           marginTop: '20px',
           padding: '15px',
-          backgroundColor: '#fff3cd',
+          backgroundColor: '#3a3a1a',
           borderRadius: '4px',
+          border: '1px solid #666',
         }}
       >
-        <h3>使用说明</h3>
-        <ol>
+        <h3 style={{ color: '#ffffff' }}>使用说明</h3>
+        <ol style={{ color: '#e0e0e0' }}>
           <li>点击"运行诊断"按钮</li>
           <li>
             查看诊断结果，特别关注：
@@ -728,10 +741,11 @@ export default function LiveDebugPage() {
           </li>
           <li>点击"测试M3U访问"按钮，测试M3U文件是否可以访问</li>
           <li>点击"测试Sources API"按钮，测试API是否正常工作</li>
-          <li>如果发现问题，根据日志信息进行修复</li>
+          <li>点击"深度配置诊断"查看数据库配置状态</li>
+          <li>如果配置为空，点击"🔧 修复配置"尝试恢复</li>
           <li>修复后重新运行诊断确认</li>
         </ol>
-        <p>
+        <p style={{ color: '#e0e0e0' }}>
           <strong>访问路径:</strong> /live-debug
         </p>
       </div>
