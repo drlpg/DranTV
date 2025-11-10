@@ -21,6 +21,14 @@ export async function GET() {
     // 检查环境变量
     log('[Check Redis] --- 环境变量检查 ---');
     log(
+      '[Check Redis] UPSTASH_URL: ' +
+        (process.env.UPSTASH_URL ? '已设置' : '未设置')
+    );
+    log(
+      '[Check Redis] UPSTASH_TOKEN: ' +
+        (process.env.UPSTASH_TOKEN ? '已设置' : '未设置')
+    );
+    log(
       '[Check Redis] UPSTASH_REDIS_REST_URL: ' +
         (process.env.UPSTASH_REDIS_REST_URL ? '已设置' : '未设置')
     );
