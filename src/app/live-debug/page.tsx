@@ -1,0 +1,188 @@
+'use client';
+
+import { useState } from 'react';
+
+export default function LiveDebugPage() {
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const runDiagnostics = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/live/debug');
+      const data = await response.json();
+      setDebugInfo(data);
+    } catch (error) {
+      setDebugInfo({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'monospace' }}>
+      <h1>直播源诊断工具</h1>
+      <button
+        onClick={runDiagnostics}
+        disabled={loading}
+        style={{
+          padding: '10px 20px',
+          fontSize: '16px',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          backgroundColor: loading ? '#ccc' : '#007bff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+        }}
+      >
+        {loading ? '诊断中...' : '运行诊断'}
+      </button>
+
+      {debugInfo && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>诊断结果</h2>
+          <div
+            style={{
+              backgroundColor: '#f5f5f5',
+              padding: '15px',
+              borderRadius: '4px',
+              maxHeight: '600px',
+              overflow: 'auto',
+            }}
+          >
+            <h3>基本信息</h3>
+            <p>
+              <strong>状态:</strong> {debugInfo.success ? '✅ 成功' : '❌ 失败'}
+            </p>
+            <p>
+              <strong>时间:</strong> {debugInfo.timestamp}
+            </p>
+            <p>
+              <strong>耗时:</strong> {debugInfo.duration}ms
+            </p>
+
+            {debugInfo.config && (
+              <>
+                <h3>配置信息</h3>
+                <p>
+                  <strong>视频源数量:</strong> {debugInfo.config.sourceCount}
+                </p>
+                <p>
+                  <strong>直播源总数:</strong>{' '}
+                  {debugInfo.config.liveSourceCount}
+                </p>
+                <p>
+                  <strong>启用的直播源:</strong>{' '}
+                  {debugInfo.config.enabledLiveSourceCount}
+                </p>
+
+                {debugInfo.config.liveSources &&
+                  debugInfo.config.liveSources.length > 0 && (
+                    <>
+                      <h4>直播源列表</h4>
+                      <ul>
+                        {debugInfo.config.liveSources.map(
+                          (source: any, index: number) => (
+                            <li key={index}>
+                              <strong>{source.name}</strong> ({source.key})
+                              <br />
+                              状态:{' '}
+                              {source.disabled ? '❌ 已禁用' : '✅ 已启用'}
+                              <br />
+                              来源: {source.from}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+              </>
+            )}
+
+            {debugInfo.logs && debugInfo.logs.length > 0 && (
+              <>
+                <h3>详细日志</h3>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                  }}
+                >
+                  {debugInfo.logs.join('\n')}
+                </pre>
+              </>
+            )}
+
+            {debugInfo.error && (
+              <>
+                <h3 style={{ color: 'red' }}>错误信息</h3>
+                <p style={{ color: 'red' }}>{debugInfo.error}</p>
+                {debugInfo.errorStack && (
+                  <pre
+                    style={{
+                      backgroundColor: '#fee',
+                      color: '#c00',
+                      padding: '10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      overflow: 'auto',
+                    }}
+                  >
+                    {debugInfo.errorStack}
+                  </pre>
+                )}
+              </>
+            )}
+
+            <h3>完整响应</h3>
+            <pre
+              style={{
+                backgroundColor: '#f0f0f0',
+                padding: '10px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                overflow: 'auto',
+              }}
+            >
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      <div
+        style={{
+          marginTop: '20px',
+          padding: '15px',
+          backgroundColor: '#fff3cd',
+          borderRadius: '4px',
+        }}
+      >
+        <h3>使用说明</h3>
+        <ol>
+          <li>点击"运行诊断"按钮</li>
+          <li>
+            查看诊断结果，特别关注：
+            <ul>
+              <li>启用的直播源数量是否为0</li>
+              <li>config.json文件是否存在</li>
+              <li>环境变量配置是否正确</li>
+            </ul>
+          </li>
+          <li>如果发现问题，根据日志信息进行修复</li>
+          <li>修复后重新运行诊断确认</li>
+        </ol>
+        <p>
+          <strong>访问路径:</strong> /live-debug
+        </p>
+      </div>
+    </div>
+  );
+}
