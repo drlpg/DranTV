@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { getConfig, setCachedConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic'; // 强制动态渲染，禁用缓存
+export const revalidate = 0; // 禁用重新验证缓存
 
 export async function POST(request: NextRequest) {
   try {

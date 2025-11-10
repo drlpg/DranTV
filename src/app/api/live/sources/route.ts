@@ -6,6 +6,8 @@ import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
 export const maxDuration = 15; // 设置最大执行时间为15秒
+export const dynamic = 'force-dynamic'; // 强制动态渲染，禁用缓存
+export const revalidate = 0; // 禁用重新验证缓存
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
