@@ -259,39 +259,26 @@ function LivePageClient() {
 
   // 获取直播源列表
   const fetchLiveSources = async () => {
-    const startTime = Date.now();
     try {
-      console.log('[Live Client] ========== 开始获取直播源 ==========');
-      console.log('[Live Client] 时间:', new Date().toISOString());
       setLoadingStage('fetching');
       setLoadingMessage('正在获取直播源...');
 
       // 获取 AdminConfig 中的直播源信息，添加超时控制
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.warn('[Live Client] 请求超时，中止请求');
         controller.abort();
       }, 15000); // 增加到15秒
 
-      console.log('[Live Client] 发送请求到 /api/live/sources');
       const response = await fetch('/api/live/sources', {
         signal: controller.signal,
         cache: 'no-store',
       });
       clearTimeout(timeoutId);
-      console.log('[Live Client] 收到响应:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText,
-        duration: Date.now() - startTime + 'ms',
-      });
 
       if (!response.ok) {
-        console.warn('[Live Client] 获取直播源响应异常:', response.status);
         // 即使响应不OK，也尝试解析数据（后端可能返回了降级数据）
         try {
           const result = await response.json();
-          console.log('[Live Client] 解析响应数据:', result);
           if (result.data && Array.isArray(result.data)) {
             setLiveSources(result.data);
             if (result.data.length === 0) {
@@ -301,55 +288,29 @@ function LivePageClient() {
             return;
           }
         } catch (parseError) {
-          console.error('[Live Client] 解析响应失败:', parseError);
           // 解析失败，继续抛出错误
         }
         throw new Error('获取直播源失败');
       }
 
       const result = await response.json();
-      console.log(
-        '[Live Client] API响应完整数据:',
-        JSON.stringify(result, null, 2)
-      );
-      console.log('[Live Client] API响应摘要:', {
-        success: result.success,
-        error: result.error,
-        sourceCount: result.data?.length || 0,
-        debug: result.debug,
-      });
 
       // 即使success为false，也检查是否有data
       const sources = result.data || [];
-      console.log('[Live Client] 设置直播源数量:', sources.length);
-      if (sources.length > 0) {
-        console.log(
-          '[Live Client] 直播源列表:',
-          sources.map((s: LiveSource) => ({
-            key: s.key,
-            name: s.name,
-            channelNumber: s.channelNumber,
-          }))
-        );
-      }
       setLiveSources(sources);
 
       if (sources.length > 0) {
         // 默认选中第一个源
         const firstSource = sources[0];
-        console.log('[Live Client] 默认选中第一个源:', firstSource.name);
 
         if (needLoadSource) {
-          console.log('[Live Client] URL参数指定源:', needLoadSource);
           const foundSource = sources.find(
             (s: LiveSource) => s.key === needLoadSource
           );
           if (foundSource) {
-            console.log('[Live Client] 找到指定源:', foundSource.name);
             setCurrentSource(foundSource);
             await fetchChannels(foundSource);
           } else {
-            console.warn('[Live Client] 未找到指定源，使用默认源');
             setCurrentSource(firstSource);
             await fetchChannels(firstSource);
           }
@@ -358,7 +319,6 @@ function LivePageClient() {
           await fetchChannels(firstSource);
         }
       } else {
-        console.warn('[Live Client] 没有可用的直播源');
         setLoadingMessage('暂无可用的直播源');
       }
 
@@ -368,23 +328,8 @@ function LivePageClient() {
       setTimeout(() => {
         setLoading(false);
       }, 1000);
-
-      console.log(
-        '[Live Client] 获取直播源完成，总耗时:',
-        Date.now() - startTime,
-        'ms'
-      );
-      console.log('[Live Client] ========== 获取直播源结束 ==========');
     } catch (err) {
-      console.error('[Live Client] ========== 发生错误 ==========');
-      console.error('[Live Client] 获取直播源失败:', err);
-      console.error('[Live Client] 错误详情:', {
-        name: err instanceof Error ? err.name : 'Unknown',
-        message: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-      });
-      console.error('[Live Client] 总耗时:', Date.now() - startTime, 'ms');
-      console.error('[Live Client] ========== 错误处理结束 ==========');
+      console.error('获取直播源失败:', err);
 
       // 根据错误类型显示不同的提示
       let errorMessage = '获取直播源失败，请稍后重试';
@@ -416,50 +361,26 @@ function LivePageClient() {
 
   // 获取频道列表
   const fetchChannels = async (source: LiveSource) => {
-    const startTime = Date.now();
     try {
-      console.log('[Live Client] ========== 开始获取频道列表 ==========');
-      console.log('[Live Client] 时间:', new Date().toISOString());
-      console.log('[Live Client] 直播源:', source.name, '(' + source.key + ')');
       setIsVideoLoading(true);
 
       // 从 cachedLiveChannels 获取频道信息
       const url = `/api/live/channels?source=${source.key}`;
-      console.log('[Live Client] 请求URL:', url);
 
       const response = await fetch(url);
-      console.log('[Live Client] 收到响应:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText,
-        duration: Date.now() - startTime + 'ms',
-      });
 
       if (!response.ok) {
-        console.error('[Live Client] 响应状态异常:', response.status);
         throw new Error('获取频道列表失败');
       }
 
       const result = await response.json();
-      console.log(
-        '[Live Client] API响应完整数据:',
-        JSON.stringify(result, null, 2)
-      );
-      console.log('[Live Client] API响应摘要:', {
-        success: result.success,
-        error: result.error,
-        channelCount: result.data?.length || 0,
-        debug: result.debug,
-      });
 
       if (!result.success) {
-        console.error('[Live Client] API返回失败:', result.error);
         throw new Error(result.error || '获取频道列表失败');
       }
 
       const channelsData = result.data;
       if (!channelsData || channelsData.length === 0) {
-        console.warn('[Live Client] 频道列表为空');
         // 不抛出错误，而是设置空频道列表
         setCurrentChannels([]);
         setGroupedChannels({});
@@ -473,12 +394,6 @@ function LivePageClient() {
         );
 
         setIsVideoLoading(false);
-        console.log(
-          '[Live Client] 获取频道列表完成（空列表），总耗时:',
-          Date.now() - startTime,
-          'ms'
-        );
-        console.log('[Live Client] ========== 获取频道列表结束 ==========');
         return;
       }
 
@@ -879,7 +794,6 @@ function LivePageClient() {
 
   // 初始化
   useEffect(() => {
-    console.log('[Live] useEffect 初始化执行');
     fetchLiveSources();
   }, []);
 

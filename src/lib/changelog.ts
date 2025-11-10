@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.49",
+    date: "2025-11-10",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "修复空用户名用户问题，在配置初始化和自检时自动过滤",
+    "移除直播页面所有控制台调试信息，优化生产环境性能"
+    ]
+  },
+  {
     version: "1.0.48",
     date: "2025-11-10",
     added: [

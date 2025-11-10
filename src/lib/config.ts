@@ -381,7 +381,7 @@ async function getInitConfig(
     // 静默处理错误
   }
   const allUsers = userNames
-    .filter((u) => u !== process.env.LOGIN_USERNAME)
+    .filter((u) => u && u.trim() && u !== process.env.LOGIN_USERNAME) // 过滤空用户名
     .map((u) => ({
       username: u,
       role: 'user',
@@ -691,9 +691,15 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
   // 站长变更自检
   const ownerUser = process.env.LOGIN_USERNAME;
 
-  // 去重
+  // 去重并过滤空用户名
   const seenUsernames = new Set<string>();
   adminConfig.UserConfig.Users = adminConfig.UserConfig.Users.filter((user) => {
+    // 过滤空用户名或无效用户名
+    if (!user.username || !user.username.trim()) {
+      console.warn('[Config] 发现空用户名，已过滤');
+      return false;
+    }
+    // 去重
     if (seenUsernames.has(user.username)) {
       return false;
     }
