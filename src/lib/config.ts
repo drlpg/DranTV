@@ -524,8 +524,22 @@ export async function getConfig(): Promise<AdminConfig> {
     console.log('[Config] 初始化配置完成');
     needsSave = true;
   } else if (isTimeout) {
-    // 超时情况：使用降级配置，避免页面崩溃
-    console.warn('[Config] 使用降级配置（基于环境变量和config.json）');
+    // 超时情况：如果有缓存，直接返回缓存，避免用空配置覆盖
+    if (cachedConfig) {
+      console.warn('[Config] 数据库超时，但有缓存可用，返回缓存配置');
+      console.log(
+        '[Config] 获取配置完成（缓存），总耗时:',
+        Date.now() - startTime,
+        'ms'
+      );
+      console.log('[Config] ========== 获取配置结束 ==========');
+      return cachedConfig;
+    }
+
+    // 没有缓存时才使用降级配置
+    console.warn(
+      '[Config] 数据库超时且无缓存，使用降级配置（基于环境变量和config.json）'
+    );
 
     let configFileContent = '';
     try {
