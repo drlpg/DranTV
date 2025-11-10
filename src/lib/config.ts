@@ -536,31 +536,42 @@ export async function getConfig(): Promise<AdminConfig> {
       return cachedConfig;
     }
 
-    // 没有缓存时才使用降级配置
-    console.warn(
-      '[Config] 数据库超时且无缓存，使用降级配置（基于环境变量和config.json）'
-    );
-
-    let configFileContent = '';
+    // 没有缓存时，尝试从数据库再次获取（使用更长的超时时间）
+    console.warn('[Config] 数据库超时且无缓存，尝试延长超时时间重试...');
     try {
-      const configPath = path.join(process.cwd(), 'config.json');
-      console.log('[Config] 尝试读取配置文件:', configPath);
-      if (fs.existsSync(configPath)) {
-        configFileContent = fs.readFileSync(configPath, 'utf-8');
-        console.log(
-          '[Config] 配置文件读取成功，长度:',
-          configFileContent.length
-        );
-      } else {
-        console.warn('[Config] 配置文件不存在');
-      }
-    } catch (e) {
-      console.error('[Config] 读取配置文件失败:', e);
-      // 静默处理读取错误
-    }
+      const longTimeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('数据库操作超时（长超时）')), 30000);
+      });
+      adminConfig = await Promise.race([
+        db.getAdminConfig(),
+        longTimeoutPromise,
+      ]);
+      console.log('[Config] 延长超时重试成功');
+    } catch (retryError) {
+      console.error('[Config] 延长超时重试仍然失败:', retryError);
 
-    adminConfig = await getInitConfig(configFileContent);
-    console.log('[Config] 降级配置初始化完成');
+      // 最后的降级方案：使用 config.json
+      console.warn('[Config] 使用降级配置（基于环境变量和config.json）');
+      let configFileContent = '';
+      try {
+        const configPath = path.join(process.cwd(), 'config.json');
+        console.log('[Config] 尝试读取配置文件:', configPath);
+        if (fs.existsSync(configPath)) {
+          configFileContent = fs.readFileSync(configPath, 'utf-8');
+          console.log(
+            '[Config] 配置文件读取成功，长度:',
+            configFileContent.length
+          );
+        } else {
+          console.warn('[Config] 配置文件不存在');
+        }
+      } catch (e) {
+        console.error('[Config] 读取配置文件失败:', e);
+      }
+
+      adminConfig = await getInitConfig(configFileContent);
+      console.log('[Config] 降级配置初始化完成');
+    }
 
     // 后台异步重试获取配置（不阻塞当前请求）
     setTimeout(async () => {

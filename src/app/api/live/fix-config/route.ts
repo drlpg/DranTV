@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { clearCachedConfig, refineConfig } from '@/lib/config';
+import { setCachedConfig, refineConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
 
@@ -88,10 +88,10 @@ export async function POST(request: NextRequest) {
       await db.saveAdminConfig(refinedConfig);
       log('[Fix Config] ✅ 配置已保存');
 
-      // 5. 清空缓存，强制重新加载
-      log('[Fix Config] 清空缓存...');
-      clearCachedConfig();
-      log('[Fix Config] ✅ 缓存已清空');
+      // 5. 更新缓存（不清空，直接更新）
+      log('[Fix Config] 更新缓存...');
+      setCachedConfig(refinedConfig);
+      log('[Fix Config] ✅ 缓存已更新');
 
       log('[Fix Config] 修复完成，总耗时: ' + (Date.now() - startTime) + 'ms');
       log('[Fix Config] ========== 修复结束 ==========');
