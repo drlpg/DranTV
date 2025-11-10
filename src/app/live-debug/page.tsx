@@ -13,6 +13,8 @@ export default function LiveDebugPage() {
   const [testingRealSources, setTestingRealSources] = useState(false);
   const [configDebugTest, setConfigDebugTest] = useState<any>(null);
   const [testingConfigDebug, setTestingConfigDebug] = useState(false);
+  const [fixConfigResult, setFixConfigResult] = useState<any>(null);
+  const [fixingConfig, setFixingConfig] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -112,6 +114,32 @@ export default function LiveDebugPage() {
     }
   };
 
+  const fixConfig = async () => {
+    if (!confirm('确定要尝试修复配置吗？这将从ConfigFile恢复直播源配置。')) {
+      return;
+    }
+
+    setFixingConfig(true);
+    try {
+      const response = await fetch('/api/live/fix-config', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      setFixConfigResult(data);
+
+      if (data.success) {
+        alert('配置修复成功！请刷新页面重新测试。');
+      }
+    } catch (error) {
+      setFixConfigResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setFixingConfig(false);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
       <h1>直播源诊断工具</h1>
@@ -194,6 +222,23 @@ export default function LiveDebugPage() {
           }}
         >
           {testingConfigDebug ? '诊断中...' : '深度配置诊断'}
+        </button>
+
+        <button
+          onClick={fixConfig}
+          disabled={fixingConfig}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: fixingConfig ? 'not-allowed' : 'pointer',
+            backgroundColor: fixingConfig ? '#ccc' : '#fd7e14',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 'bold',
+          }}
+        >
+          {fixingConfig ? '修复中...' : '🔧 修复配置'}
         </button>
       </div>
 
@@ -309,6 +354,87 @@ export default function LiveDebugPage() {
             >
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {fixConfigResult && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>配置修复结果</h2>
+          <div
+            style={{
+              backgroundColor: fixConfigResult.success ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${
+                fixConfigResult.success ? '#c3e6cb' : '#f5c6cb'
+              }`,
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>{fixConfigResult.success ? '✅ 修复成功' : '❌ 修复失败'}</h3>
+            {fixConfigResult.success ? (
+              <>
+                <p>
+                  <strong>恢复的直播源数量:</strong>{' '}
+                  {fixConfigResult.recoveredLiveSources}
+                </p>
+                {fixConfigResult.liveSources &&
+                  fixConfigResult.liveSources.length > 0 && (
+                    <>
+                      <h4>恢复的直播源:</h4>
+                      <ul>
+                        {fixConfigResult.liveSources.map(
+                          (source: any, index: number) => (
+                            <li key={index}>
+                              {source.name} ({source.key}) -{' '}
+                              {source.disabled ? '已禁用' : '已启用'}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+                <p style={{ color: '#28a745', fontWeight: 'bold' }}>
+                  请刷新页面并重新测试直播功能！
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ color: 'red' }}>
+                  <strong>错误:</strong> {fixConfigResult.error}
+                </p>
+                {fixConfigResult.suggestion && (
+                  <p
+                    style={{
+                      color: '#856404',
+                      backgroundColor: '#fff3cd',
+                      padding: '10px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <strong>建议:</strong> {fixConfigResult.suggestion}
+                  </p>
+                )}
+              </>
+            )}
+            {fixConfigResult.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {fixConfigResult.logs.join('\n')}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       )}
