@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
           config.LiveConfig?.map((s) => ({
             key: s.key,
             name: s.name,
+            url: s.url,
             disabled: s.disabled || false,
             from: s.from,
           })) || [],
