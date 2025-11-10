@@ -7,6 +7,8 @@ export default function LiveDebugPage() {
   const [loading, setLoading] = useState(false);
   const [m3uTestResults, setM3uTestResults] = useState<any[]>([]);
   const [testingM3u, setTestingM3u] = useState(false);
+  const [sourcesApiTest, setSourcesApiTest] = useState<any>(null);
+  const [testingSourcesApi, setTestingSourcesApi] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -58,6 +60,22 @@ export default function LiveDebugPage() {
     setTestingM3u(false);
   };
 
+  const testSourcesApi = async () => {
+    setTestingSourcesApi(true);
+    try {
+      const response = await fetch('/api/live/test-sources');
+      const data = await response.json();
+      setSourcesApiTest(data);
+    } catch (error) {
+      setSourcesApiTest({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setTestingSourcesApi(false);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
       <h1>直播源诊断工具</h1>
@@ -92,6 +110,22 @@ export default function LiveDebugPage() {
           }}
         >
           {testingM3u ? '测试M3U中...' : '测试M3U访问'}
+        </button>
+
+        <button
+          onClick={testSourcesApi}
+          disabled={testingSourcesApi}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: testingSourcesApi ? 'not-allowed' : 'pointer',
+            backgroundColor: testingSourcesApi ? '#ccc' : '#ffc107',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {testingSourcesApi ? '测试API中...' : '测试Sources API'}
         </button>
       </div>
 
@@ -207,6 +241,64 @@ export default function LiveDebugPage() {
             >
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {sourcesApiTest && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>Sources API测试结果</h2>
+          <div
+            style={{
+              backgroundColor: sourcesApiTest.success ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${
+                sourcesApiTest.success ? '#c3e6cb' : '#f5c6cb'
+              }`,
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>{sourcesApiTest.success ? '✅ 成功' : '❌ 失败'}</h3>
+            {sourcesApiTest.success ? (
+              <>
+                <p>
+                  <strong>API响应:</strong>
+                </p>
+                <pre
+                  style={{
+                    backgroundColor: '#f0f0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                  }}
+                >
+                  {JSON.stringify(sourcesApiTest.apiResponse, null, 2)}
+                </pre>
+              </>
+            ) : (
+              <p style={{ color: 'red' }}>
+                <strong>错误:</strong> {sourcesApiTest.error}
+              </p>
+            )}
+            {sourcesApiTest.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {sourcesApiTest.logs.join('\n')}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       )}
