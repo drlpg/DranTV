@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { GET as sourcesGET } from '../sources/route';
 
 export const runtime = 'nodejs';
 
@@ -18,15 +19,12 @@ export async function GET(request: NextRequest) {
 
   try {
     // 直接调用真实的 sources API 逻辑
-    log('[Test Real Sources] 导入 sources API...');
-    const sourcesModule = await import('../sources/route');
-
     log('[Test Real Sources] 调用 sources API GET方法...');
     const mockRequest = new Request('http://localhost:3000/api/live/sources', {
       method: 'GET',
     }) as any as NextRequest;
 
-    const response = await sourcesModule.GET(mockRequest);
+    const response = await sourcesGET(mockRequest);
     const data = await response.json();
 
     log('[Test Real Sources] API响应: ' + JSON.stringify(data, null, 2));
