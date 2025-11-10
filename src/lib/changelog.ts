@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.48",
+    date: "2025-11-10",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "为所有直播相关 API 添加 `force-dynamic` 配置，确保配置实时生效",
+    "统一日志输出策略，保留生产环境调试日志"
+    ],
+    fixed: [
+    "修复远程数据库配置为空导致直播源无法加载的问题",
+    "移除冗余的超时控制逻辑，简化 API 调用流程",
+    "删除所有临时诊断代码和空文件夹，优化代码结构"
+    ]
+  },
+  {
     version: "1.0.47",
     date: "2025-11-09",
     added: [

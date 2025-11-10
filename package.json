@@ -1,6 +1,6 @@
 {
   "name": "DranTV",
-  "version": "1.0.47",
+  "version": "1.0.48",
   "private": true,
   "scripts": {
     "dev": "pnpm gen:manifest && node simple-dev.js",
