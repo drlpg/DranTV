@@ -11,6 +11,8 @@ export default function LiveDebugPage() {
   const [testingSourcesApi, setTestingSourcesApi] = useState(false);
   const [realSourcesTest, setRealSourcesTest] = useState<any>(null);
   const [testingRealSources, setTestingRealSources] = useState(false);
+  const [configDebugTest, setConfigDebugTest] = useState<any>(null);
+  const [testingConfigDebug, setTestingConfigDebug] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -94,6 +96,22 @@ export default function LiveDebugPage() {
     }
   };
 
+  const testConfigDebug = async () => {
+    setTestingConfigDebug(true);
+    try {
+      const response = await fetch('/api/live/debug-config');
+      const data = await response.json();
+      setConfigDebugTest(data);
+    } catch (error) {
+      setConfigDebugTest({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setTestingConfigDebug(false);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', fontFamily: 'monospace' }}>
       <h1>直播源诊断工具</h1>
@@ -160,6 +178,22 @@ export default function LiveDebugPage() {
           }}
         >
           {testingRealSources ? '测试中...' : '测试真实Sources API'}
+        </button>
+
+        <button
+          onClick={testConfigDebug}
+          disabled={testingConfigDebug}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: testingConfigDebug ? 'not-allowed' : 'pointer',
+            backgroundColor: testingConfigDebug ? '#ccc' : '#6f42c1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {testingConfigDebug ? '诊断中...' : '深度配置诊断'}
         </button>
       </div>
 
@@ -275,6 +309,78 @@ export default function LiveDebugPage() {
             >
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {configDebugTest && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>深度配置诊断结果</h2>
+          <div
+            style={{
+              backgroundColor: configDebugTest.success ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${
+                configDebugTest.success ? '#c3e6cb' : '#f5c6cb'
+              }`,
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>{configDebugTest.success ? '✅ 成功' : '❌ 失败'}</h3>
+            {configDebugTest.success ? (
+              <>
+                <p>
+                  <strong>第一次获取:</strong> LiveConfig数量 ={' '}
+                  {configDebugTest.config1?.liveSourceCount || 0}
+                </p>
+                <p>
+                  <strong>第二次获取:</strong> LiveConfig数量 ={' '}
+                  {configDebugTest.config2?.liveSourceCount || 0}
+                </p>
+                <p>
+                  <strong>是否同一对象:</strong>{' '}
+                  {configDebugTest.sameObject ? '是' : '否'}
+                </p>
+                {configDebugTest.config1?.liveSources &&
+                  configDebugTest.config1.liveSources.length > 0 && (
+                    <>
+                      <h4>直播源列表:</h4>
+                      <ul>
+                        {configDebugTest.config1.liveSources.map(
+                          (source: any, index: number) => (
+                            <li key={index}>
+                              {source.name} ({source.key}) -{' '}
+                              {source.disabled ? '已禁用' : '已启用'}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+              </>
+            ) : (
+              <p style={{ color: 'red' }}>
+                <strong>错误:</strong> {configDebugTest.error}
+              </p>
+            )}
+            {configDebugTest.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {configDebugTest.logs.join('\n')}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       )}
