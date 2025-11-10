@@ -15,6 +15,10 @@ export default function LiveDebugPage() {
   const [testingConfigDebug, setTestingConfigDebug] = useState(false);
   const [fixConfigResult, setFixConfigResult] = useState<any>(null);
   const [fixingConfig, setFixingConfig] = useState(false);
+  const [initDbResult, setInitDbResult] = useState<any>(null);
+  const [initingDb, setInitingDb] = useState(false);
+  const [checkDbResult, setCheckDbResult] = useState<any>(null);
+  const [checkingDb, setCheckingDb] = useState(false);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -140,6 +144,48 @@ export default function LiveDebugPage() {
     }
   };
 
+  const initDb = async () => {
+    if (!confirm('确定要初始化数据库吗？这将创建包含2个直播源的配置。')) {
+      return;
+    }
+
+    setInitingDb(true);
+    try {
+      const response = await fetch('/api/live/init-db', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      setInitDbResult(data);
+
+      if (data.success) {
+        alert('数据库初始化成功！请刷新页面重新测试。');
+      }
+    } catch (error) {
+      setInitDbResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setInitingDb(false);
+    }
+  };
+
+  const checkDb = async () => {
+    setCheckingDb(true);
+    try {
+      const response = await fetch('/api/live/check-db');
+      const data = await response.json();
+      setCheckDbResult(data);
+    } catch (error) {
+      setCheckDbResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setCheckingDb(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -247,6 +293,39 @@ export default function LiveDebugPage() {
           }}
         >
           {fixingConfig ? '修复中...' : '🔧 修复配置'}
+        </button>
+
+        <button
+          onClick={checkDb}
+          disabled={checkingDb}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: checkingDb ? 'not-allowed' : 'pointer',
+            backgroundColor: checkingDb ? '#ccc' : '#17a2b8',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          {checkingDb ? '检查中...' : '📊 检查数据库'}
+        </button>
+
+        <button
+          onClick={initDb}
+          disabled={initingDb}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            cursor: initingDb ? 'not-allowed' : 'pointer',
+            backgroundColor: initingDb ? '#ccc' : '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 'bold',
+          }}
+        >
+          {initingDb ? '初始化中...' : '🔄 初始化数据库'}
         </button>
       </div>
 
@@ -444,6 +523,145 @@ export default function LiveDebugPage() {
                   }}
                 >
                   {fixConfigResult.logs.join('\n')}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
+
+      {checkDbResult && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>数据库检查结果</h2>
+          <div
+            style={{
+              backgroundColor: '#e7f3ff',
+              border: '1px solid #b3d9ff',
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>📊 数据库状态</h3>
+            {checkDbResult.summary && (
+              <>
+                <p>
+                  <strong>SourceConfig数量:</strong>{' '}
+                  {checkDbResult.summary.sourceCount}
+                </p>
+                <p>
+                  <strong>LiveConfig数量:</strong>{' '}
+                  {checkDbResult.summary.liveSourceCount}
+                </p>
+                <p>
+                  <strong>ConfigFile长度:</strong>{' '}
+                  {checkDbResult.summary.configFileLength} 字符
+                </p>
+                {checkDbResult.summary.liveSources &&
+                  checkDbResult.summary.liveSources.length > 0 && (
+                    <>
+                      <h4>直播源列表:</h4>
+                      <ul>
+                        {checkDbResult.summary.liveSources.map(
+                          (source: any, index: number) => (
+                            <li key={index}>
+                              {source.name} ({source.key}) -{' '}
+                              {source.disabled ? '已禁用' : '已启用'}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+              </>
+            )}
+            {checkDbResult.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {checkDbResult.logs.join('\n')}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
+
+      {initDbResult && (
+        <div style={{ marginTop: '20px' }}>
+          <h2>数据库初始化结果</h2>
+          <div
+            style={{
+              backgroundColor: initDbResult.success ? '#d4edda' : '#f8d7da',
+              border: `1px solid ${
+                initDbResult.success ? '#c3e6cb' : '#f5c6cb'
+              }`,
+              padding: '15px',
+              borderRadius: '4px',
+            }}
+          >
+            <h3>{initDbResult.success ? '✅ 初始化成功' : '❌ 初始化失败'}</h3>
+            {initDbResult.success ? (
+              <>
+                <p>
+                  <strong>LiveConfig数量:</strong>{' '}
+                  {initDbResult.summary?.liveSourceCount || 0}
+                </p>
+                <p>
+                  <strong>ConfigFile长度:</strong>{' '}
+                  {initDbResult.summary?.configFileLength || 0} 字符
+                </p>
+                {initDbResult.summary?.liveSources &&
+                  initDbResult.summary.liveSources.length > 0 && (
+                    <>
+                      <h4>初始化的直播源:</h4>
+                      <ul>
+                        {initDbResult.summary.liveSources.map(
+                          (source: any, index: number) => (
+                            <li key={index}>
+                              {source.name} ({source.key}) -{' '}
+                              {source.disabled ? '已禁用' : '已启用'}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+                <p style={{ color: '#28a745', fontWeight: 'bold' }}>
+                  数据库已成功初始化！请刷新页面并重新测试。
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ color: 'red' }}>
+                  <strong>错误:</strong> {initDbResult.error}
+                </p>
+              </>
+            )}
+            {initDbResult.logs && (
+              <details>
+                <summary>查看详细日志</summary>
+                <pre
+                  style={{
+                    backgroundColor: '#000',
+                    color: '#0f0',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    overflow: 'auto',
+                    marginTop: '10px',
+                  }}
+                >
+                  {initDbResult.logs.join('\n')}
                 </pre>
               </details>
             )}
