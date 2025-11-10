@@ -33,10 +33,12 @@ export async function GET() {
         (process.env.NEXT_PUBLIC_STORAGE_TYPE || '未设置')
     );
 
-    if (
-      !process.env.UPSTASH_REDIS_REST_URL ||
-      !process.env.UPSTASH_REDIS_REST_TOKEN
-    ) {
+    const upstashUrl =
+      process.env.UPSTASH_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const upstashToken =
+      process.env.UPSTASH_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    if (!upstashUrl || !upstashToken) {
       log('[Check Redis] ❌ Upstash Redis 环境变量未配置');
       return NextResponse.json({
         success: false,
@@ -48,13 +50,14 @@ export async function GET() {
     // 创建 Redis 客户端
     log('[Check Redis] 创建 Redis 客户端...');
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      url: process.env.UPSTASH_URL || process.env.UPSTASH_REDIS_REST_URL || '',
+      token:
+        process.env.UPSTASH_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
     });
 
-    // 检查 admin_config 键
-    log('[Check Redis] --- 检查 admin_config 键 ---');
-    const adminConfigKey = 'admin_config';
+    // 检查 admin:config 键（注意是冒号，不是下划线）
+    log('[Check Redis] --- 检查 admin:config 键 ---');
+    const adminConfigKey = 'admin:config';
 
     // 检查键是否存在
     log('[Check Redis] 检查键是否存在: ' + adminConfigKey);
@@ -62,7 +65,7 @@ export async function GET() {
     log('[Check Redis] 键存在: ' + (exists ? '是' : '否'));
 
     if (!exists) {
-      log('[Check Redis] ⚠️ admin_config 键不存在');
+      log('[Check Redis] ⚠️ admin:config 键不存在');
 
       // 列出所有键
       log('[Check Redis] 列出所有键...');

@@ -114,8 +114,35 @@ export async function POST() {
 
     // 保存到数据库
     log('[Init DB] 保存配置到数据库...');
-    await db.saveAdminConfig(currentConfig);
-    log('[Init DB] ✅ 配置已保存到数据库');
+    try {
+      await db.saveAdminConfig(currentConfig);
+      log('[Init DB] ✅ 配置已保存到数据库');
+
+      // 立即验证保存是否成功
+      log('[Init DB] 验证保存结果...');
+      const verifyConfig = await db.getAdminConfig();
+      if (verifyConfig) {
+        log(
+          '[Init DB] 验证成功 - LiveConfig数量: ' +
+            (verifyConfig.LiveConfig?.length || 0)
+        );
+        log(
+          '[Init DB] 验证成功 - ConfigFile长度: ' +
+            (verifyConfig.ConfigFile?.length || 0)
+        );
+      } else {
+        log('[Init DB] ⚠️ 验证失败 - 无法读取刚保存的配置');
+      }
+    } catch (saveError) {
+      log(
+        '[Init DB] ❌ 保存失败: ' +
+          (saveError instanceof Error ? saveError.message : String(saveError))
+      );
+      if (saveError instanceof Error && saveError.stack) {
+        log('[Init DB] 错误堆栈: ' + saveError.stack);
+      }
+      throw saveError;
+    }
 
     // 更新缓存
     log('[Init DB] 更新缓存...');
