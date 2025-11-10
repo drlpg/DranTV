@@ -403,6 +403,7 @@ export default function LiveDebugPage() {
             </ul>
           </li>
           <li>点击"测试M3U访问"按钮，测试M3U文件是否可以访问</li>
+          <li>点击"测试Sources API"按钮，测试API是否正常工作</li>
           <li>如果发现问题，根据日志信息进行修复</li>
           <li>修复后重新运行诊断确认</li>
         </ol>

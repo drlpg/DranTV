@@ -9,9 +9,8 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   const logs: string[] = [];
 
-  // 使用数组收集日志，最后一起返回
   const log = (message: string) => {
-    console.log(message); // 仍然输出到控制台
+    console.log(message);
     logs.push(message);
   };
 
@@ -53,7 +52,6 @@ export async function GET(request: NextRequest) {
         log(`[Debug API]   - from: ${source.from}`);
       });
 
-      // 过滤启用的直播源
       const enabledSources = config.LiveConfig.filter((s) => !s.disabled);
       log('[Debug API] 启用的直播源数量: ' + enabledSources.length);
     } else {
