@@ -37,6 +37,66 @@ export interface AdminConfig {
     customCSS: string;
     allowUserCustomization: boolean;
   };
+  ImageHostingConfig?: {
+    type:
+      | 'S3'
+      | 'RemoteAPI'
+      | 'FTP'
+      | 'DogeCloud'
+      | 'AliyunOSS'
+      | 'Github'
+      | 'YoupaiyunUSS';
+    s3?: {
+      accessKeyId: string;
+      secretAccessKey: string;
+      bucket: string;
+      endpoint: string;
+      region: string;
+      pathFormat: string;
+      customDomain: string;
+    };
+    remoteApi?: {
+      url: string;
+      token?: string;
+      field?: string;
+    };
+    ftp?: {
+      host: string;
+      port: number;
+      username: string;
+      password: string;
+      path: string;
+      customDomain: string;
+    };
+    dogeCloud?: {
+      accessKey: string;
+      secretKey: string;
+      bucket: string;
+      region: string;
+      customDomain: string;
+    };
+    aliyunOss?: {
+      accessKeyId: string;
+      accessKeySecret: string;
+      bucket: string;
+      region: string;
+      customDomain: string;
+    };
+    github?: {
+      token: string;
+      owner: string;
+      repo: string;
+      branch: string;
+      path: string;
+      customDomain: string;
+    };
+    youpaiyun?: {
+      operator: string;
+      password: string;
+      bucket: string;
+      customDomain: string;
+    };
+  };
   UserConfig: {
     Users: {
       username: string;

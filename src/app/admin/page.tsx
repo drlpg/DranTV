@@ -12,6 +12,7 @@ import {
   Palette,
   Settings,
   Database,
+  Image,
 } from 'lucide-react';
 
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
@@ -31,6 +32,7 @@ import VideoSourceConfig from './components/VideoSourceConfig';
 import CategoryConfig from './components/CategoryConfig';
 import SiteConfig from './components/SiteConfig';
 import LiveSourceConfig from './components/LiveSourceConfig';
+import ImageHostingConfig from './components/ImageHostingConfig';
 
 function AdminPageClient() {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
@@ -48,6 +50,7 @@ function AdminPageClient() {
     liveSource: false,
     siteConfig: false,
     categoryConfig: false,
+    imageHosting: false,
     dataMigration: false,
     themeManager: false,
   });
@@ -401,6 +404,20 @@ function AdminPageClient() {
           onToggle={() => toggleTab('categoryConfig')}
         >
           <CategoryConfig
+            config={config}
+            refreshConfig={() => fetchConfig(false)}
+          />
+        </CollapsibleTab>
+
+        <CollapsibleTab
+          title='图床配置'
+          icon={
+            <Image size={20} className='text-gray-600 dark:text-gray-400' />
+          }
+          isExpanded={expandedTabs.imageHosting}
+          onToggle={() => toggleTab('imageHosting')}
+        >
+          <ImageHostingConfig
             config={config}
             refreshConfig={() => fetchConfig(false)}
           />
