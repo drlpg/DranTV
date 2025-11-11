@@ -14,7 +14,8 @@ export const changelog: ChangelogEntry[] = [
     version: "1.0.50",
     date: "2025-11-11",
     added: [
-    "新增后台管理面板图床配置功能，支持 S3 协议配置"
+    "新增后台管理面板图床配置功能，支持 S3 协议配置",
+    "新增图床配置数据迁移脚本，自动迁移历史配置数据"
     ],
     changed: [
       // 无变更内容
@@ -23,7 +24,8 @@ export const changelog: ChangelogEntry[] = [
     "修复远程服务器图床配置无法显示的问题",
     "修复配置保存使用错误的数据库键导致配置丢失",
     "修复配置初始化和自检时 ImageHostingConfig 字段丢失",
-    "修复 resetConfig 重置时丢失 ImageHostingConfig 和 ThemeConfig"
+    "修复 resetConfig 重置时丢失 ImageHostingConfig 和 ThemeConfig",
+    "修复历史配置数据存储在错误键中的问题，已迁移到正确位置"
     ]
   },
   {
