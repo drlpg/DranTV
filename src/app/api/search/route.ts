@@ -8,20 +8,29 @@ import { searchFromApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
 
 // 短剧搜索函数
-async function searchShortDrama(query: string, page = 1, limit = 20): Promise<any[]> {
+async function searchShortDrama(
+  query: string,
+  page = 1,
+  limit = 20
+): Promise<any[]> {
   try {
     // 使用 AbortController 实现超时控制
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(`https://api.r2afosne.dpdns.org/vod/search?name=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'LunaTV/1.0',
-      },
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `https://api.r2afosne.dpdns.org/vod/search?name=${encodeURIComponent(
+        query
+      )}&page=${page}&limit=${limit}`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'LunaTV/1.0',
+        },
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
 
@@ -41,7 +50,9 @@ async function searchShortDrama(query: string, page = 1, limit = 20): Promise<an
       id: item.id?.toString() || '',
       title: item.name || '',
       poster: item.cover || '',
-      year: item.update_time ? new Date(item.update_time).getFullYear().toString() : 'unknown',
+      year: item.update_time
+        ? new Date(item.update_time).getFullYear().toString()
+        : 'unknown',
       episodes: [{ id: '1', name: '第1集' }], // 短剧通常有多集，但这里简化处理
       source: 'shortdrama',
       source_name: '短剧',
@@ -60,6 +71,7 @@ async function searchShortDrama(query: string, page = 1, limit = 20): Promise<an
 }
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const authInfo = getAuthInfoFromCookie(request);
@@ -87,6 +99,7 @@ export async function GET(request: NextRequest) {
 
   const config = await getConfig();
   const apiSites = await getAvailableApiSites(authInfo.username);
+  const maxTotalResults = (config.SiteConfig.SearchDownstreamMaxPage || 5) * 10;
 
   // 添加超时控制和错误处理，避免慢接口拖累整体响应
   const searchPromises = apiSites.map((site) =>
@@ -95,20 +108,23 @@ export async function GET(request: NextRequest) {
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error(`${site.name} timeout`)), 20000)
       ),
-    ]).then((results: unknown) => {
-      // 限制每个源的结果数量，避免页面卡顿
-      return Array.isArray(results) ? results.slice(0, 50) : [];
-    }).catch((err) => {
-      console.warn(`搜索失败 ${site.name}:`, err.message);
-      return []; // 返回空数组而不是抛出错误
-    })
+    ])
+      .then((results: unknown) => {
+        return Array.isArray(results) ? results : [];
+      })
+      .catch((err) => {
+        console.warn(`搜索失败 ${site.name}:`, err.message);
+        return []; // 返回空数组而不是抛出错误
+      })
   );
 
   // 添加短剧搜索
-  const shortDramaSearchPromise = searchShortDrama(query, 1, 20).catch((err) => {
-    console.warn('短剧搜索失败:', err.message);
-    return [];
-  });
+  const shortDramaSearchPromise = searchShortDrama(query, 1, 20).catch(
+    (err) => {
+      console.warn('短剧搜索失败:', err.message);
+      return [];
+    }
+  );
 
   // 将短剧搜索添加到所有搜索Promise中
   searchPromises.push(shortDramaSearchPromise);
@@ -119,12 +135,18 @@ export async function GET(request: NextRequest) {
       .filter((result) => result.status === 'fulfilled')
       .map((result) => (result as PromiseFulfilledResult<any>).value);
     let flattenedResults = successResults.flat();
+
+    // 过滤黄色内容
     if (!config.SiteConfig.DisableYellowFilter) {
       flattenedResults = flattenedResults.filter((result) => {
         const typeName = result.type_name || '';
         return !yellowWords.some((word: string) => typeName.includes(word));
       });
     }
+
+    // 限制总结果数量
+    flattenedResults = flattenedResults.slice(0, maxTotalResults);
+
     const cacheTime = await getCacheTime();
 
     if (flattenedResults.length === 0) {

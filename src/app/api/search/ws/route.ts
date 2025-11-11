@@ -71,6 +71,7 @@ async function searchShortDrama(
 }
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const authInfo = getAuthInfoFromCookie(request);
@@ -133,9 +134,11 @@ export async function GET(request: NextRequest) {
         return; // 连接已关闭，提前退出
       }
 
-      // 记录已完成的源数量
+      // 记录已完成的源数量和总结果数
       let completedSources = 0;
       const allResults: any[] = [];
+      const maxTotalResults =
+        (config.SiteConfig.SearchDownstreamMaxPage || 5) * 10;
 
       // 为每个源创建搜索 Promise
       const searchPromises = [
@@ -154,7 +157,7 @@ export async function GET(request: NextRequest) {
 
             const results = (await searchPromise) as any[];
 
-            // 过滤黄色内容并限制结果数量
+            // 过滤黄色内容
             let filteredResults = results;
             if (!config.SiteConfig.DisableYellowFilter) {
               filteredResults = results.filter((result) => {
@@ -165,13 +168,17 @@ export async function GET(request: NextRequest) {
               });
             }
 
-            // 限制每个源的结果数量，避免页面卡顿
-            const limitedResults = filteredResults.slice(0, 50);
+            // 检查是否已达到总结果数限制
+            const remainingSlots = maxTotalResults - allResults.length;
+            const limitedResults =
+              remainingSlots > 0
+                ? filteredResults.slice(0, remainingSlots)
+                : [];
 
             // 发送该源的搜索结果
             completedSources++;
 
-            if (!streamClosed) {
+            if (!streamClosed && limitedResults.length > 0) {
               const sourceEvent = `data: ${JSON.stringify({
                 type: 'source_result',
                 source: site.key,
@@ -184,9 +191,7 @@ export async function GET(request: NextRequest) {
                 streamClosed = true;
                 return; // 连接已关闭，停止处理
               }
-            }
 
-            if (limitedResults.length > 0) {
               allResults.push(...limitedResults);
             }
           } catch (error) {

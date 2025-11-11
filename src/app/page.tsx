@@ -108,12 +108,12 @@ function HomeClient() {
         if (moviesData.code === 200) {
           // 先尝试获取TMDB横版海报，然后再设置state
           try {
-            const top5Movies = moviesData.list.slice(0, 5);
+            const top10Movies = moviesData.list.slice(0, 10);
             const tmdbResponse = await fetch('/api/tmdb/backdrop', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                items: top5Movies.map((movie: any) => ({
+                items: top10Movies.map((movie: any) => ({
                   title: movie.title,
                   year: movie.year,
                   type: 'movie',
@@ -126,7 +126,7 @@ function HomeClient() {
               // 更新电影数据，添加横版海报
               const updatedMovies = moviesData.list.map(
                 (movie: any, index: number) => {
-                  if (index < 5 && backdrops[index]) {
+                  if (index < 10 && backdrops[index]) {
                     return { ...movie, backdrop: backdrops[index] };
                   }
                   return movie;
@@ -312,7 +312,7 @@ function HomeClient() {
               {/* 轮播图 */}
               <section className='mb-6 sm:mb-8'>
                 <Carousel
-                  items={hotMovies.slice(0, 5).map((movie) => ({
+                  items={hotMovies.slice(0, 10).map((movie) => ({
                     id: movie.id,
                     title: movie.title,
                     image: movie.backdrop || movie.poster,
@@ -321,6 +321,7 @@ function HomeClient() {
                       movie.title.trim()
                     )}${movie.year ? `&year=${movie.year}` : ''}&stype=movie`,
                   }))}
+                  maxItems={5}
                 />
               </section>
 

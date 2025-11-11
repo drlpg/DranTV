@@ -580,7 +580,10 @@ function SearchPageClient() {
       if (item.source && item.source_name) {
         sourcesSet.set(item.source, item.source_name);
       }
-      if (item.title) titlesSet.add(item.title);
+      // 标题选项：后端已经根据配置过滤了黄色内容，前端直接使用
+      if (item.title) {
+        titlesSet.add(item.title);
+      }
       if (item.year) yearsSet.add(item.year);
     });
 
@@ -630,9 +633,11 @@ function SearchPageClient() {
     const { source, title, year, yearOrder } = filterAll;
     // 使用实际执行搜索的关键字，而不是输入框中的当前值
     const actualQuery = currentQueryRef.current;
+
     const filtered = searchResults.filter((item) => {
       // 首先检查相关性
       if (!isRelevantResult(item, actualQuery)) return false;
+
       // 然后应用其他过滤器
       if (source !== 'all' && item.source !== source) return false;
       if (title !== 'all' && item.title !== title) return false;
@@ -669,6 +674,7 @@ function SearchPageClient() {
     const { source, title, year, yearOrder } = filterAgg as any;
     // 使用实际执行搜索的关键字，而不是输入框中的当前值
     const actualQuery = currentQueryRef.current;
+
     const filtered = aggregatedResults.filter(([_, group]) => {
       // 检查聚合组中是否至少有一个结果与搜索关键字相关
       const hasRelevantResult = group.some((item) =>
@@ -1427,22 +1433,23 @@ function SearchPageClient() {
             <section className='mb-12'>
               {/* 标题 */}
               <div className='mb-4'>
-                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                  搜索结果
+                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200 flex items-baseline'>
+                  <span>搜索结果</span>
                   {searchResults.length > 0 && (
                     <span className='ml-2 text-sm font-normal text-gray-500 dark:text-gray-400'>
                       (
                       {viewMode === 'agg'
-                        ? aggregatedResults.length
-                        : searchResults.length}
+                        ? filteredAggResults.length
+                        : filteredAllResults.length}
                       )
                     </span>
                   )}
-                  {isLoading && useFluidSearch && (
-                    <span className='ml-2 inline-block align-middle'>
+                  {/* 固定宽度容器，防止布局抖动 */}
+                  <span className='ml-2 text-sm inline-block w-5'>
+                    {isLoading && useFluidSearch && (
                       <span className='inline-block h-3 w-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin'></span>
-                    </span>
-                  )}
+                    )}
+                  </span>
                 </h2>
               </div>
               {/* 筛选器 + 聚合开关 同行 */}
@@ -1482,7 +1489,7 @@ function SearchPageClient() {
                 </label>
               </div>
               {searchResults.length === 0 ? (
-                isLoading ? (
+                isLoading && useFluidSearch ? (
                   <div className='flex justify-center items-center py-20 gap-2'>
                     <img
                       src='/img/spinning-circles.svg'

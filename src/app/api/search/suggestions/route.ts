@@ -9,6 +9,7 @@ import { searchFromApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,7 +28,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 生成建议
-    const suggestions = await generateSuggestions(config, query, authInfo.username);
+    const suggestions = await generateSuggestions(
+      config,
+      query,
+      authInfo.username
+    );
 
     // 从配置中获取缓存时间，如果没有配置则使用默认值300秒（5分钟）
     const cacheTime = config.SiteConfig.SiteInterfaceCacheTime || 300;
@@ -49,7 +54,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function generateSuggestions(config: AdminConfig, query: string, username: string): Promise<
+async function generateSuggestions(
+  config: AdminConfig,
+  query: string,
+  username: string
+): Promise<
   Array<{
     text: string;
     type: 'exact' | 'related' | 'suggestion';
@@ -66,10 +75,18 @@ async function generateSuggestions(config: AdminConfig, query: string, username:
     const firstSite = apiSites[0];
     const results = await searchFromApi(firstSite, query);
 
+    // 过滤黄色内容
+    let filteredResults = results;
+    if (!config.SiteConfig.DisableYellowFilter) {
+      filteredResults = results.filter((r: any) => {
+        const typeName = r.type_name || '';
+        return !yellowWords.some((word: string) => typeName.includes(word));
+      });
+    }
+
     realKeywords = Array.from(
       new Set(
-        results
-          .filter((r: any) => config.SiteConfig.DisableYellowFilter || !yellowWords.some((word: string) => (r.type_name || '').includes(word)))
+        filteredResults
           .map((r: any) => r.title)
           .filter(Boolean)
           .flatMap((title: string) => title.split(/[ -:：·、-]/))
