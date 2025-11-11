@@ -371,6 +371,23 @@ async function getInitConfig(
     SourceConfig: [],
     CustomCategories: [],
     LiveConfig: [],
+    ThemeConfig: {
+      defaultTheme: 'default',
+      customCSS: '',
+      allowUserCustomization: true,
+    },
+    ImageHostingConfig: {
+      type: 'S3',
+      s3: {
+        accessKeyId: '',
+        secretAccessKey: '',
+        bucket: '',
+        endpoint: '',
+        region: '',
+        pathFormat: '',
+        customDomain: '',
+      },
+    },
   };
 
   // 补充用户信息
@@ -688,6 +705,22 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     };
   }
 
+  // 确保 ImageHostingConfig 存在
+  if (!adminConfig.ImageHostingConfig) {
+    adminConfig.ImageHostingConfig = {
+      type: 'S3',
+      s3: {
+        accessKeyId: '',
+        secretAccessKey: '',
+        bucket: '',
+        endpoint: '',
+        region: '',
+        pathFormat: '',
+        customDomain: '',
+      },
+    };
+  }
+
   // 站长变更自检
   const ownerUser = process.env.LOGIN_USERNAME;
 
@@ -777,6 +810,15 @@ export async function resetConfig() {
     originConfig.ConfigFile,
     originConfig.ConfigSubscribtion
   );
+
+  // 保留原有的 ImageHostingConfig 和 ThemeConfig，避免重置时丢失
+  if (originConfig.ImageHostingConfig) {
+    adminConfig.ImageHostingConfig = originConfig.ImageHostingConfig;
+  }
+  if (originConfig.ThemeConfig) {
+    adminConfig.ThemeConfig = originConfig.ThemeConfig;
+  }
+
   cachedConfig = adminConfig;
   await db.saveAdminConfig(adminConfig);
 

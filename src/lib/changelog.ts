@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.50",
+    date: "2025-11-11",
+    added: [
+    "新增后台管理面板图床配置功能，支持 S3 协议配置"
+    ],
+    changed: [
+      // 无变更内容
+    ],
+    fixed: [
+    "修复远程服务器图床配置无法显示的问题",
+    "修复配置保存使用错误的数据库键导致配置丢失",
+    "修复配置初始化和自检时 ImageHostingConfig 字段丢失",
+    "修复 resetConfig 重置时丢失 ImageHostingConfig 和 ThemeConfig"
+    ]
+  },
+  {
     version: "1.0.49",
     date: "2025-11-10",
     added: [
@@ -23,7 +39,10 @@ export const changelog: ChangelogEntry[] = [
     "修复空用户名用户问题，在配置初始化和自检时自动过滤",
     "移除直播页面所有控制台调试信息，优化生产环境性能",
     "修复轮播图加载失败自动替补机制，使用项目ID跟踪失败状态",
-    "修复轮播图指示器在图片加载失败时不显示的问题"
+    "修复轮播图指示器在图片加载失败时不显示的问题",
+    "修复远程服务器图床配置无法显示的问题，确保配置正确保存到 admin:config 键",
+    "修复配置初始化和自检时 ImageHostingConfig 字段丢失的问题",
+    "修复 resetConfig 函数重置配置时丢失 ImageHostingConfig 和 ThemeConfig 的问题"
     ]
   },
   {

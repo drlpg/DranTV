@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
     // 更新配置
     config.ImageHostingConfig = ImageHostingConfig;
 
-    // 保存到数据库
-    await db.set('config', JSON.stringify(config));
+    // 保存到数据库（使用正确的保存方法）
+    await db.saveAdminConfig(config);
 
     // 更新缓存
     setCachedConfig(config);
