@@ -376,18 +376,6 @@ async function getInitConfig(
       customCSS: '',
       allowUserCustomization: true,
     },
-    ImageHostingConfig: {
-      type: 'S3',
-      s3: {
-        accessKeyId: '',
-        secretAccessKey: '',
-        bucket: '',
-        endpoint: '',
-        region: '',
-        pathFormat: '',
-        customDomain: '',
-      },
-    },
   };
 
   // 补充用户信息
