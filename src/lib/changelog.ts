@@ -11,6 +11,21 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.49",
+    date: "2025-11-12",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "调整管理后台选项卡顺序，轮播图配置移至自定义分类上方",
+    "优化播放页面侧边栏布局，移除外层容器左侧间距",
+    "优化选集网格布局，调整内边距以改善视觉效果"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "1.0.48",
     date: "2025-11-11",
     added: [

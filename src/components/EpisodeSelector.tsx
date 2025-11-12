@@ -298,13 +298,13 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   );
 
   return (
-    <div className='md:ml-2 pl-4 pr-0 h-full rounded-xl bg-black/5 dark:bg-white/3 flex flex-col border border-gray-300 dark:border-white/30 overflow-x-hidden overflow-y-hidden'>
+    <div className='pr-0 h-full rounded-xl bg-black/5 dark:bg-white/3 flex flex-col border border-gray-300 dark:border-white/30 overflow-x-hidden overflow-y-hidden'>
       {/* 主要的 Tab 切换 - 无缝融入设计 */}
-      <div className='flex -ml-4 flex-shrink-0 border-b border-dashed border-gray-300 dark:border-gray-600'>
+      <div className='flex flex-shrink-0 border-b border-dashed border-gray-300 dark:border-gray-600'>
         {totalEpisodes > 1 && (
           <div
             onClick={() => setActiveTab('episodes')}
-            className={`flex-1 py-3 pl-4 pr-4 text-center cursor-pointer transition-all duration-200 font-medium
+            className={`flex-1 py-3 px-4 text-center cursor-pointer transition-all duration-200 font-medium
               ${
                 activeTab === 'episodes'
                   ? 'text-blue-600 dark:text-blue-400'
@@ -317,7 +317,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
         )}
         <div
           onClick={handleSourceTabClick}
-          className={`flex-1 py-3 pl-4 pr-4 text-center cursor-pointer transition-all duration-200 font-medium
+          className={`flex-1 py-3 px-4 text-center cursor-pointer transition-all duration-200 font-medium
             ${
               activeTab === 'sources'
                 ? 'text-gray-900 dark:text-gray-100'
@@ -333,7 +333,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {activeTab === 'episodes' && (
         <>
           {/* 当前选集范围显示 */}
-          <div className='grid grid-cols-2 border-b border-dashed border-gray-300 dark:border-gray-600 -ml-4 flex-shrink-0'>
+          <div className='grid grid-cols-2 border-b border-dashed border-gray-300 dark:border-gray-600 flex-shrink-0'>
             <div className='flex justify-center items-center'>
               <div className='relative py-2 text-sm font-medium text-blue-500 dark:text-blue-400'>
                 {categories[displayPage]}
@@ -367,7 +367,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           </div>
 
           {/* 集数网格 */}
-          <div className='grid grid-cols-3 gap-3 overflow-y-auto flex-1 content-start pt-4 pb-4 pr-4 auto-rows-min'>
+          <div className='grid grid-cols-3 gap-3 overflow-y-auto flex-1 content-start pt-4 pb-4 pl-4 pr-4 auto-rows-min'>
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
@@ -395,7 +395,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
           {/* 底部翻页按钮 - 仅在有多页时显示 */}
           {pageCount > 1 && (
-            <div className='flex-shrink-0 border-t border-dashed border-gray-300 dark:border-gray-600 -ml-4 py-3'>
+            <div className='flex-shrink-0 border-t border-dashed border-gray-300 dark:border-gray-600 py-3'>
               <div className='flex items-center gap-4 px-4'>
                 {/* 上一页按钮 */}
                 <button
@@ -663,7 +663,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                       );
                     })}
                 </div>
-                <div className='flex-shrink-0 pt-2 border-t border-dashed border-gray-300 dark:border-gray-600 -ml-4 pl-4 pr-4'>
+                <div className='flex-shrink-0 pt-2 border-t border-dashed border-gray-300 dark:border-gray-600 px-4'>
                   <button
                     onClick={() => {
                       if (videoTitle) {
