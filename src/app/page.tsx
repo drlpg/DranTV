@@ -46,6 +46,7 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [carouselConfig, setCarouselConfig] = useState<any>(null);
 
   // 预加载常用页面数据
   useEffect(() => {
@@ -85,25 +86,41 @@ function HomeClient() {
         setLoading(true);
 
         // 使用缓存API并行获取数据
-        const [moviesData, tvShowsData, varietyShowsData, bangumiCalendarData] =
-          await Promise.all([
-            getCachedDoubanCategories({
-              kind: 'movie',
-              category: '热门',
-              type: '全部',
-            }),
-            getCachedDoubanCategories({
-              kind: 'tv',
-              category: 'tv',
-              type: 'tv',
-            }),
-            getCachedDoubanCategories({
-              kind: 'tv',
-              category: 'show',
-              type: 'show',
-            }),
-            GetBangumiCalendarData(),
-          ]);
+        const [
+          moviesData,
+          tvShowsData,
+          varietyShowsData,
+          bangumiCalendarData,
+          carouselConfigData,
+        ] = await Promise.all([
+          getCachedDoubanCategories({
+            kind: 'movie',
+            category: '热门',
+            type: '全部',
+          }),
+          getCachedDoubanCategories({
+            kind: 'tv',
+            category: 'tv',
+            type: 'tv',
+          }),
+          getCachedDoubanCategories({
+            kind: 'tv',
+            category: 'show',
+            type: 'show',
+          }),
+          GetBangumiCalendarData(),
+          fetch('/api/carousel-config')
+            .then((res) => res.json())
+            .catch(() => ({
+              mode: 'default',
+              autoPlayInterval: 10000,
+              maxItems: 5,
+              customItems: [],
+            })),
+        ]);
+
+        // 设置轮播图配置
+        setCarouselConfig(carouselConfigData);
 
         if (moviesData.code === 200) {
           // 先尝试获取TMDB横版海报，然后再设置state
@@ -310,23 +327,48 @@ function HomeClient() {
             // 首页视图
             <>
               {/* 轮播图 */}
-              <section className='mb-6 sm:mb-8'>
-                <Carousel
-                  items={hotMovies.slice(0, 10).map((movie) => ({
-                    id: movie.id,
-                    title: movie.title,
-                    image: movie.backdrop || movie.poster,
-                    rate: movie.rate,
-                    link: `/play?title=${encodeURIComponent(
-                      movie.title.trim()
-                    )}${movie.year ? `&year=${movie.year}` : ''}&stype=movie`,
-                  }))}
-                  maxItems={5}
-                />
-              </section>
+              {(loading || carouselConfig) && (
+                <section className='mb-6 sm:mb-8'>
+                  {loading ? (
+                    <div className='relative w-full overflow-hidden rounded-lg aspect-[16/9] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <img
+                          src='/img/loading.svg'
+                          alt='加载中'
+                          className='w-12 h-3 sm:w-20 sm:h-5 object-contain opacity-80'
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    carouselConfig && (
+                      <Carousel
+                        items={
+                          carouselConfig.mode === 'custom'
+                            ? carouselConfig.customItems
+                            : hotMovies.slice(0, 10).map((movie: any) => ({
+                                id: movie.id,
+                                title: movie.title,
+                                image: movie.backdrop || movie.poster,
+                                rate: movie.rate,
+                                link: `/play?title=${encodeURIComponent(
+                                  movie.title.trim()
+                                )}${
+                                  movie.year ? `&year=${movie.year}` : ''
+                                }&stype=movie`,
+                              }))
+                        }
+                        maxItems={carouselConfig.maxItems || 5}
+                        autoPlayInterval={
+                          carouselConfig.autoPlayInterval || 10000
+                        }
+                      />
+                    )
+                  )}
+                </section>
+              )}
 
               {/* 继续观看 */}
-              <ContinueWatching />
+              <ContinueWatching showSkeleton={loading} />
 
               {/* 热门电影 */}
               <section className='mb-6 sm:mb-8'>

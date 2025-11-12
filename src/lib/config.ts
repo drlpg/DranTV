@@ -709,6 +709,16 @@ export function configSelfCheck(adminConfig: AdminConfig): AdminConfig {
     };
   }
 
+  // 确保 CarouselConfig 存在
+  if (!adminConfig.CarouselConfig) {
+    adminConfig.CarouselConfig = {
+      mode: 'default',
+      autoPlayInterval: 10000,
+      maxItems: 5,
+      customItems: [],
+    };
+  }
+
   // 站长变更自检
   const ownerUser = process.env.LOGIN_USERNAME;
 
@@ -799,12 +809,15 @@ export async function resetConfig() {
     originConfig.ConfigSubscribtion
   );
 
-  // 保留原有的 ImageHostingConfig 和 ThemeConfig，避免重置时丢失
+  // 保留原有的 ImageHostingConfig、ThemeConfig 和 CarouselConfig，避免重置时丢失
   if (originConfig.ImageHostingConfig) {
     adminConfig.ImageHostingConfig = originConfig.ImageHostingConfig;
   }
   if (originConfig.ThemeConfig) {
     adminConfig.ThemeConfig = originConfig.ThemeConfig;
+  }
+  if (originConfig.CarouselConfig) {
+    adminConfig.CarouselConfig = originConfig.CarouselConfig;
   }
 
   cachedConfig = adminConfig;

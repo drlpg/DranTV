@@ -14,9 +14,13 @@ import VideoCard from '@/components/VideoCard';
 
 interface ContinueWatchingProps {
   className?: string;
+  showSkeleton?: boolean;
 }
 
-export default function ContinueWatching({ className }: ContinueWatchingProps) {
+export default function ContinueWatching({
+  className,
+  showSkeleton = false,
+}: ContinueWatchingProps) {
   const [playRecords, setPlayRecords] = useState<
     (PlayRecord & { key: string })[]
   >([]);
@@ -65,8 +69,40 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
     return unsubscribe;
   }, []);
 
-  // 如果未初始化或没有播放记录，则不渲染组件
-  if (!initialized || playRecords.length === 0) {
+  // 如果显示骨架屏（页面初始加载或组件未初始化）
+  if (showSkeleton || !initialized) {
+    return (
+      <section className={`mb-6 sm:mb-8 ${className || ''}`}>
+        <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200 mb-4'>
+          继续观看
+        </h2>
+        <ScrollableRow>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
+            >
+              <div className='w-full'>
+                <div className='aspect-[2/3] rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden relative'>
+                  <div className='relative w-[30%] h-[30%] min-w-[40px] min-h-[40px] max-w-[80px] max-h-[80px]'>
+                    <img
+                      src='/img/loading.svg'
+                      alt='加载中'
+                      className='w-full h-full object-contain opacity-60'
+                    />
+                  </div>
+                </div>
+                <div className='mt-2 h-5 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse'></div>
+              </div>
+            </div>
+          ))}
+        </ScrollableRow>
+      </section>
+    );
+  }
+
+  // 如果没有播放记录，则不渲染组件
+  if (playRecords.length === 0) {
     return null;
   }
 

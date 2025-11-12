@@ -97,6 +97,17 @@ export interface AdminConfig {
       customDomain: string;
     };
   };
+  CarouselConfig?: {
+    mode: 'default' | 'custom';
+    autoPlayInterval: number;
+    maxItems: number;
+    customItems: {
+      id: string;
+      title: string;
+      image: string;
+      link?: string;
+    }[];
+  };
   UserConfig: {
     Users: {
       username: string;

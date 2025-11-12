@@ -11,11 +11,16 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: "1.0.50",
+    version: "1.0.48",
     date: "2025-11-11",
     added: [
     "新增后台管理面板图床配置功能，支持 S3 协议配置",
-    "新增图床配置数据迁移脚本，自动迁移历史配置数据"
+    "新增图床配置数据迁移脚本，自动迁移历史配置数据",
+    "新增后台管理面板轮播图配置功能",
+    "支持自定义和默认两种轮播模式一键切换",
+    "支持上传图片至远程图床（S3协议）",
+    "支持配置轮播图超链接、标题、张数和停留时长",
+    "新增图片上传API，使用AWS签名V4协议"
     ],
     changed: [
       // 无变更内容
@@ -29,7 +34,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.49",
+    version: "1.0.47",
     date: "2025-11-10",
     added: [
       // 无新增内容
@@ -48,7 +53,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.48",
+    version: "1.0.46",
     date: "2025-11-10",
     added: [
       // 无新增内容
@@ -64,7 +69,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.47",
+    version: "1.0.45",
     date: "2025-11-09",
     added: [
       // 无新增内容
@@ -80,7 +85,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.46",
+    version: "1.0.44",
     date: "2025-11-09",
     added: [
     "新增 Cloudflare Turnstile 人机验证功能",
@@ -98,7 +103,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.45",
+    version: "1.0.43",
     date: "2025-11-09",
     added: [
       // 无新增内容
@@ -112,7 +117,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.44",
+    version: "1.0.42",
     date: "2025-11-09",
     added: [
       // 无新增内容
@@ -126,7 +131,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.43",
+    version: "1.0.41",
     date: "2025-11-09",
     added: [
       // 无新增内容
@@ -142,7 +147,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.42",
+    version: "1.0.40",
     date: "2025-11-08",
     added: [
     "新增登录表单 Cloudflare Turnstile 人机验证功能",
@@ -156,7 +161,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.41",
+    version: "1.0.39",
     date: "2025-11-08",
     added: [
       // 无新增内容
@@ -170,7 +175,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.40",
+    version: "1.0.38",
     date: "2025-11-08",
     added: [
       // 无新增内容
@@ -185,7 +190,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.39",
+    version: "1.0.37",
     date: "2025-11-08",
     added: [
       // 无新增内容
@@ -200,7 +205,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.38",
+    version: "1.0.36",
     date: "2025-11-08",
     added: [
       // 无新增内容
@@ -211,47 +216,6 @@ export const changelog: ChangelogEntry[] = [
     fixed: [
     "修复 Railway 部署时 NEXT_PUBLIC_STORAGE_TYPE 环境变量未生效问题",
     "触发重新构建以应用环境变量配置"
-    ]
-  },
-  {
-    version: "1.0.37",
-    date: "2025-11-08",
-    added: [
-    "新增直播源M3U格式导入支持，整个M3U文件作为单个直播源",
-    "新增频道分辨率信息提取和显示（支持1080P、720P、4K等）",
-    "新增logo加载失败时的fallback图标显示"
-    ],
-    changed: [
-    "优化直播源导入流程，后台异步更新频道数避免内存溢出",
-    "优化频道按钮样式，移除切换动画，统一高度",
-    '优化频道列表显示，移除"正在直播"文本，改为显示分辨率标签',
-    '优化直播源列表，移除"正在直播（数量）"显示',
-    "优化频道图标容器背景色，提升视觉效果"
-    ],
-    fixed: [
-    "修复订阅保存API清除其他直播源的严重bug",
-    "修复导入新直播源后之前直播源被清除的问题",
-    "修复频道保存后清除直播",
-    "修复频道按钮高度不一致问题（border导致）",
-    "修复暗色模式频道悬停效果不明显的问题",
-    "修复logo代理API参数不匹配问题（source vs DranTV-source）",
-    "修复频道数不实时显示的问题",
-    "新增配置保存时的去重检查，防止重复直播源"
-    ]
-  },
-  {
-    version: "1.0.36",
-    date: "2025-11-08",
-    added: [
-      // 无新增内容
-    ],
-    changed: [
-    "优化站点配置功能开关布局，开关按钮与功能标题垂直居中",
-    "优化设备码验证提示文字，移除冗余描述"
-    ],
-    fixed: [
-    "修复站点配置保存失败的问题（数据格式不匹配）",
-    "修复站点配置未改动时仍可保存的问题，新增空状态提示"
     ]
   },
   {
@@ -278,6 +242,69 @@ export const changelog: ChangelogEntry[] = [
   },
   {
     version: "1.0.34",
+    date: "2025-11-08",
+    added: [
+    "新增直播源M3U格式导入支持，整个M3U文件作为单个直播源",
+    "新增频道分辨率信息提取和显示（支持1080P、720P、4K等）",
+    "新增logo加载失败时的fallback图标显示"
+    ],
+    changed: [
+    "优化直播源导入流程，后台异步更新频道数避免内存溢出",
+    "优化频道按钮样式，移除切换动画，统一高度",
+    '优化频道列表显示，移除"正在直播"文本，改为显示分辨率标签',
+    '优化直播源列表，移除"正在直播（数量）"显示',
+    "优化频道图标容器背景色，提升视觉效果"
+    ],
+    fixed: [
+    "修复订阅保存API清除其他直播源的严重bug",
+    "修复导入新直播源后之前直播源被清除的问题",
+    "修复频道保存后清除直播",
+    "修复频道按钮高度不一致问题（border导致）",
+    "修复暗色模式频道悬停效果不明显的问题",
+    "修复logo代理API参数不匹配问题（source vs DranTV-source）",
+    "修复频道数不实时显示的问题",
+    "新增配置保存时的去重检查，防止重复直播源"
+    ]
+  },
+  {
+    version: "1.0.33",
+    date: "2025-11-08",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化站点配置功能开关布局，开关按钮与功能标题垂直居中",
+    "优化设备码验证提示文字，移除冗余描述"
+    ],
+    fixed: [
+    "修复站点配置保存失败的问题（数据格式不匹配）",
+    "修复站点配置未改动时仍可保存的问题，新增空状态提示"
+    ]
+  },
+  {
+    version: "1.0.32",
+    date: "2025-11-08",
+    added: [
+    "新增管理后台页面组件化拆分，提升代码可维护性",
+    "新增站点配置两行两列布局，优化配置界面",
+    "新增管理后台骨架屏加载效果"
+    ],
+    changed: [
+    "优化管理后台主文件从7925行精简到351行",
+    "优化站点配置面板顺序，移至用户配置上方",
+    "优化管理后台标题和按钮布局对齐",
+    "优化豆瓣代理链接显示位置",
+    "优化功能开关布局，确保按钮宽度一致"
+    ],
+    fixed: [
+    "修复管理后台无限循环导致页面闪烁问题",
+    "修复Hydration错误导致页面无法加载",
+    "修复数据库超时错误显示为友好提示",
+    "修复动态导入导致的类型错误"
+    ]
+  },
+  {
+    version: "1.0.31",
     date: "2025-11-07",
     added: [
     "新增从数据库读取M3U内容的支持",
@@ -302,7 +329,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.33",
+    version: "1.0.30",
     date: "2025-11-07",
     added: [
       // 无新增内容
@@ -348,7 +375,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.32",
+    version: "1.0.29",
     date: "2025-11-07",
     added: [
       // 无新增内容
@@ -365,7 +392,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.31",
+    version: "1.0.28",
     date: "2025-11-06",
     added: [
     '管理面板视频源和直播源配置新增"查看配置"功能，可查看订阅地址、自动更新状态、最后更新时间和导入源统计'
@@ -379,7 +406,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.30",
+    version: "1.0.27",
     date: "2025-11-05",
     added: [
     "配置订阅功能新增M3U和TXT格式支持",
@@ -413,7 +440,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.29",
+    version: "1.0.26",
     date: "2025-11-05",
     added: [
       // 无新增内容
@@ -426,7 +453,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.28",
+    version: "1.0.25",
     date: "2025-11-04",
     added: [
       // 无新增内容
@@ -440,7 +467,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.27",
+    version: "1.0.24",
     date: "2025-11-04",
     added: [
       // 无新增内容
@@ -456,7 +483,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.26",
+    version: "1.0.23",
     date: "2025-11-04",
     added: [
       // 无新增内容
@@ -473,7 +500,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.25",
+    version: "1.0.22",
     date: "2025-11-04",
     added: [
     "新增 WebSocket 支持，实现实时通信功能",
@@ -491,7 +518,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.24",
+    version: "1.0.21",
     date: "2025-11-04",
     added: [
       // 无新增内容
@@ -507,7 +534,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.23",
+    version: "1.0.20",
     date: "2025-11-04",
     added: [
       // 无新增内容
@@ -527,7 +554,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.22",
+    version: "1.0.19",
     date: "2025-11-02",
     added: [
       // 无新增内容
@@ -544,7 +571,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.21",
+    version: "1.0.18",
     date: "2025-11-02",
     added: [
       // 无新增内容
@@ -560,7 +587,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.20",
+    version: "1.0.17",
     date: "2025-11-02",
     added: [
     "添加Cloudflare Workers代理支持解决IP封禁问题",
@@ -579,7 +606,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.19",
+    version: "1.0.16",
     date: "2025-11-01",
     added: [
       // 无新增内容
@@ -593,17 +620,15 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.18",
+    version: "1.0.15",
     date: "2025-11-01",
     added: [
       // 无新增内容
     ],
     changed: [
     "播放器初始化直接使用 videoUrl，移除重复的 URL 处理逻辑",
-    "恢复与原始项目 OrangeTV-main 完全一致的播放逻辑",
     "优化视频源测速，确保选择可用且速度最快的源",
-    "初始加载现在可以正常播放视频",
-    "所有代码逻辑与原始项目保持一致，确保稳定性"
+    "初始加载现在可以正常播放视频"
     ],
     fixed: [
     "修复初始加载时视频无法播放的问题（需手动切换源才能播;   放）",
@@ -613,7 +638,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.17",
+    version: "1.0.14",
     date: "2025-11-01",
     added: [
     "新增 `/api/proxy/video` 路由，支持视频文件代理",
@@ -635,7 +660,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.16",
+    version: "1.0.13",
     date: "2025-11-01",
     added: [
     "新增 `/api/proxy/m3u8` 代理 API，处理 m3u8 清单并重写内容",
@@ -655,13 +680,13 @@ export const changelog: ChangelogEntry[] = [
     ],
     fixed: [
     "修复 Docker 容器中视频无法播放的 CORS 问题",
-    "采用原始项目 OrangeTV 的代理方案，服务器端重写 m3u8 内容",
+    "服务器端重写 m3u8 内容",
     "所有 ts 分片 URL 在服务器端替换为代理 URL",
     "添加 Referer 和 Origin 头以绕过防盗链检测"
     ]
   },
   {
-    version: "1.0.15",
+    version: "1.0.12",
     date: "2025-11-01",
     added: [
       // 无新增内容
@@ -679,7 +704,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.14",
+    version: "1.0.11",
     date: "2025-11-01",
     added: [
     "选集侧边栏添加底部分页按钮，支持多页切换",
@@ -700,7 +725,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.13",
+    version: "1.0.10",
     date: "2025-10-31",
     added: [
     '搜索页面添加"聚合搜索"标题和热门搜索标签',
@@ -725,7 +750,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.12",
+    version: "1.0.9",
     date: "2025-10-31",
     added: [
       // 无新增内容
@@ -746,7 +771,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.11",
+    version: "1.0.8",
     date: "2025-10-30",
     added: [
       // 无新增内容
@@ -766,7 +791,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.10",
+    version: "1.0.7",
     date: "2025-10-30",
     added: [
     "添加轻量级缓存系统，减少重复 API 请求",
@@ -784,7 +809,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.9",
+    version: "1.0.6",
     date: "2025-10-30",
     added: [
       // 无新增内容
@@ -803,7 +828,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.8",
+    version: "1.0.5",
     date: "2025-10-30",
     added: [
       // 无新增内容
@@ -819,7 +844,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.7",
+    version: "1.0.4",
     date: "2025-10-29",
     added: [
       // 无新增内容
@@ -833,7 +858,7 @@ export const changelog: ChangelogEntry[] = [
     ]
   },
   {
-    version: "1.0.6",
+    version: "1.0.3",
     date: "2025-10-29",
     added: [
       // 无新增内容
@@ -846,51 +871,6 @@ export const changelog: ChangelogEntry[] = [
     ],
     fixed: [
       // 无修复内容
-    ]
-  },
-  {
-    version: "1.0.5",
-    date: "2025-10-29",
-    added: [
-      // 无新增内容
-    ],
-    changed: [
-    "优化选集侧边栏容器和分割线颜色",
-    "调整侧边栏圆角为 12px",
-    "优化视频源容器悬停效果"
-    ],
-    fixed: [
-    "修复重启服务器后管理面板数据丢失问题",
-    "修复滚动条在暗色模式下无法自动隐藏问题"
-    ]
-  },
-  {
-    version: "1.0.4",
-    date: "2025-10-29",
-    added: [
-    "添加版本更新自动化脚本"
-    ],
-    changed: [
-    "优化版本信息弹窗界面"
-    ],
-    fixed: [
-    "修复 TypeScript 类型错误"
-    ]
-  },
-  {
-    version: "1.0.3",
-    date: "2025-10-29",
-    added: [
-      // 无新增内容
-    ],
-    changed: [
-    "优化服务器优雅关闭处理",
-    "改进 Upstash Redis 配置和连接"
-    ],
-    fixed: [
-    "修复服务器关闭时 WebSocket 端口未释放问题",
-    "修复环境变量优先级，确保配置正确加载",
-    "修复机器码绑定选项显示逻辑"
     ]
   },
   {

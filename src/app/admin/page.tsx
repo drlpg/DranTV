@@ -13,6 +13,7 @@ import {
   Settings,
   Database,
   Image,
+  Images,
 } from 'lucide-react';
 
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
@@ -33,6 +34,7 @@ import CategoryConfig from './components/CategoryConfig';
 import SiteConfig from './components/SiteConfig';
 import LiveSourceConfig from './components/LiveSourceConfig';
 import ImageHostingConfig from './components/ImageHostingConfig';
+import CarouselConfig from './components/CarouselConfig';
 
 function AdminPageClient() {
   const { alertModal, showAlert, hideAlert } = useAlertModal();
@@ -51,6 +53,7 @@ function AdminPageClient() {
     siteConfig: false,
     categoryConfig: false,
     imageHosting: false,
+    carouselConfig: false,
     dataMigration: false,
     themeManager: false,
   });
@@ -404,6 +407,20 @@ function AdminPageClient() {
           onToggle={() => toggleTab('categoryConfig')}
         >
           <CategoryConfig
+            config={config}
+            refreshConfig={() => fetchConfig(false)}
+          />
+        </CollapsibleTab>
+
+        <CollapsibleTab
+          title='轮播图配置'
+          icon={
+            <Images size={20} className='text-gray-600 dark:text-gray-400' />
+          }
+          isExpanded={expandedTabs.carouselConfig}
+          onToggle={() => toggleTab('carouselConfig')}
+        >
+          <CarouselConfig
             config={config}
             refreshConfig={() => fetchConfig(false)}
           />
