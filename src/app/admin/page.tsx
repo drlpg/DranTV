@@ -396,6 +396,20 @@ function AdminPageClient() {
         </CollapsibleTab>
 
         <CollapsibleTab
+          title='轮播图配置'
+          icon={
+            <Images size={20} className='text-gray-600 dark:text-gray-400' />
+          }
+          isExpanded={expandedTabs.carouselConfig}
+          onToggle={() => toggleTab('carouselConfig')}
+        >
+          <CarouselConfig
+            config={config}
+            refreshConfig={() => fetchConfig(false)}
+          />
+        </CollapsibleTab>
+
+        <CollapsibleTab
           title='自定义分类'
           icon={
             <FolderOpen
@@ -407,20 +421,6 @@ function AdminPageClient() {
           onToggle={() => toggleTab('categoryConfig')}
         >
           <CategoryConfig
-            config={config}
-            refreshConfig={() => fetchConfig(false)}
-          />
-        </CollapsibleTab>
-
-        <CollapsibleTab
-          title='轮播图配置'
-          icon={
-            <Images size={20} className='text-gray-600 dark:text-gray-400' />
-          }
-          isExpanded={expandedTabs.carouselConfig}
-          onToggle={() => toggleTab('carouselConfig')}
-        >
-          <CarouselConfig
             config={config}
             refreshConfig={() => fetchConfig(false)}
           />
