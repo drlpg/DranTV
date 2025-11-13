@@ -4,14 +4,14 @@ import { AdminConfig } from './admin.types';
 import { KvrocksStorage } from './kvrocks.db';
 import { RedisStorage } from './redis.db';
 import {
+  ChatMessage,
+  Conversation,
   Favorite,
+  Friend,
+  FriendRequest,
   IStorage,
   PlayRecord,
   SkipConfig,
-  ChatMessage,
-  Conversation,
-  Friend,
-  FriendRequest,
 } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 

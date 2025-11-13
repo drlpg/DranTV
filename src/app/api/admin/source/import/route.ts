@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminConfig, saveAdminConfig } from '@/lib/config';
+
 import { checkAuth } from '@/lib/auth';
+import { getAdminConfig, saveAdminConfig } from '@/lib/config';
 
 // 解析M3U格式的视频源列表
 function parseM3U(
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    let configContent = await response.text();
+    const configContent = await response.text();
     let format = 'unknown';
     let sources: Array<{
       name: string;

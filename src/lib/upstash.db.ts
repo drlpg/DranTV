@@ -3,15 +3,16 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
+import { encryptPassword, isEncrypted, verifyPassword } from './crypto';
 import {
+  ChatMessage,
+  Conversation,
   Favorite,
+  Friend,
+  FriendRequest,
   IStorage,
   PlayRecord,
   SkipConfig,
-  ChatMessage,
-  Conversation,
-  Friend,
-  FriendRequest,
 } from './types';
 
 // 搜索历史最大条数
@@ -198,8 +199,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async registerUser(userName: string, password: string): Promise<void> {
     // 使用加密存储密码
-    const crypto = require('./crypto');
-    const encryptedPassword = crypto.encryptPassword(password);
+    const encryptedPassword = encryptPassword(password);
     await withRetry(() =>
       this.client.set(this.userPwdKey(userName), encryptedPassword)
     );
@@ -212,10 +212,9 @@ export class UpstashRedisStorage implements IStorage {
     if (stored === null) return false;
 
     const storedPassword = ensureString(stored);
-    const crypto = require('./crypto');
 
     // 兼容旧的明文密码（迁移期间）
-    if (!crypto.isEncrypted(storedPassword)) {
+    if (!isEncrypted(storedPassword)) {
       // 如果是明文密码，直接比对
       const isValid = storedPassword === password;
       // 如果验证成功，自动升级为加密密码
@@ -226,7 +225,7 @@ export class UpstashRedisStorage implements IStorage {
     }
 
     // 验证加密密码
-    return crypto.verifyPassword(password, storedPassword);
+    return verifyPassword(password, storedPassword);
   }
 
   // 检查用户是否存在
@@ -241,8 +240,7 @@ export class UpstashRedisStorage implements IStorage {
   // 修改用户密码
   async changePassword(userName: string, newPassword: string): Promise<void> {
     // 使用加密存储密码
-    const crypto = require('./crypto');
-    const encryptedPassword = crypto.encryptPassword(newPassword);
+    const encryptedPassword = encryptPassword(newPassword);
     await withRetry(() =>
       this.client.set(this.userPwdKey(userName), encryptedPassword)
     );

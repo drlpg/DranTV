@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
+import { validateLoginRequest } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 
@@ -108,8 +109,7 @@ export async function POST(req: NextRequest) {
 
     // 输入验证（仅在数据库模式下验证格式）
     if (STORAGE_TYPE !== 'localstorage' && body.username && body.password) {
-      const validation = require('@/lib/validation');
-      const validationResult = validation.validateLoginRequest(body);
+      const validationResult = validateLoginRequest(body);
       if (!validationResult.success) {
         return NextResponse.json(
           { error: validationResult.error },

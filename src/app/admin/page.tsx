@@ -2,38 +2,38 @@
 
 'use client';
 
-import { Suspense, useCallback, useEffect, useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import {
-  Users,
-  Video,
-  Tv,
-  FolderOpen,
-  Palette,
-  Settings,
   Database,
+  FolderOpen,
   Image,
   Images,
+  Settings,
+  Tv,
+  Users,
+  Video,
 } from 'lucide-react';
+import { Suspense, useCallback, useEffect, useRef,useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
+
 import DataMigration from '@/components/DataMigration';
 import PageLayout from '@/components/PageLayout';
 
+import CarouselConfig from './components/CarouselConfig';
+import CategoryConfig from './components/CategoryConfig';
+import ImageHostingConfig from './components/ImageHostingConfig';
+import LiveSourceConfig from './components/LiveSourceConfig';
+import { AlertModal } from './components/modals/AlertModal';
+import { CollapsibleTab } from './components/shared/CollapsibleTab';
+import SiteConfig from './components/SiteConfig';
+import UserConfig from './components/UserConfig';
+import VideoSourceConfig from './components/VideoSourceConfig';
 import { useAlertModal } from './hooks/useAlertModal';
 import { useLoadingState } from './hooks/useLoadingState';
 import { buttonStyles } from './utils/constants';
 import { showError, showSuccess } from './utils/helpers';
-import { CollapsibleTab } from './components/shared/CollapsibleTab';
-import { AlertModal } from './components/modals/AlertModal';
-import UserConfig from './components/UserConfig';
-import VideoSourceConfig from './components/VideoSourceConfig';
-import CategoryConfig from './components/CategoryConfig';
-import SiteConfig from './components/SiteConfig';
-import LiveSourceConfig from './components/LiveSourceConfig';
-import ImageHostingConfig from './components/ImageHostingConfig';
-import CarouselConfig from './components/CarouselConfig';
 
 function AdminPageClient() {
   const { alertModal, showAlert, hideAlert } = useAlertModal();

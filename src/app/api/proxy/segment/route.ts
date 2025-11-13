@@ -86,7 +86,7 @@ export async function GET(request: Request) {
         }
 
         reader = response.body.getReader();
-        let isCancelled = false;
+        const isCancelled = false;
 
         function pump(): void {
           if (isCancelled || !reader) {

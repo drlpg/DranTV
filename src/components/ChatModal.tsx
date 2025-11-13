@@ -1,17 +1,21 @@
 'use client';
 
 import {
+  Image as ImageIcon,
   MessageCircle,
+  Paperclip,
   Search,
+  Send,
+  Smile,
+  UserPlus,
   Users,
   X,
-  Send,
-  UserPlus,
-  Smile,
-  Image as ImageIcon,
-  Paperclip,
 } from 'lucide-react';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useCallback,useEffect, useRef, useState } from 'react';
+
+import { useToast } from './Toast';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { getAuthInfoFromBrowserCookie } from '../lib/auth';
 import {
   ChatMessage,
   Conversation,
@@ -19,9 +23,6 @@ import {
   FriendRequest,
   WebSocketMessage,
 } from '../lib/types';
-import { getAuthInfoFromBrowserCookie } from '../lib/auth';
-import { useWebSocket } from '../hooks/useWebSocket';
-import { useToast } from './Toast';
 
 interface ChatModalProps {
   isOpen: boolean;

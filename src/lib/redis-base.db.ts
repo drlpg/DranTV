@@ -4,14 +4,14 @@ import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
 import {
+  ChatMessage,
+  Conversation,
   Favorite,
+  Friend,
+  FriendRequest,
   IStorage,
   PlayRecord,
   SkipConfig,
-  ChatMessage,
-  Conversation,
-  Friend,
-  FriendRequest,
 } from './types';
 
 // 搜索历史最大条数

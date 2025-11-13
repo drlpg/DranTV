@@ -8,25 +8,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GetBangumiCalendarData } from '@/lib/bangumi.client';
 import {
-  getDoubanCategories,
-  getDoubanList,
-  getDoubanRecommends,
-} from '@/lib/douban.client';
-import {
   getCachedDoubanCategories,
   getCachedDoubanList,
   getCachedDoubanRecommends,
 } from '@/lib/cachedDoubanApi';
+import {
+  getDoubanCategories,
+  getDoubanList,
+  getDoubanRecommends,
+} from '@/lib/douban.client';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
-import dynamic from 'next/dynamic';
-
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
-import PageLayout from '@/components/PageLayout';
-import VideoCard from '@/components/VideoCard';
-
 import DoubanCustomSelector from '@/components/DoubanCustomSelector';
 import DoubanSelector from '@/components/DoubanSelector';
+import PageLayout from '@/components/PageLayout';
+import VideoCard from '@/components/VideoCard';
 
 function DoubanPageClient() {
   const searchParams = useSearchParams();
@@ -133,7 +130,7 @@ function DoubanPageClient() {
         new Set(customCategories.map((cat) => cat.type))
       );
       if (types.length > 0) {
-        let selectedType = types.includes('movie') ? 'movie' : types[0];
+        const selectedType = types.includes('movie') ? 'movie' : types[0];
         setPrimarySelection(selectedType);
 
         const firstCategory = customCategories.find(

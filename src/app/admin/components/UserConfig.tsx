@@ -1,26 +1,20 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+
+
+import { useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Check,
-  X,
-  Plus,
-  Edit,
-  Trash2,
-  Settings,
-  UserPlus,
-  Users,
-} from 'lucide-react';
+
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
+
+import { AlertModal } from './modals/AlertModal';
+import { MachineCodeCell } from './shared/MachineCodeCell';
+import { UserAvatar } from './shared/UserAvatar';
+import { useAlertModal } from '../hooks/useAlertModal';
+import { useLoadingState } from '../hooks/useLoadingState';
 import { AdminConfig } from '../types';
 import { buttonStyles } from '../utils/constants';
 import { showError, showSuccess } from '../utils/helpers';
-import { useAlertModal } from '../hooks/useAlertModal';
-import { useLoadingState } from '../hooks/useLoadingState';
-import { UserAvatar } from './shared/UserAvatar';
-import { MachineCodeCell } from './shared/MachineCodeCell';
-import { AlertModal } from './modals/AlertModal';
 
 interface UserConfigProps {
   config: AdminConfig | null;

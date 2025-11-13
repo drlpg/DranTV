@@ -12,6 +12,7 @@ import React, {
   useState,
 } from 'react';
 
+import { getCachedDoubanCategories } from '@/lib/cachedDoubanApi';
 import {
   addSearchHistory,
   clearSearchHistory,
@@ -19,7 +20,6 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { getCachedDoubanCategories } from '@/lib/cachedDoubanApi';
 import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';

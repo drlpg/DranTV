@@ -11,6 +11,21 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.55",
+    date: "2025-11-14",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化依赖管理和构建流程",
+    "提升系统稳定性和性能"
+    ],
+    fixed: [
+    "修复依赖模块损坏导致的构建失败问题",
+    "修复类型检查和构建测试流程"
+    ]
+  },
+  {
     version: "1.0.54",
     date: "2025-11-13",
     added: [

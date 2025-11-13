@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { API_CONFIG } from '@/lib/config';
 
 // 转换外部API数据格式到内部格式 - 推荐API通常和分类热搜格式相同

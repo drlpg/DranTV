@@ -6,7 +6,7 @@ import { CURRENT_VERSION } from '@/lib/version';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const config = await getConfig();
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 

@@ -5,7 +5,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef,useState } from 'react';
 
 // 固定时段：6:00-18:00 为浅色模式，18:00-6:00 为暗色模式
 const LIGHT_MODE_START = 6; // 早上6点

@@ -26,7 +26,6 @@ import 'react-image-crop/dist/ReactCrop.css';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { CURRENT_VERSION } from '@/lib/version';
 import { checkForUpdates, UpdateStatus } from '@/lib/version_check';
-
 import { useSettings } from '@/hooks/useSettings';
 
 import { useToast } from './Toast';

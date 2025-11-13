@@ -19,6 +19,7 @@ import {
   getAllPlayRecords,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { preloadOnIdle } from '@/lib/preloadData';
 import { DoubanItem } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
@@ -27,8 +28,6 @@ import ContinueWatching from '@/components/ContinueWatching';
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
-import { preloadOnIdle } from '@/lib/preloadData';
-
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/UserMenu';

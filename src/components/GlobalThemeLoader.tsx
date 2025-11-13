@@ -71,7 +71,7 @@ const GlobalThemeLoader = () => {
     };
 
     // 应用主题并缓存
-    const applyAndCacheTheme = (themeId: string, css: string = '') => {
+    const applyAndCacheTheme = (themeId: string, css = '') => {
       applyTheme(themeId, css);
 
       // 缓存主题配置
@@ -84,7 +84,7 @@ const GlobalThemeLoader = () => {
     };
 
     // 应用主题函数
-    const applyTheme = (themeId: string, css: string = '') => {
+    const applyTheme = (themeId: string, css = '') => {
       const html = document.documentElement;
 
       // 移除所有主题class

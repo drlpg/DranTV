@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
 import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
-import { refreshLiveChannels } from '@/lib/live';
 
 export async function POST(request: NextRequest) {
   try {

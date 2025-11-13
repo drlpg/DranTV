@@ -6,13 +6,13 @@ import { Shield } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
-import { CURRENT_VERSION } from '@/lib/version';
 import MachineCode from '@/lib/machine-code';
+import { CURRENT_VERSION } from '@/lib/version';
+import { usePreventScroll } from '@/hooks/usePreventScroll';
 
+import GlobalThemeLoader from '@/components/GlobalThemeLoader';
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import GlobalThemeLoader from '@/components/GlobalThemeLoader';
-import { usePreventScroll } from '@/hooks/usePreventScroll';
 
 // 版本显示组件
 function VersionDisplay() {

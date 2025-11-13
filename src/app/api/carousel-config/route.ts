@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 import { NextResponse } from 'next/server';
+
 import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';

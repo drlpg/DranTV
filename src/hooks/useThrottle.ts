@@ -6,7 +6,7 @@ import { useCallback, useRef } from 'react';
  */
 export function useThrottle<T extends (...args: any[]) => any>(
   callback: T,
-  delay: number = 300
+  delay = 300
 ): T {
   const lastRun = useRef(Date.now());
 

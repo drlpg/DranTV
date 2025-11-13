@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { ExternalLink,Plus, Trash2, Upload } from 'lucide-react';
+import { useEffect,useState } from 'react';
+
 import { AdminConfig } from '@/lib/admin.types';
-import { Plus, Trash2, Upload, ExternalLink } from 'lucide-react';
-import { buttonStyles } from '../utils/constants';
-import { useAlertModal } from '../hooks/useAlertModal';
-import { useLoadingState } from '../hooks/useLoadingState';
-import { showError, showSuccess } from '../utils/helpers';
+
 import { AlertModal } from './modals/AlertModal';
 import { ConfirmModal } from './modals/ConfirmModal';
+import { useAlertModal } from '../hooks/useAlertModal';
+import { useLoadingState } from '../hooks/useLoadingState';
+import { buttonStyles } from '../utils/constants';
+import { showError, showSuccess } from '../utils/helpers';
 
 interface CarouselConfigProps {
   config: AdminConfig | null;

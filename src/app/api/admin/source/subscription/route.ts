@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminConfig, saveAdminConfig } from '@/lib/config';
+
 import { checkAuth } from '@/lib/auth';
+import { getAdminConfig, saveAdminConfig } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
   try {

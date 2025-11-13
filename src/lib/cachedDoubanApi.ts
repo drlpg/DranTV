@@ -4,12 +4,12 @@
  * 减少重复请求，提升页面切换速度
  */
 
-import { apiCache } from './simpleCache';
 import {
   getDoubanCategories,
   getDoubanList,
   getDoubanRecommends,
 } from './douban.client';
+import { apiCache } from './simpleCache';
 import type { DoubanResult } from './types';
 
 /**

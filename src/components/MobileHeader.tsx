@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { memo } from 'react';
 
-import { BackButton } from './BackButton';
 import { useSite } from './SiteProvider';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu } from './UserMenu';

@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { WebSocketMessage } from '../lib/types';
+
 import { getAuthInfoFromBrowserCookie } from '../lib/auth';
+import { WebSocketMessage } from '../lib/types';
 
 // 全局连接计数器，用于调试
 let globalConnectionCount = 0;

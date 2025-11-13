@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '../../../../lib/db';
-import { FriendRequest, Friend } from '../../../../lib/types';
+
 import { getAuthInfoFromCookie } from '../../../../lib/auth';
+import { db } from '../../../../lib/db';
+import { Friend,FriendRequest } from '../../../../lib/types';
 
 export async function GET(request: NextRequest) {
   try {

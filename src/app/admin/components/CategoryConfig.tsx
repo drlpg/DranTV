@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  restrictToVerticalAxis,
   restrictToParentElement,
+  restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
 import {
   arrayMove,
@@ -22,20 +20,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Check,
-  X,
   GripVertical,
 } from 'lucide-react';
-import { AdminConfig, CustomCategory } from '../types';
-import { buttonStyles } from '../utils/constants';
-import { showError, showSuccess } from '../utils/helpers';
+import { useEffect,useMemo, useState } from 'react';
+
+import { AlertModal } from './modals/AlertModal';
 import { useAlertModal } from '../hooks/useAlertModal';
 import { useLoadingState } from '../hooks/useLoadingState';
-import { AlertModal } from './modals/AlertModal';
+import { AdminConfig, CustomCategory } from '../types';
+import { buttonStyles } from '../utils/constants';
+import { showError } from '../utils/helpers';
 
 const CategoryConfig = ({
   config,

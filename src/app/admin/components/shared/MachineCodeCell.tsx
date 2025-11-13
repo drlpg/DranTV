@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+
+import { AlertConfig } from '../../types';
 import { buttonStyles } from '../../utils/constants';
 import { showError, showSuccess } from '../../utils/helpers';
-import { AlertConfig } from '../../types';
 
 interface MachineCodeCellProps {
   username: string;

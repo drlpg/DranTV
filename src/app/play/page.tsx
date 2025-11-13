@@ -1112,7 +1112,7 @@ function PlayPageClient() {
         });
 
         // 选择匹配级别：完全匹配 > 部分匹配 > 宽松匹配
-        let matchedResults =
+        const matchedResults =
           exactMatches.length > 0
             ? exactMatches
             : partialMatches.length > 0
@@ -1126,7 +1126,10 @@ function PlayPageClient() {
           if (!groupMap.has(key)) {
             groupMap.set(key, []);
           }
-          groupMap.get(key)!.push(result);
+          const group = groupMap.get(key);
+          if (group) {
+            group.push(result);
+          }
         });
 
         // 将分组转换为数组并按源数量排序（源多的在前）

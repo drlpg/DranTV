@@ -1,8 +1,9 @@
 'use client';
 
+import { User } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { User } from 'lucide-react';
+
 import { getUserAvatar } from '../../utils/helpers';
 
 interface UserAvatarProps {

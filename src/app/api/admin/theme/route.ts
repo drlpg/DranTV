@@ -1,9 +1,9 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getAuthInfoFromCookie } from '@/lib/auth';
-import { db } from '@/lib/db';
+
 import { AdminConfig } from '@/lib/admin.types';
-import { headers, cookies } from 'next/headers';
-import { getConfig, setCachedConfig, clearCachedConfig } from '@/lib/config';
+import {getConfig, setCachedConfig } from '@/lib/config';
+import { db } from '@/lib/db';
 
 export async function GET() {
   try {

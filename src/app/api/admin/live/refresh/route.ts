@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
-import { db } from '@/lib/db';
-import { refreshLiveChannels, clearAllCachedLiveChannels } from '@/lib/live';
+import { clearAllCachedLiveChannels } from '@/lib/live';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 增加超时时间到60秒

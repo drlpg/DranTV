@@ -1,8 +1,9 @@
 'use client';
 
+import { AlertCircle, AlertTriangle,CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
+
 import { buttonStyles } from '../../utils/constants';
 
 interface AlertModalProps {

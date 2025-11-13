@@ -141,7 +141,7 @@ async function refreshConfig() {
 
 // 刷新视频源订阅
 async function refreshSourceSubscription() {
-  let config = await getConfig();
+  const config = await getConfig();
   if (
     config &&
     config.SourceSubscription &&
@@ -293,7 +293,7 @@ async function refreshSourceSubscription() {
 
 // 刷新直播源订阅
 async function refreshLiveSubscription() {
-  let config = await getConfig();
+  const config = await getConfig();
   if (
     config &&
     config.LiveSubscription &&

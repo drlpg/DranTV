@@ -5,8 +5,6 @@
 import {
   Bug,
   CheckCircle,
-  ChevronDown,
-  ChevronUp,
   Download,
   Plus,
   RefreshCw,

@@ -2,7 +2,6 @@
 
 import { usePreventScroll } from '@/hooks/usePreventScroll';
 
-import { BackButton } from './BackButton';
 import { Footer } from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import MobileHeader from './MobileHeader';

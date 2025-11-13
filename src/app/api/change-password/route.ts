@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { validatePassword } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 
@@ -31,8 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 输入验证
-    const validation = require('@/lib/validation');
-    const validationResult = validation.validatePassword(newPassword);
+    const validationResult = validatePassword(newPassword);
     if (!validationResult.success) {
       return NextResponse.json(
         { error: validationResult.error },

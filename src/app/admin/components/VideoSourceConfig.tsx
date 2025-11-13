@@ -1,19 +1,16 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  restrictToVerticalAxis,
   restrictToParentElement,
+  restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
 import {
   arrayMove,
@@ -23,26 +20,17 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Check,
-  X,
   GripVertical,
-  ExternalLink,
-  Copy,
-  RefreshCw,
-  Download,
-  Upload,
-  AlertCircle,
 } from 'lucide-react';
+import { useCallback,useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+import { AlertModal } from './modals/AlertModal';
+import { useAlertModal } from '../hooks/useAlertModal';
+import { useLoadingState } from '../hooks/useLoadingState';
 import { AdminConfig, DataSource } from '../types';
 import { buttonStyles } from '../utils/constants';
 import { showError, showSuccess } from '../utils/helpers';
-import { useAlertModal } from '../hooks/useAlertModal';
-import { useLoadingState } from '../hooks/useLoadingState';
-import { AlertModal } from './modals/AlertModal';
 
 const VideoSourceConfig = ({
   config,

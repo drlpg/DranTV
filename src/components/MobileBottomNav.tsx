@@ -5,7 +5,7 @@
 import { Cat, Clover, Film, Home, Play, Radio, Star, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 interface MobileBottomNavProps {
   /**
