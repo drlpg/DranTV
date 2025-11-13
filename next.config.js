@@ -4,7 +4,7 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
-  output: 'standalone',
+  // output: 'standalone', // 在 Windows 上禁用以避免 symlink 问题
   eslint: {
     dirs: ['src'],
     ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误

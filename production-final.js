@@ -44,37 +44,70 @@ global.sendMessageToUsers = sendMessageToUsers;
 console.log('Starting Next.js production server...');
 const { createServer } = require('http');
 const { parse } = require('url');
-const next = require('next');
+const fs = require('fs');
 
 const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = process.env.PORT || 3000;
 
-const app = next({
-  dev: false,
-  hostname,
-  port,
-});
+// 检查是否使用 standalone 模式
+const standaloneServerPath = path.join(
+  __dirname,
+  '.next',
+  'standalone',
+  'server.js'
+);
+const useStandalone = fs.existsSync(standaloneServerPath);
 
-const handle = app.getRequestHandler();
+if (useStandalone) {
+  console.log('Using standalone mode server...');
+  // 使用 standalone 模式的 server.js
+  process.chdir(path.join(__dirname, '.next', 'standalone'));
+  require(standaloneServerPath);
 
-app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('处理请求时出错:', req.url, err);
-      res.statusCode = 500;
-      res.end('内部服务器错误');
-    }
-  });
-
-  server.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`> Next.js服务已启动: http://${hostname}:${port}`);
+  // standalone 模式下，server.js 会自己启动服务器
+  // 我们需要等待一下再设置任务
+  setTimeout(() => {
     setupServerTasks();
+  }, 3000);
+} else {
+  console.log('Using standard Next.js server...');
+  // 使用标准的 Next.js 启动方式
+  const next = require('next');
+
+  const app = next({
+    dev: false,
+    hostname,
+    port,
+    dir: __dirname,
   });
-});
+
+  const handle = app.getRequestHandler();
+
+  app
+    .prepare()
+    .then(() => {
+      const server = createServer(async (req, res) => {
+        try {
+          const parsedUrl = parse(req.url, true);
+          await handle(req, res, parsedUrl);
+        } catch (err) {
+          console.error('处理请求时出错:', req.url, err);
+          res.statusCode = 500;
+          res.end('内部服务器错误');
+        }
+      });
+
+      server.listen(port, (err) => {
+        if (err) throw err;
+        console.log(`> Next.js服务已启动: http://${hostname}:${port}`);
+        setupServerTasks();
+      });
+    })
+    .catch((err) => {
+      console.error('Next.js启动失败:', err);
+      process.exit(1);
+    });
+}
 
 // 设置服务器启动后的任务
 function setupServerTasks() {
