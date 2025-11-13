@@ -1012,19 +1012,19 @@ function PlayPageClient() {
     ): Promise<SearchResult[]> => {
       try {
         const detailResponse = await fetch(
-          `/api/detail?source=${source}&id=${id}`
+          `/api/detail?source=${encodeURIComponent(
+            source
+          )}&id=${encodeURIComponent(id)}`
         );
         if (!detailResponse.ok) {
           throw new Error('获取视频详情失败');
         }
         const detailData = (await detailResponse.json()) as SearchResult;
-        setAvailableSources([detailData]);
+        // 不要在这里设置 availableSources，让调用者决定如何处理
         return [detailData];
       } catch (err) {
         console.error('获取视频详情失败:', err);
         return [];
-      } finally {
-        setSourceSearchLoading(false);
       }
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
@@ -1099,18 +1099,56 @@ function PlayPageClient() {
           }
         });
 
-        // 优先级：完全匹配 > 部分匹配 > 宽松匹配
-        let results =
+        // 选择匹配级别：完全匹配 > 部分匹配 > 宽松匹配
+        let matchedResults =
           exactMatches.length > 0
             ? exactMatches
             : partialMatches.length > 0
             ? partialMatches
             : looseMatches;
 
-        // 限制最大搜索结果为10个，提高加载速度
-        results = results.slice(0, 10);
+        // 按标题和年份分组，统计每组的源数量
+        const groupMap = new Map<string, SearchResult[]>();
+        matchedResults.forEach((result) => {
+          const key = `${normalizeTitle(result.title)}_${result.year}`;
+          if (!groupMap.has(key)) {
+            groupMap.set(key, []);
+          }
+          groupMap.get(key)!.push(result);
+        });
 
-        setAvailableSources(results);
+        // 将分组转换为数组并按源数量排序（源多的在前）
+        const sortedGroups = Array.from(groupMap.values()).sort(
+          (a, b) => b.length - a.length
+        );
+
+        // 智能提取最多10个视频源
+        let results: SearchResult[] = [];
+        const MAX_SOURCES = 10;
+
+        if (sortedGroups.length > 0) {
+          const firstGroup = sortedGroups[0];
+
+          if (firstGroup.length >= MAX_SOURCES) {
+            // 第一组有≥10个源，只取前10个
+            results = firstGroup.slice(0, MAX_SOURCES);
+          } else {
+            // 第一组<10个源，从其他组补充
+            results = [...firstGroup];
+
+            for (
+              let i = 1;
+              i < sortedGroups.length && results.length < MAX_SOURCES;
+              i++
+            ) {
+              const group = sortedGroups[i];
+              const remaining = MAX_SOURCES - results.length;
+              results.push(...group.slice(0, remaining));
+            }
+          }
+        }
+
+        // 不在这里设置 availableSources，让调用者统一处理
         return results;
       } catch (err) {
         setSourceSearchError(err instanceof Error ? err.message : '搜索失败');
@@ -1199,15 +1237,40 @@ function PlayPageClient() {
       );
 
       let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
-      if (
-        currentSource &&
-        currentId &&
-        !sourcesInfo.some(
+
+      // 如果指定了源和ID，需要获取该源的详细信息
+      if (currentSource && currentId) {
+        const existingSource = sourcesInfo.find(
           (source) => source.source === currentSource && source.id === currentId
-        )
-      ) {
-        sourcesInfo = await fetchSourceDetail(currentSource, currentId);
+        );
+
+        // 如果搜索结果中没有该源，或者该源的episodes数据不完整，则获取详情
+        if (
+          !existingSource ||
+          !existingSource.episodes ||
+          existingSource.episodes.length <= 1
+        ) {
+          console.log('获取指定源的详细信息:', currentSource, currentId);
+          const detailInfo = await fetchSourceDetail(currentSource, currentId);
+          if (detailInfo.length > 0) {
+            // 替换或添加详细信息到源列表
+            const detailData = detailInfo[0];
+            const index = sourcesInfo.findIndex(
+              (s) => s.source === currentSource && s.id === currentId
+            );
+            if (index >= 0) {
+              sourcesInfo[index] = detailData;
+            } else {
+              sourcesInfo.unshift(detailData);
+              // 确保不超过10个源
+              if (sourcesInfo.length > 10) {
+                sourcesInfo = sourcesInfo.slice(0, 10);
+              }
+            }
+          }
+        }
       }
+
       if (sourcesInfo.length === 0) {
         setError('未找到匹配结果');
         setLoading(false);
@@ -1215,6 +1278,7 @@ function PlayPageClient() {
       }
 
       let detailData: SearchResult = sourcesInfo[0];
+
       // 指定源和id且无需优选
       if (currentSource && currentId && !needPreferRef.current) {
         const target = sourcesInfo.find(
@@ -1228,6 +1292,20 @@ function PlayPageClient() {
           return;
         }
       }
+      // 未指定源和id，使用第一个源，但需要确保有完整数据
+      else if (!currentSource || !currentId) {
+        if (!detailData.episodes || detailData.episodes.length <= 1) {
+          console.log('获取第一个源的详细信息');
+          const detailInfo = await fetchSourceDetail(
+            detailData.source,
+            detailData.id
+          );
+          if (detailInfo.length > 0) {
+            detailData = detailInfo[0];
+            sourcesInfo[0] = detailData;
+          }
+        }
+      }
 
       // 未指定源和 id 或需要优选，且开启优选开关
       if (
@@ -1237,16 +1315,46 @@ function PlayPageClient() {
         setLoadingStage('preferring');
         setLoadingMessage('⚡ 正在优选最佳播放源...');
 
-        detailData = await preferBestSource(sourcesInfo);
+        // 在优选前，确保所有源都有完整的详情数据（最多10个）
+        const sourcesWithDetails = await Promise.all(
+          sourcesInfo.slice(0, 10).map(async (source) => {
+            // 如果episodes数据不完整，获取详情
+            if (!source.episodes || source.episodes.length <= 1) {
+              try {
+                const detailInfo = await fetchSourceDetail(
+                  source.source,
+                  source.id
+                );
+                return detailInfo.length > 0 ? detailInfo[0] : source;
+              } catch (err) {
+                console.warn(`获取源 ${source.source} 详情失败:`, err);
+                return source;
+              }
+            }
+            return source;
+          })
+        );
+
+        detailData = await preferBestSource(sourcesWithDetails);
 
         // 将优选的源移到列表最前面
         const reorderedSources = [
           detailData,
-          ...sourcesInfo.filter(
+          ...sourcesWithDetails.filter(
             (s) => !(s.source === detailData.source && s.id === detailData.id)
           ),
         ];
         setAvailableSources(reorderedSources);
+      }
+
+      // 无论是否优选，都要确保 availableSources 包含所有搜索到的源
+      // 如果上面的优选逻辑没有执行，这里会设置 availableSources
+      if (
+        !optimizationEnabled ||
+        (currentSource && currentId && !needPreferRef.current)
+      ) {
+        // 确保不超过10个源
+        setAvailableSources(sourcesInfo.slice(0, 10));
       }
 
       setNeedPrefer(false);
@@ -1369,12 +1477,45 @@ function PlayPageClient() {
         }
       }
 
-      const newDetail = availableSources.find(
+      let newDetail = availableSources.find(
         (source) => source.source === newSource && source.id === newId
       );
+
       if (!newDetail) {
         setError('未找到匹配结果');
+        setIsVideoLoading(false);
         return;
+      }
+
+      // 如果详情数据不完整，获取完整详情
+      if (!newDetail.episodes || newDetail.episodes.length <= 1) {
+        console.log('获取换源的详细信息:', newSource, newId);
+        try {
+          const detailResponse = await fetch(
+            `/api/detail?source=${encodeURIComponent(
+              newSource
+            )}&id=${encodeURIComponent(newId)}`
+          );
+          if (detailResponse.ok) {
+            const detailData = (await detailResponse.json()) as SearchResult;
+            newDetail = detailData;
+
+            // 更新 availableSources 中的数据
+            const index = availableSources.findIndex(
+              (s) => s.source === newSource && s.id === newId
+            );
+            if (index >= 0) {
+              const updatedSources = [...availableSources];
+              updatedSources[index] = detailData;
+              setAvailableSources(updatedSources);
+            }
+          }
+        } catch (err) {
+          console.error('获取详情失败:', err);
+          setError('获取播放源详情失败');
+          setIsVideoLoading(false);
+          return;
+        }
       }
 
       // 尝试跳转到当前正在播放的集数
