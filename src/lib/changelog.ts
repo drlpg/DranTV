@@ -11,6 +11,23 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.54",
+    date: "2025-11-13",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "优化视频代理逻辑，区分m3u8流媒体和普通视频文件",
+    "优化首页组件渲染性能，使用唯一ID作为key",
+    "统一视频封面徽章样式，确保尺寸和圆角一致"
+    ],
+    fixed: [
+    "修复远程服务器视频无法播放的问题",
+    "修复轮播图和VideoCard组件重复渲染的问题",
+    "修复代理API缓存导致的播放异常"
+    ]
+  },
+  {
     version: "1.0.53",
     date: "2025-11-13",
     added: [
