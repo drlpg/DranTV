@@ -42,8 +42,9 @@ function printUsage() {
 流程:
   1. 在 CHANGELOG 顶部添加新版本模板
   2. 更新 VERSION.txt
-  3. 运行 convert-changelog.js 生成 changelog.ts
-  4. 更新 src/lib/version.ts
+  3. 更新 package.json
+  4. 运行 convert-changelog.js 生成 changelog.ts
+  5. 更新 src/lib/version.ts
 `);
 }
 
@@ -124,6 +125,23 @@ function runConvertChangelog() {
   }
 }
 
+function updatePackageJson(version) {
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    packageJson.version = version;
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2) + '\n',
+      'utf8'
+    );
+    console.log(`✅ 已更新 package.json: ${version}`);
+  } catch (error) {
+    console.error(`❌ 无法更新 package.json:`, error.message);
+    process.exit(1);
+  }
+}
+
 function updateVersionTs(version) {
   const versionTsPath = path.join(process.cwd(), 'src/lib/version.ts');
   try {
@@ -172,15 +190,19 @@ function main() {
   }
 
   // 步骤 2: 更新 VERSION.txt
-  console.log('📝 步骤 1/3: 更新 VERSION.txt');
+  console.log('📝 步骤 1/4: 更新 VERSION.txt');
   updateVersionTxt(version);
 
-  // 步骤 3: 运行 convert-changelog.js
-  console.log('\n📝 步骤 2/3: 生成 changelog.ts');
+  // 步骤 3: 更新 package.json
+  console.log('\n📝 步骤 2/4: 更新 package.json');
+  updatePackageJson(version);
+
+  // 步骤 4: 运行 convert-changelog.js
+  console.log('\n📝 步骤 3/4: 生成 changelog.ts');
   runConvertChangelog();
 
-  // 步骤 4: 更新 version.ts
-  console.log('\n📝 步骤 3/3: 更新 version.ts');
+  // 步骤 5: 更新 version.ts
+  console.log('\n📝 步骤 4/4: 更新 version.ts');
   updateVersionTs(version);
 
   console.log('\n✨ 版本更新完成！\n');

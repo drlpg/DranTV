@@ -437,28 +437,28 @@ function PlayPageClient() {
   ): number => {
     let score = 0;
 
-    // 分辨率评分 (40% 权重)
+    // 分辨率评分 (50% 权重)
     const qualityScore = (() => {
       switch (testResult.quality) {
         case '4K':
           return 100;
         case '2K':
-          return 85;
+          return 90;
         case '1080p':
-          return 75;
+          return 80;
         case '720p':
-          return 60;
+          return 65;
         case '480p':
-          return 40;
+          return 45;
         case 'SD':
-          return 20;
+          return 25;
         default:
           return 0;
       }
     })();
-    score += qualityScore * 0.4;
+    score += qualityScore * 0.5;
 
-    // 下载速度评分 (40% 权重) - 基于最大速度线性映射
+    // 下载速度评分 (20% 权重)
     const speedScore = (() => {
       const speedStr = testResult.loadSpeed;
       if (speedStr === '未知' || speedStr === '测量中...') return 30;
@@ -475,21 +475,26 @@ function PlayPageClient() {
       const speedRatio = speedKBps / maxSpeed;
       return Math.min(100, Math.max(0, speedRatio * 100));
     })();
-    score += speedScore * 0.4;
+    score += speedScore * 0.2;
 
-    // 网络延迟评分 (20% 权重) - 基于延迟范围线性映射
+    // 网络延迟评分 (30% 权重)
     const pingScore = (() => {
       const ping = testResult.pingTime;
-      if (ping <= 0) return 0; // 无效延迟给默认分
+      if (ping <= 0) return 0; // 无效延迟给0分
 
       // 如果所有延迟都相同，给满分
       if (maxPing === minPing) return 100;
 
-      // 线性映射：最低延迟=100分，最高延迟=0分
-      const pingRatio = (maxPing - ping) / (maxPing - minPing);
+      // 使用非线性映射，对低延迟更敏感
+      // 延迟越低，分数越高，使用指数衰减
+      const pingRange = maxPing - minPing;
+      const normalizedPing = (ping - minPing) / pingRange; // 0-1之间
+
+      // 使用平方根函数，使得低延迟区域的差异更明显
+      const pingRatio = 1 - Math.sqrt(normalizedPing);
       return Math.min(100, Math.max(0, pingRatio * 100));
     })();
-    score += pingScore * 0.2;
+    score += pingScore * 0.3;
 
     return Math.round(score * 100) / 100; // 保留两位小数
   };
@@ -1015,19 +1020,78 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
-        // 处理搜索结果，根据规则过滤
-        const results = data.results.filter(
-          (result: SearchResult) =>
-            result.title.replaceAll(' ', '').toLowerCase() ===
-              videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
-            (videoYearRef.current
-              ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
-              : true) &&
-            (searchType
-              ? (searchType === 'tv' && result.episodes.length > 1) ||
-                (searchType === 'movie' && result.episodes.length === 1)
-              : true)
-        );
+        // 标准化标题：移除空格、特殊字符，转小写
+        const normalizeTitle = (title: string) => {
+          return title
+            .replaceAll(' ', '')
+            .replace(/[：:·•\-—]/g, '')
+            .toLowerCase();
+        };
+
+        const normalizedSearchTitle = normalizeTitle(videoTitleRef.current);
+
+        // 处理搜索结果，使用更宽松的匹配规则
+        const exactMatches: SearchResult[] = [];
+        const partialMatches: SearchResult[] = [];
+        const looseMatches: SearchResult[] = [];
+
+        data.results.forEach((result: SearchResult) => {
+          const normalizedResultTitle = normalizeTitle(result.title);
+
+          // 检查年份匹配（宽松匹配：允许年份为空或相差1年）
+          const yearMatch = videoYearRef.current
+            ? !result.year ||
+              result.year.toLowerCase() ===
+                videoYearRef.current.toLowerCase() ||
+              Math.abs(
+                parseInt(result.year) - parseInt(videoYearRef.current)
+              ) <= 1
+            : true;
+
+          // 检查类型匹配
+          const typeMatch = searchType
+            ? (searchType === 'tv' && result.episodes.length > 1) ||
+              (searchType === 'movie' && result.episodes.length === 1)
+            : true;
+
+          // 完全匹配：标题完全相同
+          if (
+            normalizedResultTitle === normalizedSearchTitle &&
+            yearMatch &&
+            typeMatch
+          ) {
+            exactMatches.push(result);
+          }
+          // 部分匹配：标题包含搜索词或搜索词包含标题
+          else if (
+            (normalizedResultTitle.includes(normalizedSearchTitle) ||
+              normalizedSearchTitle.includes(normalizedResultTitle)) &&
+            yearMatch &&
+            typeMatch
+          ) {
+            partialMatches.push(result);
+          }
+          // 宽松匹配：忽略年份，只匹配标题
+          else if (
+            (normalizedResultTitle.includes(normalizedSearchTitle) ||
+              normalizedSearchTitle.includes(normalizedResultTitle)) &&
+            typeMatch
+          ) {
+            looseMatches.push(result);
+          }
+        });
+
+        // 优先级：完全匹配 > 部分匹配 > 宽松匹配
+        let results =
+          exactMatches.length > 0
+            ? exactMatches
+            : partialMatches.length > 0
+            ? partialMatches
+            : looseMatches;
+
+        // 限制最大搜索结果为10个，提高加载速度
+        results = results.slice(0, 10);
+
         setAvailableSources(results);
         return results;
       } catch (err) {
@@ -1156,6 +1220,15 @@ function PlayPageClient() {
         setLoadingMessage('⚡ 正在优选最佳播放源...');
 
         detailData = await preferBestSource(sourcesInfo);
+
+        // 将优选的源移到列表最前面
+        const reorderedSources = [
+          detailData,
+          ...sourcesInfo.filter(
+            (s) => !(s.source === detailData.source && s.id === detailData.id)
+          ),
+        ];
+        setAvailableSources(reorderedSources);
       }
 
       setNeedPrefer(false);

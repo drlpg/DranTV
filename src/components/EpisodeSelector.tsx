@@ -484,9 +484,15 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             !sourceSearchError &&
             availableSources.length > 0 && (
               <>
-                <div className='flex-1 overflow-y-auto space-y-2 pr-4 py-3 scrollbar-auto-hide'>
+                <div className='flex-1 overflow-y-auto space-y-2 pl-4 pr-4 py-3 scrollbar-auto-hide'>
                   {availableSources
                     .sort((a, b) => {
+                      const aKey = `${a.source}-${a.id}`;
+                      const bKey = `${b.source}-${b.id}`;
+                      const aInfo = videoInfoMap.get(aKey);
+                      const bInfo = videoInfoMap.get(bKey);
+
+                      // 优先级1：当前选中的源置顶
                       const aIsCurrent =
                         a.source?.toString() === currentSource?.toString() &&
                         a.id?.toString() === currentId?.toString();
@@ -494,41 +500,95 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         b.source?.toString() === currentSource?.toString() &&
                         b.id?.toString() === currentId?.toString();
 
-                      // 当前源始终排在最前面
                       if (aIsCurrent && !bIsCurrent) return -1;
                       if (!aIsCurrent && bIsCurrent) return 1;
 
-                      // 其他源按延迟从低到高排序
-                      const aKey = `${a.source}-${a.id}`;
-                      const bKey = `${b.source}-${b.id}`;
-                      const aInfo = videoInfoMap.get(aKey);
-                      const bInfo = videoInfoMap.get(bKey);
+                      // 优先级2：有测速数据的排在前面
+                      const aHasValidData =
+                        aInfo && aInfo.pingTime > 0 && !aInfo.hasError;
+                      const bHasValidData =
+                        bInfo && bInfo.pingTime > 0 && !bInfo.hasError;
 
-                      // 如果都有延迟信息，按延迟排序
-                      if (
-                        aInfo &&
-                        bInfo &&
-                        aInfo.pingTime > 0 &&
-                        bInfo.pingTime > 0
-                      ) {
-                        return aInfo.pingTime - bInfo.pingTime;
+                      if (aHasValidData && !bHasValidData) return -1;
+                      if (!aHasValidData && bHasValidData) return 1;
+
+                      // 优先级3：都有测速数据时，按综合评分排序
+                      if (aHasValidData && bHasValidData) {
+                        // 计算综合评分（分辨率40% + 延迟35% + 速度25%）
+                        const calculateScore = (info: {
+                          quality: string;
+                          loadSpeed: string;
+                          pingTime: number;
+                        }) => {
+                          // 分辨率评分
+                          const qualityScore = (() => {
+                            switch (info.quality) {
+                              case '4K':
+                                return 100;
+                              case '2K':
+                                return 90;
+                              case '1080p':
+                                return 80;
+                              case '720p':
+                                return 65;
+                              case '480p':
+                                return 45;
+                              case 'SD':
+                                return 25;
+                              default:
+                                return 0;
+                            }
+                          })();
+
+                          // 速度评分（解析速度值）
+                          const speedScore = (() => {
+                            const speedStr = info.loadSpeed;
+                            if (speedStr === '未知' || speedStr === '测量中...')
+                              return 30;
+                            const match = speedStr.match(
+                              /^([\d.]+)\s*(KB\/s|MB\/s)$/
+                            );
+                            if (!match) return 30;
+                            const value = parseFloat(match[1]);
+                            const unit = match[2];
+                            const speedKBps =
+                              unit === 'MB/s' ? value * 1024 : value;
+                            // 简化评分：>1MB/s=100, >500KB/s=70, >200KB/s=50, 其他按比例
+                            if (speedKBps >= 1024) return 100;
+                            if (speedKBps >= 512) return 70;
+                            if (speedKBps >= 200) return 50;
+                            return (speedKBps / 200) * 50;
+                          })();
+
+                          // 延迟评分（延迟越低分数越高）
+                          const pingScore = (() => {
+                            const ping = info.pingTime;
+                            if (ping <= 0) return 0;
+                            // 使用非线性映射：<200ms=100, <400ms=80, <600ms=60, <800ms=40, >=800ms按比例递减
+                            if (ping < 200) return 100;
+                            if (ping < 400)
+                              return 80 + ((200 - (ping - 200)) / 200) * 20;
+                            if (ping < 600)
+                              return 60 + ((400 - (ping - 400)) / 200) * 20;
+                            if (ping < 800)
+                              return 40 + ((600 - (ping - 800)) / 200) * 20;
+                            return Math.max(0, 40 - ((ping - 800) / 200) * 10);
+                          })();
+
+                          // 综合评分：分辨率50% + 延迟30% + 速度20%
+                          return (
+                            qualityScore * 0.5 +
+                            pingScore * 0.3 +
+                            speedScore * 0.2
+                          );
+                        };
+
+                        const aScore = calculateScore(aInfo);
+                        const bScore = calculateScore(bInfo);
+                        return bScore - aScore; // 分数高的排前面
                       }
 
-                      // 有延迟信息的排在没有的前面
-                      if (
-                        aInfo &&
-                        aInfo.pingTime > 0 &&
-                        (!bInfo || bInfo.pingTime <= 0)
-                      )
-                        return -1;
-                      if (
-                        bInfo &&
-                        bInfo.pingTime > 0 &&
-                        (!aInfo || aInfo.pingTime <= 0)
-                      )
-                        return 1;
-
-                      // 都没有延迟信息，保持原顺序
+                      // 优先级4：保持原顺序
                       return 0;
                     })
                     .map((source, index) => {
@@ -632,21 +692,21 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                             </div>
 
                             {/* 网络信息 - 底部 */}
-                            <div className='flex items-end h-6'>
+                            <div className='flex items-end justify-between h-6 w-full'>
                               {(() => {
                                 const sourceKey = `${source.source}-${source.id}`;
                                 const videoInfo = videoInfoMap.get(sourceKey);
                                 if (videoInfo) {
                                   if (!videoInfo.hasError) {
                                     return (
-                                      <div className='flex items-end gap-3 text-xs whitespace-nowrap'>
+                                      <>
                                         <div className='text-blue-600 dark:text-blue-400 font-medium text-xs whitespace-nowrap'>
                                           {videoInfo.loadSpeed}
                                         </div>
                                         <div className='text-orange-600 dark:text-orange-400 font-medium text-xs whitespace-nowrap'>
                                           {videoInfo.pingTime}ms
                                         </div>
-                                      </div>
+                                      </>
                                     );
                                   } else {
                                     return (
