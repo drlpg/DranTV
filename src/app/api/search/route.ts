@@ -14,9 +14,9 @@ async function searchShortDrama(
   limit = 20
 ): Promise<any[]> {
   try {
-    // 使用 AbortController 实现超时控制
+    // 使用 AbortController 实现超时控制，增加到 30 秒
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     const response = await fetch(
       `https://api.r2afosne.dpdns.org/vod/search?name=${encodeURIComponent(
@@ -64,8 +64,11 @@ async function searchShortDrama(
       vod_class: '',
       vod_tag: '',
     }));
-  } catch (error) {
-    console.warn('短剧搜索失败:', error);
+  } catch (error: any) {
+    // 只在非超时错误时打印日志
+    if (error?.name !== 'AbortError') {
+      console.warn('短剧搜索失败:', error);
+    }
     return [];
   }
 }
@@ -101,7 +104,7 @@ export async function GET(request: NextRequest) {
   const apiSites = await getAvailableApiSites(authInfo.username);
   const maxTotalResults = (config.SiteConfig.SearchDownstreamMaxPage || 5) * 10;
 
-  // 添加超时控制和错误处理，避免慢接口拖累整体响应
+  // 优先执行视频源搜索，添加超时控制和错误处理
   const searchPromises = apiSites.map((site) =>
     Promise.race([
       searchFromApi(site, query),
@@ -118,18 +121,8 @@ export async function GET(request: NextRequest) {
       })
   );
 
-  // 添加短剧搜索
-  const shortDramaSearchPromise = searchShortDrama(query, 1, 20).catch(
-    (err) => {
-      console.warn('短剧搜索失败:', err.message);
-      return [];
-    }
-  );
-
-  // 将短剧搜索添加到所有搜索Promise中
-  searchPromises.push(shortDramaSearchPromise);
-
   try {
+    // 先等待主要视频源搜索完成
     const results = await Promise.allSettled(searchPromises);
     const successResults = results
       .filter((result) => result.status === 'fulfilled')
@@ -142,6 +135,29 @@ export async function GET(request: NextRequest) {
         const typeName = result.type_name || '';
         return !yellowWords.some((word: string) => typeName.includes(word));
       });
+    }
+
+    // 如果主要搜索结果不足，且未达到限制，尝试添加短剧搜索结果（低优先级）
+    if (flattenedResults.length < maxTotalResults) {
+      try {
+        // 给短剧搜索更短的超时时间（15秒），避免影响主搜索
+        const shortDramaResults = await Promise.race([
+          searchShortDrama(query, 1, 20),
+          new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 15000)),
+        ]);
+
+        if (shortDramaResults.length > 0) {
+          // 计算还能添加多少短剧结果
+          const remainingSlots = maxTotalResults - flattenedResults.length;
+          const shortDramaToAdd = shortDramaResults.slice(0, remainingSlots);
+          flattenedResults = [...flattenedResults, ...shortDramaToAdd];
+        }
+      } catch (error: any) {
+        // 短剧搜索失败不影响主搜索结果，静默处理
+        if (error?.name !== 'AbortError') {
+          console.warn('短剧搜索失败（已跳过）:', error.message);
+        }
+      }
     }
 
     // 限制总结果数量
