@@ -913,7 +913,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
               actualYear !== 'unknown' &&
               actualYear.trim() !== '' && (
                 <div
-                  className='absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-black/50 text-white text-[9px] md:text-xs font-medium px-1 py-0.5 md:px-2 md:py-1 rounded backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90 flex items-center justify-center'
+                  className='absolute top-1.5 left-1.5 md:top-2 md:left-2 bg-black/50 text-white text-[9px] md:text-xs font-medium px-1 py-0.5 md:px-2 md:py-1 rounded md:rounded-md backdrop-blur-sm shadow-sm transition-all duration-300 ease-out group-hover:opacity-90 flex items-center justify-center'
                   style={
                     {
                       WebkitUserSelect: 'none',
@@ -933,7 +933,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
             {/* 徽章 */}
             {config.showRating && rate && (
               <div
-                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500/80 backdrop-blur-md text-white text-[9px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center'
+                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500/80 backdrop-blur-md text-white text-[9px] md:text-xs font-bold px-1 py-0.5 md:px-2 md:py-1 rounded md:rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center'
                 style={
                   {
                     WebkitUserSelect: 'none',
@@ -952,11 +952,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
             {actualEpisodes && actualEpisodes > 1 && (
               <div
-                className={`absolute top-2 right-2 bg-blue-500 text-white font-semibold rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center ${
-                  from === 'playrecord'
-                    ? 'text-[10px] px-1.5 py-0.5 sm:text-xs sm:px-2 sm:py-1'
-                    : 'text-xs px-2 py-1'
-                }`}
+                className='absolute top-1.5 right-1.5 md:top-2 md:right-2 bg-blue-500 text-white font-semibold rounded md:rounded-md transition-all duration-300 ease-out group-hover:scale-110 flex items-center justify-center text-[9px] md:text-xs px-1 py-0.5 md:px-2 md:py-1'
                 style={
                   {
                     WebkitUserSelect: 'none',
