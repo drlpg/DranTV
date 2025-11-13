@@ -49,8 +49,10 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 从构建器中复制 standalone 输出
+# 从构建器中复制 standalone 输出（包括 server.js）
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# 确保 .next 目录存在
+RUN mkdir -p .next
 # 从构建器中复制 scripts 目录
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 # 从构建器中复制启动脚本和WebSocket相关文件
