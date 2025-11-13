@@ -4,7 +4,7 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
-  // output: 'standalone', // 在 Windows 上禁用以避免 symlink 问题
+  output: 'standalone',
   eslint: {
     dirs: ['src'],
     ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误
@@ -88,7 +88,7 @@ const nextConfig = {
     ],
   },
 
-  webpack(config, { dev, isServer }) {
+  webpack(config, { dev }) {
     // 开发环境性能优化
     if (dev) {
       // 禁用源码映射以加快编译
