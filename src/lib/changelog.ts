@@ -11,6 +11,23 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "1.0.51",
+    date: "2025-11-13",
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+    "统一优化所有弹窗标题样式，标题字体大小22px，按钮高度22px",
+    "优化本地设置弹窗下拉框聚焦边框厚度为1px",
+    "优化版本信息面板标题和版本号容器样式",
+    "优化管理后台页面标题和按钮样式",
+    "完善版本更新脚本，自动更新package.json版本号"
+    ],
+    fixed: [
+      // 无修复内容
+    ]
+  },
+  {
     version: "1.0.50",
     date: "2025-11-13",
     added: [

@@ -325,13 +325,13 @@ function AdminPageClient() {
   return (
     <PageLayout>
       <div className='container mx-auto px-4 sm:px-8 py-4 sm:py-8 max-w-7xl'>
-        <div className='flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8'>
-          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100'>
+        <div className='flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8'>
+          <h1 className='text-[22px] font-bold text-gray-900 dark:text-gray-100 leading-none flex items-center'>
             管理后台
           </h1>
           <button
             onClick={handleResetConfig}
-            className='px-2 sm:px-3 text-sm font-medium bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg transition-colors h-6 sm:h-[30px] flex items-center w-fit'
+            className='h-[22px] px-[10px] flex items-center text-xs font-medium bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 text-white rounded-full transition-colors'
             title='重置所有配置为默认值'
           >
             重置配置

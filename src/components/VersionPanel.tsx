@@ -328,11 +328,11 @@ export const VersionPanel: React.FC<VersionPanelProps> = ({
         {/* 标题栏 */}
         <div className='flex items-center justify-between p-3 sm:p-6 border-b border-dashed border-gray-200 dark:border-gray-700'>
           <div className='flex items-center gap-2 sm:gap-3'>
-            <h3 className='text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200'>
+            <h3 className='text-[22px] font-bold text-gray-800 dark:text-gray-200 leading-none flex items-center'>
               版本信息
             </h3>
             <div className='flex flex-wrap items-center gap-1 sm:gap-2'>
-              <span className='px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full'>
+              <span className='h-[22px] px-[10px] flex items-center text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full'>
                 v{CURRENT_VERSION}
               </span>
               {hasUpdate && (

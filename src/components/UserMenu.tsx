@@ -838,13 +838,13 @@ export const UserMenu: React.FC = () => {
         >
           {/* 标题栏 */}
           <div className='flex items-center justify-between mb-6'>
-            <div className='flex items-center gap-3'>
-              <h3 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+            <div className='flex items-center gap-2 sm:gap-3'>
+              <h3 className='text-[22px] font-bold text-gray-800 dark:text-gray-200 leading-none flex items-center'>
                 本地设置
               </h3>
               <button
                 onClick={handleResetSettings}
-                className='px-2 py-1 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-200 hover:border-red-300 dark:border-red-800 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors'
+                className='h-[22px] px-[10px] flex items-center text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-200 hover:border-red-300 dark:border-red-800 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors'
                 title='重置为默认设置'
               >
                 恢复默认
@@ -876,7 +876,7 @@ export const UserMenu: React.FC = () => {
                 <button
                   type='button'
                   onClick={() => setIsDoubanDropdownOpen(!isDoubanDropdownOpen)}
-                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
+                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
                 >
                   {
                     doubanDataSourceOptions.find(
@@ -986,7 +986,7 @@ export const UserMenu: React.FC = () => {
                       !isDoubanImageProxyDropdownOpen
                     )
                   }
-                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
+                  className='w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:border-gray-400 dark:hover:border-gray-500 text-left'
                 >
                   {
                     doubanImageProxyTypeOptions.find(
@@ -1376,7 +1376,7 @@ export const UserMenu: React.FC = () => {
               <div className='p-6'>
                 {/* 标题栏 */}
                 <div className='flex items-center justify-between mb-6'>
-                  <h3 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+                  <h3 className='text-[22px] font-bold text-gray-800 dark:text-gray-200 leading-none flex items-center'>
                     修改头像
                   </h3>
                   <button
