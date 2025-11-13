@@ -50,18 +50,22 @@ const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = process.env.PORT || 3000;
 
 // 检查是否使用 standalone 模式
-const standaloneServerPath = path.join(
-  __dirname,
-  '.next',
-  'standalone',
-  'server.js'
-);
+// 在 Docker 环境中，standalone 文件已经在根目录
+const standaloneServerPath = process.env.DOCKER_ENV
+  ? path.join(__dirname, 'server.js')
+  : path.join(__dirname, '.next', 'standalone', 'server.js');
+
 const useStandalone = fs.existsSync(standaloneServerPath);
 
 if (useStandalone) {
   console.log('Using standalone mode server...');
-  // 使用 standalone 模式的 server.js
-  process.chdir(path.join(__dirname, '.next', 'standalone'));
+  console.log('Standalone server path:', standaloneServerPath);
+
+  // Docker 环境中不需要切换目录
+  if (!process.env.DOCKER_ENV) {
+    process.chdir(path.join(__dirname, '.next', 'standalone'));
+  }
+
   require(standaloneServerPath);
 
   // standalone 模式下，server.js 会自己启动服务器
