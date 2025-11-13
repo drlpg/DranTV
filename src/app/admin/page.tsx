@@ -20,7 +20,6 @@ import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import DataMigration from '@/components/DataMigration';
 import PageLayout from '@/components/PageLayout';
-import ThemeManager from '@/components/ThemeManager';
 
 import { useAlertModal } from './hooks/useAlertModal';
 import { useLoadingState } from './hooks/useLoadingState';
@@ -55,7 +54,6 @@ function AdminPageClient() {
     imageHosting: false,
     carouselConfig: false,
     dataMigration: false,
-    themeManager: false,
   });
 
   // 使用 ref 保存 showAlert，避免依赖变化
@@ -438,17 +436,6 @@ function AdminPageClient() {
             config={config}
             refreshConfig={() => fetchConfig(false)}
           />
-        </CollapsibleTab>
-
-        <CollapsibleTab
-          title='主题配置'
-          icon={
-            <Palette size={20} className='text-gray-600 dark:text-gray-400' />
-          }
-          isExpanded={expandedTabs.themeManager}
-          onToggle={() => toggleTab('themeManager')}
-        >
-          <ThemeManager showAlert={showAlert} role={role} />
         </CollapsibleTab>
 
         <CollapsibleTab

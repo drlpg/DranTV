@@ -299,28 +299,21 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       [from, actualSource, actualId, onDelete]
     );
 
-    const handleClick = useCallback(() => {
-      // 如果从搜索页面点击，设置标记以便返回时使用缓存
-      if (from === 'search' && typeof window !== 'undefined') {
-        sessionStorage.setItem('fromPlayPage', 'true');
-      }
-
+    // 生成URL的辅助函数
+    const generateUrl = useCallback(() => {
       let url = '';
       if (origin === 'live' && actualSource && actualId) {
-        // 直播内容跳转到直播页面
         url = `/live?source=${actualSource.replace(
           'live_',
           ''
         )}&id=${actualId.replace('live_', '')}`;
       } else if (from === 'shortdrama' && actualId) {
-        // 短剧内容跳转到播放页面，传递剧集ID用于调用获取全集地址的接口
         const urlParams = new URLSearchParams();
         urlParams.set('shortdrama_id', actualId);
         urlParams.set('title', actualTitle.trim());
         if (actualYear) urlParams.set('year', actualYear);
         if (vod_class) urlParams.set('vod_class', vod_class);
         if (vod_tag) urlParams.set('vod_tag', vod_tag);
-
         url = `/play?${urlParams.toString()}`;
       } else if (
         from === 'douban' ||
@@ -342,19 +335,12 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
           actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
       }
-
-      // 使用 startTransition 优化路由跳转
-      if (url) {
-        requestAnimationFrame(() => {
-          router.push(url);
-        });
-      }
+      return url;
     }, [
       origin,
       from,
       actualSource,
       actualId,
-      router,
       actualTitle,
       actualYear,
       isAggregate,
@@ -364,6 +350,29 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
       vod_tag,
     ]);
 
+    // 预加载路由
+    const handlePrefetch = useCallback(() => {
+      const url = generateUrl();
+      if (url) {
+        router.prefetch(url);
+      }
+    }, [generateUrl, router]);
+
+    const handleClick = useCallback(() => {
+      // 如果从搜索页面点击，设置标记以便返回时使用缓存
+      if (from === 'search' && typeof window !== 'undefined') {
+        sessionStorage.setItem('fromPlayPage', 'true');
+      }
+
+      const url = generateUrl();
+      // 使用 startTransition 优化路由跳转
+      if (url) {
+        requestAnimationFrame(() => {
+          router.push(url);
+        });
+      }
+    }, [from, generateUrl, router]);
+
     // 新标签页播放处理函数
     const handlePlayInNewTab = useCallback(() => {
       // 如果从搜索页面点击，设置标记以便返回时使用缓存
@@ -371,48 +380,11 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         sessionStorage.setItem('fromPlayPage', 'true');
       }
 
-      let url = '';
-      if (origin === 'live' && actualSource && actualId) {
-        // 直播内容跳转到直播页面
-        url = `/live?source=${actualSource.replace(
-          'live_',
-          ''
-        )}&id=${actualId.replace('live_', '')}`;
-      } else if (
-        from === 'douban' ||
-        (isAggregate && !actualSource && !actualId)
-      ) {
-        url = `/play?title=${encodeURIComponent(actualTitle.trim())}${
-          actualYear ? `&year=${actualYear}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}${
-          isAggregate ? '&prefer=true' : ''
-        }${
-          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }`;
-      } else if (actualSource && actualId) {
-        url = `/play?source=${actualSource}&id=${actualId}&title=${encodeURIComponent(
-          actualTitle
-        )}${actualYear ? `&year=${actualYear}` : ''}${
-          isAggregate ? '&prefer=true' : ''
-        }${
-          actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}`;
-      }
-
+      const url = generateUrl();
       if (url) {
         window.open(url, '_blank');
       }
-    }, [
-      origin,
-      from,
-      actualSource,
-      actualId,
-      actualTitle,
-      actualYear,
-      isAggregate,
-      actualQuery,
-      actualSearchType,
-    ]);
+    }, [from, generateUrl]);
 
     // 检查搜索结果的收藏状态
     const checkSearchFavoriteStatus = useCallback(async () => {
@@ -677,6 +649,7 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
         <div
           className='group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1.05] hover:z-[500]'
           onClick={handleClick}
+          onMouseEnter={handlePrefetch}
           {...longPressProps}
           style={
             {

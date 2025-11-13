@@ -197,8 +197,12 @@ export class UpstashRedisStorage implements IStorage {
   }
 
   async registerUser(userName: string, password: string): Promise<void> {
-    // 简单存储明文密码，生产环境应加密
-    await withRetry(() => this.client.set(this.userPwdKey(userName), password));
+    // 使用加密存储密码
+    const crypto = require('./crypto');
+    const encryptedPassword = crypto.encryptPassword(password);
+    await withRetry(() =>
+      this.client.set(this.userPwdKey(userName), encryptedPassword)
+    );
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
@@ -206,8 +210,23 @@ export class UpstashRedisStorage implements IStorage {
       this.client.get(this.userPwdKey(userName))
     );
     if (stored === null) return false;
-    // 确保比较时都是字符串类型
-    return ensureString(stored) === password;
+
+    const storedPassword = ensureString(stored);
+    const crypto = require('./crypto');
+
+    // 兼容旧的明文密码（迁移期间）
+    if (!crypto.isEncrypted(storedPassword)) {
+      // 如果是明文密码，直接比对
+      const isValid = storedPassword === password;
+      // 如果验证成功，自动升级为加密密码
+      if (isValid) {
+        await this.changePassword(userName, password);
+      }
+      return isValid;
+    }
+
+    // 验证加密密码
+    return crypto.verifyPassword(password, storedPassword);
   }
 
   // 检查用户是否存在
@@ -221,9 +240,11 @@ export class UpstashRedisStorage implements IStorage {
 
   // 修改用户密码
   async changePassword(userName: string, newPassword: string): Promise<void> {
-    // 简单存储明文密码，生产环境应加密
+    // 使用加密存储密码
+    const crypto = require('./crypto');
+    const encryptedPassword = crypto.encryptPassword(newPassword);
     await withRetry(() =>
-      this.client.set(this.userPwdKey(userName), newPassword)
+      this.client.set(this.userPwdKey(userName), encryptedPassword)
     );
   }
 

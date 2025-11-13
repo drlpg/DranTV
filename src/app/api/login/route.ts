@@ -106,6 +106,18 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { turnstileToken } = body;
 
+    // 输入验证（仅在数据库模式下验证格式）
+    if (STORAGE_TYPE !== 'localstorage' && body.username && body.password) {
+      const validation = require('@/lib/validation');
+      const validationResult = validation.validateLoginRequest(body);
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: validationResult.error },
+          { status: 400 }
+        );
+      }
+    }
+
     // 验证 Turnstile token
     if (turnstileToken) {
       const isValid = await verifyTurnstile(turnstileToken);

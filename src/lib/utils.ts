@@ -79,9 +79,13 @@ export function processImageUrl(originalUrl: string): string {
 /**
  * 从m3u8地址获取视频质量等级和网络信息
  * @param m3u8Url m3u8播放列表的URL
+ * @param timeout 超时时间（毫秒），默认3000ms
  * @returns Promise<{quality: string, loadSpeed: string, pingTime: number}> 视频质量等级和网络信息
  */
-export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
+export async function getVideoResolutionFromM3u8(
+  m3u8Url: string,
+  timeout = 3000
+): Promise<{
   quality: string; // 如720p、1080p等
   loadSpeed: string; // 自动转换为KB/s或MB/s
   pingTime: number; // 网络延迟（毫秒）
@@ -109,15 +113,15 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
       // 固定使用hls.js加载
       const hls = new Hls();
 
-      // 设置超时处理 - 缩短超时时间以加快测速
-      const timeout = setTimeout(() => {
+      // 设置超时处理 - 使用传入的超时时间
+      const timeoutId = setTimeout(() => {
         hls.destroy();
         video.remove();
-        reject(new Error('Timeout loading video metadata'));
-      }, 2500);
+        reject(new Error('测速超时'));
+      }, timeout);
 
       video.onerror = () => {
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
         hls.destroy();
         video.remove();
         reject(new Error('Failed to load video metadata'));
@@ -135,7 +139,7 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
           hasMetadataLoaded &&
           (hasSpeedCalculated || actualLoadSpeed !== '未知')
         ) {
-          clearTimeout(timeout);
+          clearTimeout(timeoutId);
           const width = video.videoWidth;
           if (width && width > 0) {
             hls.destroy();
@@ -211,7 +215,7 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
       hls.on(Hls.Events.ERROR, (event: any, data: any) => {
         console.error('HLS错误:', data);
         if (data.fatal) {
-          clearTimeout(timeout);
+          clearTimeout(timeoutId);
           hls.destroy();
           video.remove();
           reject(new Error(`HLS播放失败: ${data.type}`));

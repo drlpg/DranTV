@@ -486,6 +486,22 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               <>
                 <div className='flex-1 overflow-y-auto space-y-2 pl-4 pr-4 py-3 scrollbar-auto-hide'>
                   {availableSources
+                    .filter((source) => {
+                      const sourceKey = `${source.source}-${source.id}`;
+                      const info = videoInfoMap.get(sourceKey);
+
+                      // 当前源始终显示
+                      const isCurrent =
+                        source.source?.toString() ===
+                          currentSource?.toString() &&
+                        source.id?.toString() === currentId?.toString();
+                      if (isCurrent) return true;
+
+                      // 过滤掉测速失败的源
+                      if (info && info.hasError) return false;
+
+                      return true;
+                    })
                     .sort((a, b) => {
                       const aKey = `${a.source}-${a.id}`;
                       const bKey = `${b.source}-${b.id}`;

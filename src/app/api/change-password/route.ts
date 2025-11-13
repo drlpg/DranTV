@@ -30,9 +30,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 验证新密码
-    if (!newPassword || typeof newPassword !== 'string') {
-      return NextResponse.json({ error: '新密码不得为空' }, { status: 400 });
+    // 输入验证
+    const validation = require('@/lib/validation');
+    const validationResult = validation.validatePassword(newPassword);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: validationResult.error },
+        { status: 400 }
+      );
     }
 
     const username = authInfo.username;

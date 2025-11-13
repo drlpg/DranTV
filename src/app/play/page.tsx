@@ -286,23 +286,29 @@ function PlayPageClient() {
     const batchSize = Math.ceil(sources.length / 2);
     const allResults: Array<{
       source: SearchResult;
-      testResult: { quality: string; loadSpeed: string; pingTime: number };
-    } | null> = [];
+      testResult: {
+        quality: string;
+        loadSpeed: string;
+        pingTime: number;
+      } | null;
+      sourceKey: string;
+    }> = [];
 
     for (let start = 0; start < sources.length; start += batchSize) {
       const batchSources = sources.slice(start, start + batchSize);
       const batchResults = await Promise.all(
         batchSources.map(async (source) => {
+          const sourceKey = `${source.source}-${source.id}`;
           try {
             // 检查是否有第一集的播放地址
             if (!source.episodes || source.episodes.length === 0) {
-              return null;
+              return { source, testResult: null, sourceKey };
             }
 
             // 始终测试第一集（索引0），确保测速的是用户最可能播放的集数
             const episodeUrl = source.episodes[0];
             if (!episodeUrl) {
-              return null;
+              return { source, testResult: null, sourceKey };
             }
 
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
@@ -310,9 +316,11 @@ function PlayPageClient() {
             return {
               source,
               testResult,
+              sourceKey,
             };
           } catch (error) {
-            return null;
+            // 测速失败，返回失败标记
+            return { source, testResult: null, sourceKey };
           }
         })
       );
@@ -331,17 +339,27 @@ function PlayPageClient() {
       }
     >();
     allResults.forEach((result) => {
-      if (result) {
+      if (result.testResult) {
         // 成功的结果
-        const sourceKey = `${result.source.source}-${result.source.id}`;
-        newVideoInfoMap.set(sourceKey, result.testResult);
+        newVideoInfoMap.set(result.sourceKey, result.testResult);
+      } else {
+        // 失败的结果，标记为错误
+        newVideoInfoMap.set(result.sourceKey, {
+          quality: '未知',
+          loadSpeed: '未知',
+          pingTime: 0,
+          hasError: true,
+        });
       }
     });
 
     // 过滤出成功的结果用于优选计算
-    const successfulResults = allResults.filter(Boolean) as Array<{
+    const successfulResults = allResults.filter(
+      (result) => result.testResult !== null
+    ) as Array<{
       source: SearchResult;
       testResult: { quality: string; loadSpeed: string; pingTime: number };
+      sourceKey: string;
     }>;
 
     setPrecomputedVideoInfo(newVideoInfoMap);
@@ -732,7 +750,7 @@ function PlayPageClient() {
   };
 
   // 为标签生成颜色的函数
-  const getTagColor = (tag: string, isClass: boolean = false) => {
+  const getTagColor = (tag: string, isClass = false) => {
     if (isClass) {
       // vod_class 使用更显眼的颜色
       const classColors = [
@@ -1979,7 +1997,7 @@ function PlayPageClient() {
                 },
                 beforeEmit: async (danmu: any) => {
                   try {
-                    const result = await sendDanmu(currentVideoId, {
+                    await sendDanmu(currentVideoId, {
                       text: danmu.text,
                       color: danmu.color || '#FFFFFF',
                       mode: danmu.mode || 0,
@@ -2013,7 +2031,9 @@ function PlayPageClient() {
                             if (danmakuPlugin.isHide && danmakuPlugin.show) {
                               danmakuPlugin.show();
                             }
-                          } catch {}
+                          } catch (e) {
+                            // 忽略弹幕显示错误
+                          }
 
                           // 尝试不同的方法来添加弹幕
                           if (danmakuPlugin.emit) {

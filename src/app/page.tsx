@@ -85,7 +85,7 @@ function HomeClient() {
       try {
         setLoading(true);
 
-        // 使用缓存API并行获取数据
+        // 使用缓存API并行获取所有数据，包括TMDB
         const [
           moviesData,
           tvShowsData,
@@ -122,24 +122,26 @@ function HomeClient() {
         // 设置轮播图配置
         setCarouselConfig(carouselConfigData);
 
+        // 并行处理电影数据和TMDB横版海报
         if (moviesData.code === 200) {
-          // 先尝试获取TMDB横版海报，然后再设置state
-          try {
-            const top10Movies = moviesData.list.slice(0, 10);
-            const tmdbResponse = await fetch('/api/tmdb/backdrop', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                items: top10Movies.map((movie: any) => ({
-                  title: movie.title,
-                  year: movie.year,
-                  type: 'movie',
-                })),
-              }),
-            });
+          // 先设置原始数据，避免阻塞
+          setHotMovies(moviesData.list);
 
-            if (tmdbResponse.ok) {
-              const { backdrops } = await tmdbResponse.json();
+          // 异步获取TMDB横版海报，不阻塞其他数据显示
+          const top10Movies = moviesData.list.slice(0, 10);
+          fetch('/api/tmdb/backdrop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: top10Movies.map((movie: any) => ({
+                title: movie.title,
+                year: movie.year,
+                type: 'movie',
+              })),
+            }),
+          })
+            .then((res) => res.json())
+            .then(({ backdrops }) => {
               // 更新电影数据，添加横版海报
               const updatedMovies = moviesData.list.map(
                 (movie: any, index: number) => {
@@ -150,14 +152,10 @@ function HomeClient() {
                 }
               );
               setHotMovies(updatedMovies);
-            } else {
-              // TMDB API失败，使用原始数据
-              setHotMovies(moviesData.list);
-            }
-          } catch (error) {
-            // 异常时使用原始数据
-            setHotMovies(moviesData.list);
-          }
+            })
+            .catch(() => {
+              // TMDB失败时保持原始数据
+            });
         }
 
         if (tvShowsData.code === 200) {
@@ -387,7 +385,7 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
@@ -432,7 +430,7 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
@@ -476,7 +474,7 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
@@ -549,7 +547,7 @@ function HomeClient() {
                 <ScrollableRow>
                   {loading
                     ? // 加载状态显示骨架屏
-                      Array.from({ length: 8 }).map((_, index) => (
+                      Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={index}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'

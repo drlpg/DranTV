@@ -113,7 +113,18 @@ const AlertModal = ({
           {html && (
             <div
               className='text-left text-gray-600 dark:text-gray-400 mb-4'
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{
+                __html: (() => {
+                  // 动态导入清理函数
+                  try {
+                    const { sanitizeHtml } = require('@/lib/sanitize');
+                    return sanitizeHtml(html);
+                  } catch {
+                    // 如果导入失败，返回空字符串（安全）
+                    return '';
+                  }
+                })(),
+              }}
             />
           )}
 
