@@ -537,7 +537,7 @@ function PlayPageClient() {
     if (
       detailData.source === 'shortdrama' &&
       newUrl &&
-      !newUrl.includes('/api/proxy/video')
+      !newUrl.includes('/api/proxy/')
     ) {
       newUrl = processShortDramaUrl(newUrl);
     }
@@ -787,6 +787,10 @@ function PlayPageClient() {
       return originalUrl;
     }
 
+    // 检查是否是 m3u8 流媒体
+    const isM3u8 =
+      originalUrl.includes('.m3u8') || originalUrl.includes('m3u8');
+
     // 检查是否需要使用代理
     const proxyChecks = {
       'quark.cn': originalUrl.includes('quark.cn'),
@@ -797,7 +801,7 @@ function PlayPageClient() {
       'ffzy-online': originalUrl.includes('ffzy-online'),
       'bfikuncdn.com': originalUrl.includes('bfikuncdn.com'),
       'vip.': originalUrl.includes('vip.'),
-      m3u8: originalUrl.includes('m3u8'),
+      m3u8: isM3u8,
       'not localhost':
         !originalUrl.includes('localhost') &&
         !originalUrl.includes('127.0.0.1'),
@@ -806,6 +810,14 @@ function PlayPageClient() {
     const needsProxy = Object.values(proxyChecks).some((check) => check);
 
     if (needsProxy) {
+      // 对于 m3u8 流媒体，使用 m3u8 代理
+      if (isM3u8) {
+        const proxyUrl = `/api/proxy/m3u8?url=${encodeURIComponent(
+          originalUrl
+        )}`;
+        return proxyUrl;
+      }
+      // 对于其他视频文件，使用 video 代理
       const proxyUrl = `/api/proxy/video?url=${encodeURIComponent(
         originalUrl
       )}`;

@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function getBaseUrl(url: string): string {
   try {
