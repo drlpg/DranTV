@@ -394,9 +394,9 @@ function HomeClient() {
                         </div>
                       ))
                     : // 显示真实数据
-                      hotMovies.map((movie, index) => (
+                      hotMovies.map((movie) => (
                         <div
-                          key={index}
+                          key={movie.id}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard
@@ -439,9 +439,9 @@ function HomeClient() {
                         </div>
                       ))
                     : // 显示真实数据
-                      hotTvShows.map((show, index) => (
+                      hotTvShows.map((show) => (
                         <div
-                          key={index}
+                          key={show.id}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard
@@ -556,9 +556,9 @@ function HomeClient() {
                         </div>
                       ))
                     : // 显示真实数据
-                      hotVarietyShows.map((show, index) => (
+                      hotVarietyShows.map((show) => (
                         <div
-                          key={index}
+                          key={show.id}
                           className='min-w-[calc((100vw-2rem-1.5rem)/3)] w-[calc((100vw-2rem-1.5rem)/3)] sm:min-w-[180px] sm:w-44 snap-start'
                         >
                           <VideoCard

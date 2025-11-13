@@ -155,37 +155,28 @@ const VideoCard = forwardRef<VideoCardHandle, VideoCardProps>(
 
     // 检查poster是否有效并重置状态
     useEffect(() => {
-      // 清理之前的超时定时器
-      if (imageLoadTimeout) {
-        clearTimeout(imageLoadTimeout);
-        setImageLoadTimeout(null);
-      }
-
       // 如果poster为空或无效，直接显示错误占位符
       if (!actualPoster || !processImageUrl(actualPoster)) {
         setImageError(true);
         setIsLoading(false);
         setImageLoaded(false);
-      } else {
-        // 重置状态（当poster改变时）
-        setImageError(false);
-        setIsLoading(true);
-        setImageLoaded(false);
-
-        // 设置15秒超时机制
-        const timeout = setTimeout(() => {
-          if (!imageLoaded) {
-            setImageError(true);
-            setIsLoading(false);
-          }
-        }, 15000);
-        setImageLoadTimeout(timeout);
+        return;
       }
 
+      // 重置状态（当poster改变时）
+      setImageError(false);
+      setIsLoading(true);
+      setImageLoaded(false);
+
+      // 设置15秒超时机制
+      const timeout = setTimeout(() => {
+        setImageError(true);
+        setIsLoading(false);
+      }, 15000);
+      setImageLoadTimeout(timeout);
+
       return () => {
-        if (imageLoadTimeout) {
-          clearTimeout(imageLoadTimeout);
-        }
+        clearTimeout(timeout);
       };
     }, [actualPoster]);
 

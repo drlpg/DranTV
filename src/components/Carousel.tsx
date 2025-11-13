@@ -42,22 +42,25 @@ export default function Carousel({
       }
     }
 
-    // 只有当validItems真的改变时才更新
-    const newIds = validItems.map((i) => i.id).join(',');
-    const currentIds = activeItems.map((i) => i.id).join(',');
+    // 使用函数式更新，避免依赖 activeItems
+    setActiveItems((prevActiveItems) => {
+      const newIds = validItems.map((i) => i.id).join(',');
+      const currentIds = prevActiveItems.map((i) => i.id).join(',');
 
-    if (newIds !== currentIds) {
-      setActiveItems(validItems);
-
-      // 调整当前索引
-      setCurrentIndex((prevIndex) => {
-        if (prevIndex >= validItems.length && validItems.length > 0) {
-          return 0;
-        }
-        return prevIndex;
-      });
-    }
-  }, [items, failedIds, maxItems, activeItems]);
+      // 只有当validItems真的改变时才更新
+      if (newIds !== currentIds) {
+        // 调整当前索引
+        setCurrentIndex((prevIndex) => {
+          if (prevIndex >= validItems.length && validItems.length > 0) {
+            return 0;
+          }
+          return prevIndex;
+        });
+        return validItems;
+      }
+      return prevActiveItems;
+    });
+  }, [items, failedIds, maxItems]);
 
   useEffect(() => {
     if (activeItems.length <= 1 || isHovered) return;
