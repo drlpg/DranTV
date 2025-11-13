@@ -31,6 +31,7 @@ export default function Carousel({
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [activeItems, setActiveItems] = useState<CarouselItem[]>([]);
+  const [isReady, setIsReady] = useState(false);
 
   // 动态计算有效的轮播项目
   useEffect(() => {
@@ -56,11 +57,20 @@ export default function Carousel({
           }
           return prevIndex;
         });
+
+        // 预加载第一张图片
+        if (validItems.length > 0 && !isReady) {
+          const firstImage = new Image();
+          firstImage.onload = () => setIsReady(true);
+          firstImage.onerror = () => setIsReady(true); // 即使失败也显示
+          firstImage.src = validItems[0].image;
+        }
+
         return validItems;
       }
       return prevActiveItems;
     });
-  }, [items, failedIds, maxItems]);
+  }, [items, failedIds, maxItems, isReady]);
 
   useEffect(() => {
     if (activeItems.length <= 1 || isHovered) return;
@@ -127,8 +137,8 @@ export default function Carousel({
     setTouchEnd(0);
   };
 
-  // 如果没有数据，显示骨架屏
-  if (activeItems.length === 0) {
+  // 如果没有数据或第一张图片未加载完成，显示骨架屏
+  if (activeItems.length === 0 || !isReady) {
     return (
       <div className='relative w-full overflow-hidden rounded-lg aspect-[16/9] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
         <div className='absolute inset-0 flex items-center justify-center'>

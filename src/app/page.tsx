@@ -47,6 +47,7 @@ function HomeClient() {
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [carouselConfig, setCarouselConfig] = useState<any>(null);
+  const [carouselReady, setCarouselReady] = useState(false);
 
   // 预加载常用页面数据
   useEffect(() => {
@@ -127,6 +128,11 @@ function HomeClient() {
           // 先设置原始数据，避免阻塞
           setHotMovies(moviesData.list);
 
+          // 如果是默认模式，立即标记轮播图可以显示（使用 poster）
+          if (carouselConfigData.mode === 'default') {
+            setCarouselReady(true);
+          }
+
           // 异步获取TMDB横版海报，不阻塞其他数据显示
           const top10Movies = moviesData.list.slice(0, 10);
           fetch('/api/tmdb/backdrop', {
@@ -167,6 +173,11 @@ function HomeClient() {
         }
 
         setBangumiCalendarData(bangumiCalendarData);
+
+        // 如果是自定义模式，现在可以显示轮播图了
+        if (carouselConfigData.mode === 'custom') {
+          setCarouselReady(true);
+        }
       } catch (error) {
         console.error('获取推荐数据失败:', error);
       } finally {
@@ -325,45 +336,43 @@ function HomeClient() {
             // 首页视图
             <>
               {/* 轮播图 */}
-              {(loading || carouselConfig) && (
-                <section className='mb-6 sm:mb-8'>
-                  {loading ? (
-                    <div className='relative w-full overflow-hidden rounded-lg aspect-[16/9] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <img
-                          src='/img/loading.svg'
-                          alt='加载中'
-                          className='w-12 h-3 sm:w-20 sm:h-5 object-contain opacity-80'
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    carouselConfig && (
-                      <Carousel
-                        items={
-                          carouselConfig.mode === 'custom'
-                            ? carouselConfig.customItems
-                            : hotMovies.slice(0, 10).map((movie: any) => ({
-                                id: movie.id,
-                                title: movie.title,
-                                image: movie.backdrop || movie.poster,
-                                rate: movie.rate,
-                                link: `/play?title=${encodeURIComponent(
-                                  movie.title.trim()
-                                )}${
-                                  movie.year ? `&year=${movie.year}` : ''
-                                }&stype=movie`,
-                              }))
-                        }
-                        maxItems={carouselConfig.maxItems || 5}
-                        autoPlayInterval={
-                          carouselConfig.autoPlayInterval || 10000
-                        }
+              <section className='mb-6 sm:mb-8'>
+                {!carouselReady ? (
+                  <div className='relative w-full overflow-hidden rounded-lg aspect-[16/9] md:aspect-auto md:h-[60dvh] bg-gray-100 dark:bg-gray-800'>
+                    <div className='absolute inset-0 flex items-center justify-center'>
+                      <img
+                        src='/img/loading.svg'
+                        alt='加载中'
+                        className='w-12 h-3 sm:w-20 sm:h-5 object-contain opacity-80'
                       />
-                    )
-                  )}
-                </section>
-              )}
+                    </div>
+                  </div>
+                ) : (
+                  carouselConfig && (
+                    <Carousel
+                      items={
+                        carouselConfig.mode === 'custom'
+                          ? carouselConfig.customItems
+                          : hotMovies.slice(0, 10).map((movie: any) => ({
+                              id: movie.id,
+                              title: movie.title,
+                              image: movie.backdrop || movie.poster,
+                              rate: movie.rate,
+                              link: `/play?title=${encodeURIComponent(
+                                movie.title.trim()
+                              )}${
+                                movie.year ? `&year=${movie.year}` : ''
+                              }&stype=movie`,
+                            }))
+                      }
+                      maxItems={carouselConfig.maxItems || 5}
+                      autoPlayInterval={
+                        carouselConfig.autoPlayInterval || 10000
+                      }
+                    />
+                  )
+                )}
+              </section>
 
               {/* 继续观看 */}
               <ContinueWatching showSkeleton={loading} />

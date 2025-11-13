@@ -17,7 +17,12 @@ export async function GET() {
       customItems: [],
     };
 
-    return NextResponse.json(carouselConfig);
+    return NextResponse.json(carouselConfig, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=300', // 缓存5分钟
+        'CDN-Cache-Control': 'public, s-maxage=300',
+      },
+    });
   } catch (error) {
     console.error('[轮播图配置] 获取失败:', error);
     return NextResponse.json(
@@ -27,7 +32,12 @@ export async function GET() {
         maxItems: 5,
         customItems: [],
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'public, max-age=60, s-maxage=60', // 错误时缓存1分钟
+        },
+      }
     );
   }
 }
