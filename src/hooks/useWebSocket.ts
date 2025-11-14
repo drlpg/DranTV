@@ -149,7 +149,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         keepAliveIntervalRef.current = setInterval(() => {
           if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(
-              JSON.stringify({ type: 'ping', timestamp: Date.now() })
+              JSON.stringify({ type: 'ping', timestamp: Date.now() }),
             );
           } else {
             if (keepAliveIntervalRef.current) {
@@ -168,7 +168,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           optionsRef.current.onMessage?.(message);
         } catch (error) {
-          console.error('解析 WebSocket 消息错误:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('解析 WebSocket 消息错误:', error);
+          }
         }
       };
 
@@ -244,7 +246,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           const baseDelay = 3000; // 最小3秒，避免过于频繁
           const delay = Math.max(
             baseDelay,
-            Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000)
+            Math.min(Math.pow(2, reconnectAttemptsRef.current) * 1000, 30000),
           ); // 指数退避，最少3秒，最多30秒
 
           // 清除之前的重连定时器
@@ -260,7 +262,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket 错误:', error);
+        // WebSocket 错误对象通常是空的，只记录连接失败
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('WebSocket 连接错误，将尝试重连');
+        }
         isConnectingRef.current = false; // 重置连接标志
         optionsRef.current.onError?.(error);
         setConnectionStatus('disconnected');
@@ -268,7 +273,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     } catch (error) {
       console.error(
         `❌ [${instanceIdRef.current}] 创建 WebSocket 连接失败:`,
-        error
+        error,
       );
       isConnectingRef.current = false; // 重置连接标志
       setConnectionStatus('disconnected');
@@ -343,7 +348,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           keepAliveIntervalRef.current = setInterval(() => {
             if (wsRef.current?.readyState === WebSocket.OPEN) {
               wsRef.current.send(
-                JSON.stringify({ type: 'ping', timestamp: Date.now() })
+                JSON.stringify({ type: 'ping', timestamp: Date.now() }),
               );
             }
           }, 20000);

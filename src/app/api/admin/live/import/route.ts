@@ -258,13 +258,15 @@ export async function POST(request: NextRequest) {
         const sourceName =
           fileName.replace(/\.(m3u|m3u8)$/i, '') || '导入的直播源';
 
-        // 生成唯一key
-        const timestamp = Date.now();
+        // 生成key（基于URL的hash，确保同一URL总是生成相同的key）
+        const urlHash = url.split('').reduce((hash, char) => {
+          return (hash << 5) - hash + char.charCodeAt(0);
+        }, 0);
         const sourceKey =
           sourceName
             .toLowerCase()
             .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
-            .substring(0, 20) + `_${timestamp}`;
+            .substring(0, 15) + `_${Math.abs(urlHash).toString(36)}`;
 
         // 提取EPG URL（如果有）
         let epgUrl = '';
@@ -287,14 +289,35 @@ export async function POST(request: NextRequest) {
           },
         ];
       } else {
-        // TXT格式
+        // TXT格式 - 也作为一个直播源（包含多个频道）
         format = 'txt';
-        const parsedSources = parseTXT(configContent);
-        sources = parsedSources.map((item) => ({
-          ...item,
-          disabled: false,
-          from: 'subscription' as const,
-        }));
+
+        // 从URL中提取名称
+        const urlParts = url.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0];
+        const sourceName =
+          fileName.replace(/\.(txt|m3u|m3u8)$/i, '') || '导入的直播源';
+
+        // 生成key（基于URL的hash，确保同一URL总是生成相同的key）
+        const urlHash = url.split('').reduce((hash, char) => {
+          return (hash << 5) - hash + char.charCodeAt(0);
+        }, 0);
+        const sourceKey =
+          sourceName
+            .toLowerCase()
+            .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+            .substring(0, 15) + `_${Math.abs(urlHash).toString(36)}`;
+
+        sources = [
+          {
+            name: sourceName,
+            key: sourceKey,
+            url: url, // 使用原始URL
+            disabled: false,
+            from: 'subscription' as const,
+            channelNumber: 0, // 初始为0，将在刷新时更新
+          },
+        ];
       }
     }
 
@@ -332,36 +355,39 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    await saveAdminConfig(adminConfig);
-
     console.log(`成功导入 ${newSources.length} 个直播源，格式: ${format}`);
 
-    // 异步后台更新频道数（不阻塞响应）
+    // 同步刷新频道数（M3U格式）
     if (format === 'm3u') {
-      Promise.all(
+      console.log('[Live Import] 开始刷新频道数...');
+      await Promise.all(
         newSources.map(async (source) => {
           try {
             const channelCount = await refreshLiveChannels(source);
-            // 重新获取配置并更新
-            const latestConfig = await getAdminConfig();
-            const liveSource = latestConfig.LiveConfig?.find(
-              (s) => s.key === source.key,
+            source.channelNumber = channelCount;
+            console.log(
+              `刷新频道数成功: ${source.name} (${channelCount} 个频道)`,
             );
-            if (liveSource) {
-              liveSource.channelNumber = channelCount;
-              await saveAdminConfig(latestConfig);
-              console.log(
-                `后台更新频道数成功: ${source.name} (${channelCount})`,
-              );
-            }
           } catch (error) {
-            console.warn(`后台更新频道数失败: ${source.name}`, error);
+            console.warn(`刷新频道数失败: ${source.name}`, error);
+            source.channelNumber = 0;
           }
         }),
-      ).catch(() => {
-        // 静默处理错误
-      });
+      );
+
+      // 更新配置中的频道数
+      for (const source of newSources) {
+        const liveSource = adminConfig.LiveConfig?.find(
+          (s) => s.key === source.key,
+        );
+        if (liveSource) {
+          liveSource.channelNumber = source.channelNumber;
+        }
+      }
     }
+
+    // 保存更新后的配置
+    await saveAdminConfig(adminConfig);
 
     return NextResponse.json({
       success: true,

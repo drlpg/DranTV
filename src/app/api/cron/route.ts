@@ -328,7 +328,7 @@ async function refreshLiveSubscription() {
         ua?: string;
         epg?: string;
         disabled?: boolean;
-        from: 'config' | 'custom';
+        from: 'subscription' | 'custom';
       }> = [];
 
       // 解析配置内容
@@ -343,7 +343,7 @@ async function refreshLiveSubscription() {
             ua: item.ua,
             epg: item.epg,
             disabled: item.disabled || false,
-            from: 'config' as const,
+            from: 'subscription' as const, // 订阅来源
           }));
         } else if (jsonData.lives) {
           sources = Object.entries(jsonData.lives).map(
@@ -354,7 +354,7 @@ async function refreshLiveSubscription() {
               ua: (value as any).ua,
               epg: (value as any).epg,
               disabled: (value as any).disabled || false,
-              from: 'config' as const,
+              from: 'subscription' as const, // 订阅来源
             }),
           );
         } else if (jsonData.sources) {
@@ -365,93 +365,51 @@ async function refreshLiveSubscription() {
             ua: item.ua,
             epg: item.epg,
             disabled: item.disabled || false,
-            from: 'config' as const,
+            from: 'subscription' as const, // 订阅来源
           }));
         }
       } catch (e) {
-        // 非JSON格式，尝试M3U或TXT
+        // 非JSON格式，M3U/TXT 应该作为一个整体的直播源，不解析单个频道
+        // 订阅URL本身就是直播源，不需要解析内容
+        console.log('订阅内容不是JSON格式，将订阅URL作为直播源');
+
+        // 从URL中提取名称
+        const urlParts = config.LiveSubscription.URL.split('/');
+        const fileName = urlParts[urlParts.length - 1].split('?')[0];
+        const sourceName =
+          fileName.replace(/\.(m3u|m3u8|txt)$/i, '') || '订阅直播源';
+
+        // 生成key（使用固定的key以便更新时能找到）
+        const sourceKey =
+          sourceName
+            .toLowerCase()
+            .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
+            .substring(0, 20) + '_subscription';
+
+        // 提取EPG URL（如果是M3U格式）
+        let epgUrl = '';
         if (
           configContent.trim().startsWith('#EXTM3U') ||
           configContent.includes('#EXTINF')
         ) {
-          // M3U格式
-          const lines = configContent.split('\n').map((line) => line.trim());
-          let currentName = '';
-          let currentEpg = '';
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            if (line.startsWith('#EXTINF:')) {
-              const match = line.match(/#EXTINF:[^,]*,(.+)/);
-              if (match) currentName = match[1].trim();
-              const epgMatch = line.match(/tvg-url="([^"]+)"/);
-              if (epgMatch) currentEpg = epgMatch[1];
-            } else if (line && !line.startsWith('#')) {
-              if (currentName) {
-                const key = currentName
-                  .toLowerCase()
-                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
-                  .substring(0, 20);
-                sources.push({
-                  name: currentName,
-                  key: key || `live_${sources.length + 1}`,
-                  url: line,
-                  epg: currentEpg || undefined,
-                  disabled: false,
-                  from: 'config',
-                });
-                currentName = '';
-                currentEpg = '';
-              }
-            }
+          const epgMatch = configContent.match(
+            /#EXTM3U[^\n]*(?:x-tvg-url|url-tvg)="([^"]+)"/,
+          );
+          if (epgMatch) {
+            epgUrl = epgMatch[1];
           }
-        } else {
-          // TXT格式
-          const lines = configContent
-            .split('\n')
-            .map((line) => line.trim())
-            .filter((line) => line && !line.startsWith('#'));
-          lines.forEach((line) => {
-            if (line.includes('=')) {
-              const parts = line.split('=').map((s) => s.trim());
-              const name = parts[0];
-              const url = parts[1];
-              const epg = parts[2];
-              if (name && url) {
-                const key = name
-                  .toLowerCase()
-                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
-                  .substring(0, 20);
-                sources.push({
-                  name,
-                  key: key || `live_${sources.length + 1}`,
-                  url,
-                  epg: epg || undefined,
-                  disabled: false,
-                  from: 'config',
-                });
-              }
-            } else if (line.includes(',')) {
-              const parts = line.split(',').map((s) => s.trim());
-              const name = parts[0];
-              const url = parts[1];
-              const epg = parts[2];
-              if (name && url) {
-                const key = name
-                  .toLowerCase()
-                  .replace(/[^a-z0-9\u4e00-\u9fa5]/g, '_')
-                  .substring(0, 20);
-                sources.push({
-                  name,
-                  key: key || `live_${sources.length + 1}`,
-                  url,
-                  epg: epg || undefined,
-                  disabled: false,
-                  from: 'config',
-                });
-              }
-            }
-          });
         }
+
+        sources = [
+          {
+            name: sourceName,
+            key: sourceKey,
+            url: config.LiveSubscription.URL, // 使用订阅URL，不是内容
+            epg: epgUrl || undefined,
+            disabled: false,
+            from: 'subscription', // 订阅来源，可以删除
+          },
+        ];
       }
 
       if (sources.length > 0) {

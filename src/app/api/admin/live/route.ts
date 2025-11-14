@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         if (config.LiveConfig.some((l) => l.key === key)) {
           return NextResponse.json(
             { error: '直播源 key 已存在' },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -74,14 +74,6 @@ export async function POST(request: NextRequest) {
         const deleteIndex = config.LiveConfig.findIndex((l) => l.key === key);
         if (deleteIndex === -1) {
           return NextResponse.json({ error: '直播源不存在' }, { status: 404 });
-        }
-
-        const liveSource = config.LiveConfig[deleteIndex];
-        if (liveSource.from === 'config') {
-          return NextResponse.json(
-            { error: '不能删除配置文件中的直播源' },
-            { status: 400 }
-          );
         }
 
         // 删除内存缓存
@@ -128,14 +120,6 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: '直播源不存在' }, { status: 404 });
         }
 
-        // 配置文件中的直播源不允许编辑
-        if (editSource.from === 'config') {
-          return NextResponse.json(
-            { error: '不能编辑配置文件中的直播源' },
-            { status: 400 }
-          );
-        }
-
         // 更新字段（除了 key 和 from）
         editSource.name = name as string;
         editSource.url = url as string;
@@ -158,7 +142,7 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(order)) {
           return NextResponse.json(
             { error: '排序数据格式错误' },
-            { status: 400 }
+            { status: 400 },
           );
         }
 
@@ -187,7 +171,7 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(enableKeys) || enableKeys.length === 0) {
           return NextResponse.json(
             { error: '缺少 keys 参数或为空' },
-            { status: 400 }
+            { status: 400 },
           );
         }
         enableKeys.forEach((key) => {
@@ -204,7 +188,7 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(disableKeys) || disableKeys.length === 0) {
           return NextResponse.json(
             { error: '缺少 keys 参数或为空' },
-            { status: 400 }
+            { status: 400 },
           );
         }
         disableKeys.forEach((key) => {
@@ -221,19 +205,16 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(deleteKeys) || deleteKeys.length === 0) {
           return NextResponse.json(
             { error: '缺少 keys 参数或为空' },
-            { status: 400 }
+            { status: 400 },
           );
         }
-        // 只能删除custom来源的直播源
-        const keysToDelete = deleteKeys.filter((key) => {
-          const source = config.LiveConfig?.find((l) => l.key === key);
-          if (!source) return false;
-          // 配置文件中的直播源不能删除
-          return source.from !== 'config';
-        });
 
-        // 批量删除
-        for (const key of keysToDelete) {
+        console.log(
+          `[Admin Live API] 请求批量删除 ${deleteKeys.length} 个直播源`,
+        );
+
+        // 批量删除所有请求的直播源
+        for (const key of deleteKeys) {
           const idx = config.LiveConfig?.findIndex((l) => l.key === key);
           if (idx !== undefined && idx !== -1) {
             // 删除内存缓存
@@ -243,13 +224,15 @@ export async function POST(request: NextRequest) {
             try {
               await db.delete(`live_channels_${key}`);
               console.log(
-                `[Admin Live API] 已删除频道数据: live_channels_${key}`
+                `[Admin Live API] 已删除频道数据: live_channels_${key}`,
               );
             } catch (error) {
               console.error(`[Admin Live API] 删除频道数据失败:`, error);
             }
 
             config.LiveConfig?.splice(idx, 1);
+          } else {
+            console.log(`[Admin Live API] 直播源不存在: ${key}`);
           }
         }
 
@@ -266,7 +249,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Admin Live API] 操作完成: ${action}`);
     console.log(
-      `[Admin Live API] 当前直播源数量: ${config.LiveConfig?.length || 0}`
+      `[Admin Live API] 当前直播源数量: ${config.LiveConfig?.length || 0}`,
     );
 
     // 保存配置
@@ -284,7 +267,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '操作失败' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

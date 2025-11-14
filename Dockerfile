@@ -37,10 +37,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # 清理可能存在的旧构建缓存，然后生成生产构建
 # 在 Docker 环境中构建，确保路径正确
-# 使用 webpack 模式构建（Next.js 16 的 Turbopack 还不完全兼容）
+# 使用 webpack 模式构建（Next.js 16 的 Turbopack 还不完全兼容 Tailwind 转义语法）
 RUN rm -rf .next && \
     rm -rf .next.bak && \
-    pnpm run build
+    pnpm gen:manifest && \
+    npx next build --webpack
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner

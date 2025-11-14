@@ -3,6 +3,9 @@
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// 强制使用 webpack（Turbopack 还不完全兼容 Tailwind 的转义语法）
+process.env.NEXT_PRIVATE_WEBPACK = 'true';
+
 const nextConfig = {
   // 移除 standalone 模式，使用标准构建
   // output: 'standalone',
