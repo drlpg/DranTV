@@ -1981,11 +1981,10 @@ function PlayPageClient() {
         currentEpisodeIndex,
       );
 
-      console.log('[播放器初始化] videoUrl:', videoUrl);
-
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
+        type: 'm3u8', // 明确指定类型
         poster: videoCover,
         volume: 0.7,
         isLive: false,

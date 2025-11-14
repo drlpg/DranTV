@@ -21,6 +21,9 @@ export async function GET(request: Request) {
     const fetchHeaders: Record<string, string> = {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      Accept: '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      Connection: 'keep-alive',
     };
 
     const range = request.headers.get('Range');
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
 
     try {
       const urlObj = new URL(decodedUrl);
-      fetchHeaders['Referer'] = urlObj.origin;
+      fetchHeaders['Referer'] = urlObj.origin + '/';
       fetchHeaders['Origin'] = urlObj.origin;
     } catch {
       // ignore

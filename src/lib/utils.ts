@@ -216,13 +216,13 @@ export async function getVideoResolutionFromM3u8(
             details: data.details,
             fatal: data.fatal,
             url: m3u8Url,
-            event: event,
           });
           clearTimeout(timeoutId);
           hls.destroy();
           video.remove();
           reject(new Error(`HLS播放失败: ${data.type} - ${data.details}`));
         }
+        // 非致命错误，只记录但不中断
       });
 
       // 监听视频元数据加载完成
