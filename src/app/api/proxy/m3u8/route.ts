@@ -182,38 +182,16 @@ export async function GET(request: Request) {
     }
 
     const contentType = response.headers.get('Content-Type') || '';
-    if (
-      contentType.toLowerCase().includes('mpegurl') ||
-      contentType.toLowerCase().includes('octet-stream')
-    ) {
-      const finalUrl = response.url;
-      const m3u8Content = await response.text();
-      responseUsed = true;
+    const finalUrl = response.url;
+    const m3u8Content = await response.text();
+    responseUsed = true;
 
-      const baseUrl = getBaseUrl(finalUrl);
-      const modifiedContent = rewriteM3U8Content(m3u8Content, baseUrl, request);
-
-      const headers = new Headers();
-      headers.set('Content-Type', contentType);
-      headers.set('Access-Control-Allow-Origin', '*');
-      headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-      headers.set(
-        'Access-Control-Allow-Headers',
-        'Content-Type, Range, Origin, Accept',
-      );
-      headers.set('Cache-Control', 'no-cache');
-      headers.set(
-        'Access-Control-Expose-Headers',
-        'Content-Length, Content-Range',
-      );
-      return new Response(modifiedContent, { headers });
-    }
+    const baseUrl = getBaseUrl(finalUrl);
+    const modifiedContent = rewriteM3U8Content(m3u8Content, baseUrl, request);
 
     const headers = new Headers();
-    headers.set(
-      'Content-Type',
-      response.headers.get('Content-Type') || 'application/vnd.apple.mpegurl',
-    );
+    // 始终使用正确的 M3U8 Content-Type
+    headers.set('Content-Type', 'application/vnd.apple.mpegurl');
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     headers.set(
@@ -225,8 +203,7 @@ export async function GET(request: Request) {
       'Access-Control-Expose-Headers',
       'Content-Length, Content-Range',
     );
-
-    return new Response(response.body, { status: 200, headers });
+    return new Response(modifiedContent, { headers });
   } catch (error) {
     // 只记录非网络超时的错误
     if (error instanceof Error) {
