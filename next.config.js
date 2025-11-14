@@ -6,13 +6,15 @@ const isDev = process.env.NODE_ENV !== 'production';
 const nextConfig = {
   // 移除 standalone 模式，使用标准构建
   // output: 'standalone',
-  eslint: {
-    dirs: ['src'],
-    ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误
-  },
+
+  // Next.js 16 不再支持 eslint 配置，使用 .eslintrc 代替
+  // eslint: {
+  //   dirs: ['src'],
+  //   ignoreDuringBuilds: true,
+  // },
 
   reactStrictMode: false,
-  swcMinify: true, // 启用 SWC 压缩以提升性能
+  // swcMinify 在 Next.js 16 中已默认启用，不需要配置
 
   // 开发环境性能优化
   typescript: isDev
@@ -59,7 +61,7 @@ const nextConfig = {
   },
 
   experimental: {
-    instrumentationHook: process.env.NODE_ENV === 'production',
+    // instrumentationHook 在 Next.js 16 中已默认启用
     // 优化包导入
     optimizePackageImports: ['lucide-react', 'react-icons'],
   },
@@ -89,6 +91,13 @@ const nextConfig = {
     ],
   },
 
+  // Turbopack 配置（Next.js 16 默认使用 Turbopack）
+  turbopack: {
+    // 空配置表示接受默认的 Turbopack 行为
+    // 如果需要 webpack 配置，请使用 --webpack 标志构建
+  },
+
+  // Webpack 配置（仅在使用 --webpack 标志时生效）
   webpack(config, { dev }) {
     // 开发环境性能优化
     if (dev) {
@@ -106,31 +115,33 @@ const nextConfig = {
 
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule) =>
-      rule.test?.test?.('.svg')
+      rule.test?.test?.('.svg'),
     );
 
-    config.module.rules.push(
-      // Reapply the existing rule, but only for svg imports ending in ?url
-      {
-        ...fileLoaderRule,
-        test: /\.svg$/i,
-        resourceQuery: /url/, // *.svg?url
-      },
-      // Convert all other *.svg imports to React components
-      {
-        test: /\.svg$/i,
-        issuer: { not: /\.(css|scss|sass)$/ },
-        resourceQuery: { not: /url/ }, // exclude if *.svg?url
-        loader: '@svgr/webpack',
-        options: {
-          dimensions: false,
-          titleProp: true,
+    if (fileLoaderRule) {
+      config.module.rules.push(
+        // Reapply the existing rule, but only for svg imports ending in ?url
+        {
+          ...fileLoaderRule,
+          test: /\.svg$/i,
+          resourceQuery: /url/, // *.svg?url
         },
-      }
-    );
+        // Convert all other *.svg imports to React components
+        {
+          test: /\.svg$/i,
+          issuer: { not: /\.(css|scss|sass)$/ },
+          resourceQuery: { not: /url/ }, // exclude if *.svg?url
+          loader: '@svgr/webpack',
+          options: {
+            dimensions: false,
+            titleProp: true,
+          },
+        },
+      );
 
-    // Modify the file loader rule to ignore *.svg, since we have it handled now.
-    fileLoaderRule.exclude = /\.svg$/i;
+      // Modify the file loader rule to ignore *.svg, since we have it handled now.
+      fileLoaderRule.exclude = /\.svg$/i;
+    }
 
     // Add alias configuration to ensure proper path resolution in Docker builds
     const path = require('path');

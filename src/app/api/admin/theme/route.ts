@@ -2,13 +2,13 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { AdminConfig } from '@/lib/admin.types';
-import {getConfig, setCachedConfig } from '@/lib/config';
+import { getConfig, setCachedConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export async function GET() {
   try {
     // 创建一个模拟的NextRequest对象来使用getAuthInfoFromCookie
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const authCookie = cookieStore.get('auth');
 
     if (!authCookie) {
@@ -32,17 +32,14 @@ export async function GET() {
     });
   } catch (error) {
     console.error('获取主题配置失败:', error);
-    return NextResponse.json(
-      { error: '获取主题配置失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '获取主题配置失败' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
     // 获取认证信息
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const authCookie = cookieStore.get('auth');
 
     if (!authCookie) {
@@ -59,7 +56,10 @@ export async function POST(request: Request) {
 
     // 检查是否为管理员
     if (authData.role !== 'admin' && authData.role !== 'owner') {
-      return NextResponse.json({ error: '权限不足，仅管理员可设置全局主题' }, { status: 403 });
+      return NextResponse.json(
+        { error: '权限不足，仅管理员可设置全局主题' },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();
@@ -85,8 +85,15 @@ export async function POST(request: Request) {
     };
 
     console.log('=== 保存主题配置 ===');
-    console.log('请求参数:', { defaultTheme, customCSS, allowUserCustomization });
-    console.log('当前存储类型:', process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage');
+    console.log('请求参数:', {
+      defaultTheme,
+      customCSS,
+      allowUserCustomization,
+    });
+    console.log(
+      '当前存储类型:',
+      process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
+    );
     console.log('待保存配置:', updatedConfig.ThemeConfig);
     console.log('完整配置对象:', JSON.stringify(updatedConfig, null, 2));
 
@@ -109,8 +116,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('更新主题配置失败:', error);
     return NextResponse.json(
-      { error: '更新主题配置失败', details: error instanceof Error ? error.message : '未知错误' },
-      { status: 500 }
+      {
+        error: '更新主题配置失败',
+        details: error instanceof Error ? error.message : '未知错误',
+      },
+      { status: 500 },
     );
   }
 }

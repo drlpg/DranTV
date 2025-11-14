@@ -23,8 +23,9 @@ const inter = Inter({
 const isDev = process.env.NODE_ENV !== 'production';
 
 export const dynamic = 'force-dynamic';
-export const fetchCache = isDev ? 'default-no-store' : 'force-cache'; // 开发环境禁用缓存
-export const revalidate = isDev ? 0 : 3600; // 开发环境不缓存，生产环境1小时
+// Next.js 16 要求这些配置必须是静态值
+export const fetchCache = 'default-no-store'; // 禁用缓存
+export const revalidate = 0; // 不缓存
 
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
@@ -93,7 +94,7 @@ export default async function RootLayout({
     doubanImageProxy = config.SiteConfig.DoubanImageProxy;
     disableYellowFilter = config.SiteConfig.DisableYellowFilter;
     customCategories = config.CustomCategories.filter(
-      (category) => !category.disabled
+      (category) => !category.disabled,
     ).map((category) => ({
       name: category.name || '',
       type: category.type,
@@ -105,8 +106,8 @@ export default async function RootLayout({
       process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE === 'true'
         ? true
         : process.env.NEXT_PUBLIC_REQUIRE_DEVICE_CODE === 'false'
-        ? false
-        : config.SiteConfig.RequireDeviceCode;
+          ? false
+          : config.SiteConfig.RequireDeviceCode;
   }
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取

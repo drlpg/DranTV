@@ -54,7 +54,7 @@ function SearchPageClient() {
   const [hotKeywords, setHotKeywords] = useState<string[]>([]);
   // 聚合卡片 refs 与聚合统计缓存
   const groupRefs = useRef<Map<string, React.RefObject<VideoCardHandle>>>(
-    new Map()
+    new Map(),
   );
   const groupStatsRef = useRef<
     Map<
@@ -117,7 +117,7 @@ function SearchPageClient() {
     if (currentFluidSearch) {
       // 流式搜索
       const es = new EventSource(
-        `/api/search/ws?q=${encodeURIComponent(trimmed)}`
+        `/api/search/ws?q=${encodeURIComponent(trimmed)}`,
       );
       eventSourceRef.current = es;
 
@@ -135,7 +135,7 @@ function SearchPageClient() {
               '当前查询:',
               currentQueryRef.current,
               '响应查询:',
-              trimmed
+              trimmed,
             );
             return;
           }
@@ -191,7 +191,7 @@ function SearchPageClient() {
                       sessionStorage.setItem('cachedSearchQuery', trimmed);
                       sessionStorage.setItem(
                         'cachedSearchResults',
-                        JSON.stringify(newResults)
+                        JSON.stringify(newResults),
                       );
                       sessionStorage.setItem(
                         'cachedSearchState',
@@ -200,14 +200,14 @@ function SearchPageClient() {
                             payload.completedSources || totalSources,
                           completedSources:
                             payload.completedSources || totalSources,
-                        })
+                        }),
                       );
                       sessionStorage.setItem(
                         'cachedSearchFilters',
                         JSON.stringify({
                           filterAll,
                           filterAgg,
-                        })
+                        }),
                       );
                       sessionStorage.setItem('cachedViewMode', viewMode);
                     } catch (error) {
@@ -223,7 +223,7 @@ function SearchPageClient() {
                       sessionStorage.setItem('cachedSearchQuery', trimmed);
                       sessionStorage.setItem(
                         'cachedSearchResults',
-                        JSON.stringify(prev)
+                        JSON.stringify(prev),
                       );
                       sessionStorage.setItem(
                         'cachedSearchState',
@@ -232,14 +232,14 @@ function SearchPageClient() {
                             payload.completedSources || totalSources,
                           completedSources:
                             payload.completedSources || totalSources,
-                        })
+                        }),
                       );
                       sessionStorage.setItem(
                         'cachedSearchFilters',
                         JSON.stringify({
                           filterAll,
                           filterAgg,
-                        })
+                        }),
                       );
                       sessionStorage.setItem('cachedViewMode', viewMode);
                     } catch (error) {
@@ -292,7 +292,7 @@ function SearchPageClient() {
               '当前查询:',
               currentQueryRef.current,
               '响应查询:',
-              trimmed
+              trimmed,
             );
             return;
           }
@@ -313,21 +313,21 @@ function SearchPageClient() {
               sessionStorage.setItem('cachedSearchQuery', trimmed);
               sessionStorage.setItem(
                 'cachedSearchResults',
-                JSON.stringify(results)
+                JSON.stringify(results),
               );
               sessionStorage.setItem(
                 'cachedSearchState',
                 JSON.stringify({
                   totalSources: 1,
                   completedSources: 1,
-                })
+                }),
               );
               sessionStorage.setItem(
                 'cachedSearchFilters',
                 JSON.stringify({
                   filterAll,
                   filterAgg,
-                })
+                }),
               );
               sessionStorage.setItem('cachedViewMode', viewMode);
             } catch (error) {
@@ -352,7 +352,7 @@ function SearchPageClient() {
   const getGroupRef = (key: string) => {
     let ref = groupRefs.current.get(key);
     if (!ref) {
-      ref = React.createRef<VideoCardHandle>();
+      ref = { current: null } as unknown as React.RefObject<VideoCardHandle>;
       groupRefs.current.set(key, ref);
     }
     return ref;
@@ -376,7 +376,7 @@ function SearchPageClient() {
       return res;
     })();
     const source_names = Array.from(
-      new Set(group.map((g) => g.source_name).filter(Boolean))
+      new Set(group.map((g) => g.source_name).filter(Boolean)),
     ) as string[];
 
     const douban_id = (() => {
@@ -487,7 +487,7 @@ function SearchPageClient() {
   const compareYear = (
     aYear: string,
     bYear: string,
-    order: 'none' | 'asc' | 'desc'
+    order: 'none' | 'asc' | 'desc',
   ) => {
     // 如果是无排序状态，返回0（保持原顺序）
     if (order === 'none') return 0;
@@ -530,7 +530,7 @@ function SearchPageClient() {
 
     // 按出现顺序返回聚合结果
     return keyOrder.map(
-      (key) => [key, map.get(key)!] as [string, SearchResult[]]
+      (key) => [key, map.get(key)!] as [string, SearchResult[]],
     );
   }, [searchResults]);
 
@@ -573,7 +573,7 @@ function SearchPageClient() {
     const actualQuery = currentQueryRef.current;
     // 只考虑与搜索关键字相关的结果来构建过滤选项
     const relevantResults = searchResults.filter((item) =>
-      isRelevantResult(item, actualQuery)
+      isRelevantResult(item, actualQuery),
     );
 
     relevantResults.forEach((item) => {
@@ -678,7 +678,7 @@ function SearchPageClient() {
     const filtered = aggregatedResults.filter(([_, group]) => {
       // 检查聚合组中是否至少有一个结果与搜索关键字相关
       const hasRelevantResult = group.some((item) =>
-        isRelevantResult(item, actualQuery)
+        isRelevantResult(item, actualQuery),
       );
       if (!hasRelevantResult) return false;
 
@@ -812,7 +812,7 @@ function SearchPageClient() {
         // 去重处理，确保没有重复项
         const uniqueHistory = Array.from(new Set(newHistory));
         setSearchHistory(uniqueHistory);
-      }
+      },
     );
 
     // 获取滚动位置的函数 - 专门针对 body 滚动
@@ -978,7 +978,7 @@ function SearchPageClient() {
       if (currentFluidSearch) {
         // 流式搜索
         const es = new EventSource(
-          `/api/search/ws?q=${encodeURIComponent(trimmed)}`
+          `/api/search/ws?q=${encodeURIComponent(trimmed)}`,
         );
         eventSourceRef.current = es;
 
@@ -996,7 +996,7 @@ function SearchPageClient() {
                 '当前查询:',
                 currentQueryRef.current,
                 '响应查询:',
-                trimmed
+                trimmed,
               );
               return;
             }
@@ -1052,7 +1052,7 @@ function SearchPageClient() {
                         sessionStorage.setItem('cachedSearchQuery', trimmed);
                         sessionStorage.setItem(
                           'cachedSearchResults',
-                          JSON.stringify(newResults)
+                          JSON.stringify(newResults),
                         );
                         sessionStorage.setItem(
                           'cachedSearchState',
@@ -1061,14 +1061,14 @@ function SearchPageClient() {
                               payload.completedSources || totalSources,
                             completedSources:
                               payload.completedSources || totalSources,
-                          })
+                          }),
                         );
                         sessionStorage.setItem(
                           'cachedSearchFilters',
                           JSON.stringify({
                             filterAll,
                             filterAgg,
-                          })
+                          }),
                         );
                         sessionStorage.setItem('cachedViewMode', viewMode);
                       } catch (error) {
@@ -1084,7 +1084,7 @@ function SearchPageClient() {
                         sessionStorage.setItem('cachedSearchQuery', trimmed);
                         sessionStorage.setItem(
                           'cachedSearchResults',
-                          JSON.stringify(prev)
+                          JSON.stringify(prev),
                         );
                         sessionStorage.setItem(
                           'cachedSearchState',
@@ -1093,14 +1093,14 @@ function SearchPageClient() {
                               payload.completedSources || totalSources,
                             completedSources:
                               payload.completedSources || totalSources,
-                          })
+                          }),
                         );
                         sessionStorage.setItem(
                           'cachedSearchFilters',
                           JSON.stringify({
                             filterAll,
                             filterAgg,
-                          })
+                          }),
                         );
                         sessionStorage.setItem('cachedViewMode', viewMode);
                       } catch (error) {
@@ -1153,7 +1153,7 @@ function SearchPageClient() {
                 '当前查询:',
                 currentQueryRef.current,
                 '响应查询:',
-                trimmed
+                trimmed,
               );
               return;
             }
@@ -1174,21 +1174,21 @@ function SearchPageClient() {
                 sessionStorage.setItem('cachedSearchQuery', trimmed);
                 sessionStorage.setItem(
                   'cachedSearchResults',
-                  JSON.stringify(results)
+                  JSON.stringify(results),
                 );
                 sessionStorage.setItem(
                   'cachedSearchState',
                   JSON.stringify({
                     totalSources: 1,
                     completedSources: 1,
-                  })
+                  }),
                 );
                 sessionStorage.setItem(
                   'cachedSearchFilters',
                   JSON.stringify({
                     filterAll,
                     filterAgg,
-                  })
+                  }),
                 );
                 sessionStorage.setItem('cachedViewMode', viewMode);
               } catch (error) {
