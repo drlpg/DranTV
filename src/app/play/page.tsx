@@ -546,6 +546,8 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
+    console.log('[updateVideoUrl] 原始 URL:', newUrl);
+
     // 确保所有 M3U8 URL 都通过代理（不仅仅是短剧）
     if (newUrl && !newUrl.includes('/api/proxy/')) {
       // 如果是短剧，使用短剧处理函数
@@ -557,6 +559,8 @@ function PlayPageClient() {
         newUrl = `/api/proxy/m3u8?url=${encodeURIComponent(newUrl)}`;
       }
     }
+
+    console.log('[updateVideoUrl] 最终 URL:', newUrl);
 
     if (newUrl !== videoUrl) {
       setVideoUrl(newUrl);
