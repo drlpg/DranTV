@@ -2513,34 +2513,29 @@ function PlayPageClient() {
         const video = artPlayerRef.current?.video;
         const videoError = video?.error;
 
-        // 记录所有错误，包括空对象
-        const errorInfo = {
-          error: err,
-          errorType: typeof err,
-          errorKeys: err ? Object.keys(err) : [],
-          videoError: videoError
-            ? {
-                code: videoError.code,
-                message: videoError.message,
-              }
-            : null,
-          isShortDrama,
-          currentTime: artPlayerRef.current?.currentTime || 0,
-          videoUrl: videoUrl,
-          episode: currentEpisodeIndex + 1,
-        };
-
-        console.error('播放器错误:', errorInfo);
-
-        if (isShortDrama) {
-          // 短剧播放错误的特殊处理
-          console.error('短剧播放错误详情:', {
-            source: currentSourceRef.current,
-            id: currentIdRef.current,
+        // 只记录有实际错误信息的情况
+        if (videoError) {
+          const errorInfo = {
+            code: videoError.code,
+            message: videoError.message,
+            isShortDrama,
+            currentTime: artPlayerRef.current?.currentTime || 0,
+            videoUrl: videoUrl,
             episode: currentEpisodeIndex + 1,
-            url: videoUrl,
-            hasPlayedTime: (artPlayerRef.current?.currentTime || 0) > 0,
-          });
+          };
+
+          console.error('播放器错误:', errorInfo);
+
+          if (isShortDrama) {
+            // 短剧播放错误的特殊处理
+            console.error('短剧播放错误详情:', {
+              source: currentSourceRef.current,
+              id: currentIdRef.current,
+              episode: currentEpisodeIndex + 1,
+              url: videoUrl,
+              hasPlayedTime: (artPlayerRef.current?.currentTime || 0) > 0,
+            });
+          }
         }
 
         if (artPlayerRef.current.currentTime > 0) {
