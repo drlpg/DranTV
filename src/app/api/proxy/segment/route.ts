@@ -13,7 +13,6 @@ export async function GET(request: Request) {
   }
 
   let response: Response | null = null;
-  let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 
   try {
     const decodedUrl = decodeURIComponent(url);
@@ -87,12 +86,6 @@ export async function GET(request: Request) {
       );
     }
 
-    console.log(
-      '[Segment Proxy] Success:',
-      response.status,
-      response.headers.get('Content-Length'),
-    );
-
     const headers = new Headers();
     headers.set(
       'Content-Type',
@@ -120,74 +113,9 @@ export async function GET(request: Request) {
       headers.set('Content-Range', contentRange);
     }
 
-    // 使用流式传输
-    const stream = new ReadableStream({
-      start(controller) {
-        if (!response?.body) {
-          controller.close();
-          return;
-        }
-
-        reader = response.body.getReader();
-
-        function pump(): void {
-          if (!reader) {
-            return;
-          }
-
-          reader
-            .read()
-            .then(({ done, value }) => {
-              if (done) {
-                controller.close();
-                cleanup();
-                return;
-              }
-
-              controller.enqueue(value);
-              pump();
-            })
-            .catch((error) => {
-              controller.error(error);
-              cleanup();
-            });
-        }
-
-        function cleanup() {
-          if (reader) {
-            try {
-              (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
-            } catch {
-              // ignore
-            }
-            reader = null;
-          }
-        }
-
-        pump();
-      },
-      cancel() {
-        if (reader) {
-          try {
-            (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
-          } catch {
-            // ignore
-          }
-          reader = null;
-        }
-
-        if (response?.body) {
-          try {
-            response.body.cancel();
-          } catch {
-            // ignore
-          }
-        }
-      },
-    });
-
     const status = response.status === 206 ? 206 : 200;
-    return new Response(stream, { status, headers });
+    // 直接传递 response.body，让浏览器处理流式传输
+    return new Response(response.body, { status, headers });
   } catch (error) {
     // 只记录非网络超时的错误
     if (error instanceof Error) {
