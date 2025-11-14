@@ -46,17 +46,17 @@ export function processImageUrl(originalUrl: string): string {
       case 'img3':
         return originalUrl.replace(
           /img\d+\.doubanio\.com/g,
-          'img3.doubanio.com'
+          'img3.doubanio.com',
         );
       case 'cmliussss-cdn-tencent':
         return originalUrl.replace(
           /img\d+\.doubanio\.com/g,
-          'img.doubanio.cmliussss.net'
+          'img.doubanio.cmliussss.net',
         );
       case 'cmliussss-cdn-ali':
         return originalUrl.replace(
           /img\d+\.doubanio\.com/g,
-          'img.doubanio.cmliussss.com'
+          'img.doubanio.cmliussss.com',
         );
       case 'custom':
         return `${proxyUrl}${encodeURIComponent(originalUrl)}`;
@@ -84,7 +84,7 @@ export function processImageUrl(originalUrl: string): string {
  */
 export async function getVideoResolutionFromM3u8(
   m3u8Url: string,
-  timeout = 3000
+  timeout = 3000,
 ): Promise<{
   quality: string; // 如720p、1080p等
   loadSpeed: string; // 自动转换为KB/s或MB/s
@@ -150,14 +150,14 @@ export async function getVideoResolutionFromM3u8(
               width >= 3840
                 ? '4K' // 4K: 3840x2160
                 : width >= 2560
-                ? '2K' // 2K: 2560x1440
-                : width >= 1920
-                ? '1080p' // 1080p: 1920x1080
-                : width >= 1280
-                ? '720p' // 720p: 1280x720
-                : width >= 854
-                ? '480p'
-                : 'SD'; // 480p: 854x480
+                  ? '2K' // 2K: 2560x1440
+                  : width >= 1920
+                    ? '1080p' // 1080p: 1920x1080
+                    : width >= 1280
+                      ? '720p' // 720p: 1280x720
+                      : width >= 854
+                        ? '480p'
+                        : 'SD'; // 480p: 854x480
 
             resolve({
               quality,
@@ -213,8 +213,13 @@ export async function getVideoResolutionFromM3u8(
 
       // 监听hls.js错误
       hls.on(Hls.Events.ERROR, (event: any, data: any) => {
-        console.error('HLS错误:', data);
-        if (data.fatal) {
+        // 只记录致命错误
+        if (data?.fatal) {
+          console.error('HLS致命错误:', {
+            type: data.type,
+            details: data.details,
+            fatal: data.fatal,
+          });
           clearTimeout(timeoutId);
           hls.destroy();
           video.remove();
@@ -232,7 +237,7 @@ export async function getVideoResolutionFromM3u8(
     throw new Error(
       `Error getting video resolution: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
