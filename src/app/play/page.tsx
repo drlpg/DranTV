@@ -2057,13 +2057,26 @@ function PlayPageClient() {
 
             const hls = new Hls(hlsConfig);
 
+            console.log('[HLS] Loading source:', url.substring(0, 100));
             hls.loadSource(url);
             hls.attachMedia(video);
             video.hls = hls;
 
             ensureVideoSource(video, url);
 
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+              console.log('[HLS] Manifest parsed successfully');
+            });
+
             hls.on(Hls.Events.ERROR, function (event: any, data: any) {
+              // 记录所有错误
+              console.log('[HLS] Error event:', {
+                type: data.type,
+                details: data.details,
+                fatal: data.fatal,
+                response: data.response,
+              });
+
               // 只处理致命错误
               if (data?.fatal) {
                 const errorInfo = {
@@ -2074,6 +2087,7 @@ function PlayPageClient() {
                   url: url.includes('/api/proxy/m3u8')
                     ? '代理地址'
                     : '原始地址',
+                  response: data.response,
                 };
                 console.error('HLS致命错误:', errorInfo);
 

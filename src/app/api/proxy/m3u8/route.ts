@@ -125,6 +125,7 @@ export async function GET(request: Request) {
 
   try {
     const decodedUrl = decodeURIComponent(url);
+    console.log('[M3U8 Proxy] Request:', decodedUrl.substring(0, 100));
 
     // 添加30秒超时
     const controller = new AbortController();
@@ -171,13 +172,14 @@ export async function GET(request: Request) {
     }
 
     if (!response.ok) {
-      // 只记录非超时的错误
-      if (response.status !== 504 && response.status !== 403) {
-        console.error('[M3U8 Proxy] Fetch failed:', response.status);
-      }
+      console.error(
+        '[M3U8 Proxy] Fetch failed:',
+        response.status,
+        decodedUrl.substring(0, 100),
+      );
       return NextResponse.json(
-        { error: 'Failed to fetch m3u8' },
-        { status: 500 },
+        { error: `Failed to fetch m3u8: ${response.status}` },
+        { status: response.status },
       );
     }
 
@@ -185,6 +187,13 @@ export async function GET(request: Request) {
     const finalUrl = response.url;
     const m3u8Content = await response.text();
     responseUsed = true;
+
+    console.log(
+      '[M3U8 Proxy] Success:',
+      finalUrl.substring(0, 100),
+      'Content length:',
+      m3u8Content.length,
+    );
 
     const baseUrl = getBaseUrl(finalUrl);
     const modifiedContent = rewriteM3U8Content(m3u8Content, baseUrl, request);
@@ -205,21 +214,11 @@ export async function GET(request: Request) {
     );
     return new Response(modifiedContent, { headers });
   } catch (error) {
-    // 只记录非网络超时的错误
-    if (error instanceof Error) {
-      const errorMsg = error.message.toLowerCase();
-      if (
-        !errorMsg.includes('timeout') &&
-        !errorMsg.includes('connect timeout') &&
-        !errorMsg.includes('fetch failed')
-      ) {
-        console.error('[M3U8 Proxy] Error:', error);
-      }
-    } else {
-      console.error('[M3U8 Proxy] Error:', error);
-    }
+    console.error('[M3U8 Proxy] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch m3u8' },
+      {
+        error: error instanceof Error ? error.message : 'Failed to fetch m3u8',
+      },
       { status: 500 },
     );
   } finally {

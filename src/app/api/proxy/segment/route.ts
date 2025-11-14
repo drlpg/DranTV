@@ -16,6 +16,7 @@ export async function GET(request: Request) {
 
   try {
     const decodedUrl = decodeURIComponent(url);
+    console.log('[Segment Proxy] Request:', decodedUrl.substring(0, 100));
 
     // 透传 Range 请求头
     const fetchHeaders: Record<string, string> = {
@@ -75,17 +76,14 @@ export async function GET(request: Request) {
     }
 
     if (!response.ok && response.status !== 206) {
-      // 只记录非超时的错误
-      if (response.status !== 504 && response.status !== 403) {
-        console.error(
-          '[Segment Proxy] Fetch failed:',
-          response.status,
-          decodedUrl,
-        );
-      }
+      console.error(
+        '[Segment Proxy] Fetch failed:',
+        response.status,
+        decodedUrl.substring(0, 100),
+      );
       return NextResponse.json(
-        { error: 'Failed to fetch segment' },
-        { status: 500 },
+        { error: `Failed to fetch segment: ${response.status}` },
+        { status: response.status },
       );
     }
 
@@ -120,19 +118,7 @@ export async function GET(request: Request) {
     // 直接传递 response.body，让浏览器处理流式传输
     return new Response(response.body, { status, headers });
   } catch (error) {
-    // 只记录非网络超时的错误
-    if (error instanceof Error) {
-      const errorMsg = error.message.toLowerCase();
-      if (
-        !errorMsg.includes('timeout') &&
-        !errorMsg.includes('connect timeout') &&
-        !errorMsg.includes('fetch failed')
-      ) {
-        console.error('[Segment Proxy] Error:', error);
-      }
-    } else {
-      console.error('[Segment Proxy] Error:', error);
-    }
+    console.error('[Segment Proxy] Error:', error);
 
     if (response?.body) {
       try {
@@ -143,7 +129,10 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(
-      { error: 'Failed to fetch segment' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch segment',
+      },
       { status: 500 },
     );
   }
