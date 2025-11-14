@@ -49,24 +49,20 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 从构建器中复制 standalone 输出到根目录
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# 从构建器中复制 public 和 .next/static 到正确位置
+# 从构建器复制所有必要文件
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# 从构建器中复制 scripts 目录
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
-# 从构建器中复制 WebSocket 和启动脚本
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-COPY --from=builder --chown=nextjs:nodejs /app/docker-start.js ./docker-start.js
-# 从构建器中复制 package.json 和 pnpm-lock.yaml
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 
-# 安装必要的WebSocket依赖
+# 安装生产依赖
 USER root
 RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    pnpm install --prod --no-optional ws && \
+    pnpm install --prod --no-optional && \
     pnpm store prune
 
 # 创建健康检查脚本
@@ -119,5 +115,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001
 
-# 使用 Docker 专用启动脚本
-CMD ["node", "docker-start.js"]
+# 使用标准启动脚本
+CMD ["node", "production-final.js"]

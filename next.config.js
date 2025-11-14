@@ -4,7 +4,8 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
 const nextConfig = {
-  output: 'standalone',
+  // 移除 standalone 模式，使用标准构建
+  // output: 'standalone',
   eslint: {
     dirs: ['src'],
     ignoreDuringBuilds: true, // 始终在构建时忽略 ESLint 错误
