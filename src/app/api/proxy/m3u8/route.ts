@@ -189,10 +189,6 @@ export async function GET(request: Request) {
     const baseUrl = getBaseUrl(finalUrl);
     const modifiedContent = rewriteM3U8Content(m3u8Content, baseUrl, request);
 
-    // 调试：输出前几行重写后的内容
-    const lines = modifiedContent.split('\n').slice(0, 5);
-    console.log('[M3U8 Proxy] 重写后的前5行:', lines);
-
     const headers = new Headers();
     // 始终使用正确的 M3U8 Content-Type
     headers.set('Content-Type', 'application/vnd.apple.mpegurl');

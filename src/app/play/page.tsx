@@ -2089,9 +2089,6 @@ function PlayPageClient() {
                     hls.destroy();
                     break;
                 }
-              } else {
-                // 非致命错误，记录但继续播放
-                console.warn('HLS非致命错误:', errorInfo);
               }
             });
           },
