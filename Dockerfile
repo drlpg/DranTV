@@ -60,7 +60,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
+COPY --from=builder --chown=nextjs:nodejs /app/docker-production.js ./docker-production.js
 
 # 创建健康检查脚本
 RUN echo '#!/usr/bin/env node\n\
@@ -112,5 +112,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001
 
-# 使用标准启动脚本
-CMD ["node", "production-final.js"]
+# 使用 next start 启动脚本
+CMD ["node", "docker-production.js"]
