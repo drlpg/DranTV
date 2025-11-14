@@ -94,6 +94,10 @@
       "eslint --max-warnings=0",
       "prettier -w"
     ],
+    "scripts/**/*.{js,ts}": [
+      "eslint --max-warnings=0",
+      "prettier -w"
+    ],
     "*.{js,ts}": [
       "eslint --max-warnings=0",
       "prettier -w"
