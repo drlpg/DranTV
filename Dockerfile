@@ -52,18 +52,12 @@ ENV DOCKER_ENV=true
 # 从构建器复制所有必要文件
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
-COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
-
-# 安装生产依赖
-USER root
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    pnpm install --prod --no-optional && \
-    pnpm store prune
 
 # 创建健康检查脚本
 RUN echo '#!/usr/bin/env node\n\
