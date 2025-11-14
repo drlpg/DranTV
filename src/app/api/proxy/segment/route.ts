@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         headers: fetchHeaders,
         cache: 'no-store',
         signal: controller.signal,
-        // @ts-ignore - undici specific options
+        // @ts-expect-error - undici specific options
         connectTimeout: 30000, // 30秒连接超时
         bodyTimeout: 60000, // 60秒响应体超时
       });
@@ -63,7 +63,10 @@ export async function GET(request: Request) {
           errorMsg.includes('fetch failed')
         ) {
           // 不记录日志，直接返回504
-          return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
+          return NextResponse.json(
+            { error: 'Request timeout' },
+            { status: 504 },
+          );
         }
       }
       throw error;
@@ -71,14 +74,24 @@ export async function GET(request: Request) {
 
     if (!response.ok && response.status !== 206) {
       // 只记录非超时的错误
-      if (response.status !== 504) {
-        console.error('[Segment Proxy] Fetch failed:', response.status);
+      if (response.status !== 504 && response.status !== 403) {
+        console.error(
+          '[Segment Proxy] Fetch failed:',
+          response.status,
+          decodedUrl,
+        );
       }
       return NextResponse.json(
         { error: 'Failed to fetch segment' },
         { status: 500 },
       );
     }
+
+    console.log(
+      '[Segment Proxy] Success:',
+      response.status,
+      response.headers.get('Content-Length'),
+    );
 
     const headers = new Headers();
     headers.set(
