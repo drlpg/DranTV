@@ -97,18 +97,9 @@ export async function getVideoResolutionFromM3u8(
       video.muted = true;
       video.preload = 'metadata';
 
-      // 测量网络延迟（ping时间） - 使用m3u8 URL而不是ts文件
+      // 测量网络延迟（ping时间）- 通过实际加载来测量
       const pingStart = performance.now();
       let pingTime = 0;
-
-      // 测量ping时间（使用m3u8 URL）
-      fetch(m3u8Url, { method: 'HEAD', mode: 'no-cors' })
-        .then(() => {
-          pingTime = performance.now() - pingStart;
-        })
-        .catch(() => {
-          pingTime = performance.now() - pingStart; // 记录到失败为止的时间
-        });
 
       // 固定使用hls.js加载
       const hls = new Hls();
@@ -174,6 +165,11 @@ export async function getVideoResolutionFromM3u8(
           }
         }
       };
+
+      // 监听清单加载完成，计算 ping 时间
+      hls.on(Hls.Events.MANIFEST_LOADED, () => {
+        pingTime = performance.now() - pingStart;
+      });
 
       // 监听片段加载开始
       hls.on(Hls.Events.FRAG_LOADING, () => {
