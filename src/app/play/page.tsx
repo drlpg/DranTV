@@ -306,9 +306,14 @@ function PlayPageClient() {
             }
 
             // 始终测试第一集（索引0），确保测速的是用户最可能播放的集数
-            const episodeUrl = source.episodes[0];
+            let episodeUrl = source.episodes[0];
             if (!episodeUrl) {
               return { source, testResult: null, sourceKey };
+            }
+
+            // 如果是相对路径的代理 URL，转换为完整 URL
+            if (episodeUrl.startsWith('/api/proxy/')) {
+              episodeUrl = `${window.location.origin}${episodeUrl}`;
             }
 
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
