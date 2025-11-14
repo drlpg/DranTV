@@ -5,6 +5,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
+  // 在 Docker 环境中暂时跳过 middleware
+  if (process.env.DOCKER_ENV === 'true') {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
   // 跳过不需要认证的路径
