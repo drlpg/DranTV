@@ -21,7 +21,7 @@ import {
   subscribeToDataUpdates,
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
-import { processImageUrl } from '@/lib/utils';
+import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import { BackButton } from '@/components/BackButton';
 import EpisodeSelector from '@/components/EpisodeSelector';
@@ -324,12 +324,11 @@ function PlayPageClient() {
               episodeUrl = `${window.location.origin}${episodeUrl}`;
             }
 
-            // 暂时禁用测速，直接返回 null
-            // const testResult = await getVideoResolutionFromM3u8(episodeUrl);
+            const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
             return {
               source,
-              testResult: null, // 禁用测速
+              testResult,
               sourceKey,
             };
           } catch (error) {
@@ -1981,6 +1980,8 @@ function PlayPageClient() {
         currentIdRef.current,
         currentEpisodeIndex,
       );
+
+      console.log('[播放器初始化] videoUrl:', videoUrl);
 
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
