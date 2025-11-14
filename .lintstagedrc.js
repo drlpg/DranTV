@@ -5,9 +5,21 @@ module.exports = {
   // Scripts
   'scripts/**/*.{js,ts}': ['eslint --max-warnings=0', 'prettier -w'],
 
-  // Root level files (excluding public directory)
+  // Root level config files (only prettier, no eslint)
+  '.*.{js,ts}': ['prettier -w'],
+
+  // Root level files (excluding public directory and dot files)
   '*.{js,ts}': (filenames) => {
-    const filtered = filenames.filter((file) => !file.startsWith('public/'));
+    const path = require('path');
+    const filtered = filenames.filter((file) => {
+      const basename = path.basename(file);
+      // 排除 public 目录和以点开头的文件
+      return (
+        !file.includes('public/') &&
+        !file.includes('public\\') &&
+        !basename.startsWith('.')
+      );
+    });
     if (filtered.length === 0) return [];
     return [
       `eslint --max-warnings=0 ${filtered.join(' ')}`,
