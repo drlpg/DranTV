@@ -311,6 +311,14 @@ function PlayPageClient() {
               return { source, testResult: null, sourceKey };
             }
 
+            // 如果不是代理 URL，添加代理
+            if (!episodeUrl.includes('/api/proxy/')) {
+              // 如果是 M3U8，使用代理
+              if (episodeUrl.includes('.m3u8') || episodeUrl.includes('m3u8')) {
+                episodeUrl = `/api/proxy/m3u8?url=${encodeURIComponent(episodeUrl)}`;
+              }
+            }
+
             // 如果是相对路径的代理 URL，转换为完整 URL
             if (episodeUrl.startsWith('/api/proxy/')) {
               episodeUrl = `${window.location.origin}${episodeUrl}`;
