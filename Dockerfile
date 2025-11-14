@@ -49,23 +49,19 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 从构建器中复制 standalone 输出（包括 server.js）
+# 从构建器中复制 standalone 输出到根目录
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# 确保 .next 目录存在
-RUN mkdir -p .next
-# 从构建器中复制 scripts 目录
-COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
-# 从构建器中复制启动脚本和WebSocket相关文件
-COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
-COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
-# 从构建器中复制 public 和 .next/static 目录
+# 从构建器中复制 public 和 .next/static 到正确位置
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# 从构建器中复制 package.json 和 pnpm-lock.yaml，用于安装额外依赖
+# 从构建器中复制 scripts 目录
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+# 从构建器中复制 WebSocket 和启动脚本
+COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
+COPY --from=builder --chown=nextjs:nodejs /app/docker-start.js ./docker-start.js
+# 从构建器中复制 package.json 和 pnpm-lock.yaml
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
-# 复制 tsconfig.json 以确保路径解析正确
-COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 
 # 安装必要的WebSocket依赖
 USER root
@@ -123,5 +119,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # 设置WebSocket端口环境变量
 ENV WS_PORT=3001
 
-# 使用分离端口模式
-CMD ["node", "production-final.js"]
+# 使用 Docker 专用启动脚本
+CMD ["node", "docker-start.js"]
