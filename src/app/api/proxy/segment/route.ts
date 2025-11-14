@@ -37,34 +37,55 @@ export async function GET(request: Request) {
       // ignore
     }
 
-    response = await fetch(decodedUrl, {
-      headers: fetchHeaders,
-      cache: 'no-store',
-    });
+    // 添加30秒超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      response = await fetch(decodedUrl, {
+        headers: fetchHeaders,
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      // 静默处理超时错误，避免日志噪音
+      if (
+        error instanceof Error &&
+        (error.name === 'AbortError' || error.message.includes('timeout'))
+      ) {
+        return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
+      }
+      throw error;
+    }
 
     if (!response.ok && response.status !== 206) {
-      console.error('[Segment Proxy] Fetch failed:', response.status);
+      // 只记录非超时的错误
+      if (response.status !== 504) {
+        console.error('[Segment Proxy] Fetch failed:', response.status);
+      }
       return NextResponse.json(
         { error: 'Failed to fetch segment' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const headers = new Headers();
     headers.set(
       'Content-Type',
-      response.headers.get('Content-Type') || 'video/mp2t'
+      response.headers.get('Content-Type') || 'video/mp2t',
     );
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     headers.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Range, Origin, Accept'
+      'Content-Type, Range, Origin, Accept',
     );
     headers.set('Accept-Ranges', 'bytes');
     headers.set(
       'Access-Control-Expose-Headers',
-      'Content-Length, Content-Range, Accept-Ranges'
+      'Content-Length, Content-Range, Accept-Ranges',
     );
 
     const contentLength = response.headers.get('Content-Length');
@@ -173,7 +194,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { error: 'Failed to fetch segment' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -184,7 +205,7 @@ export async function OPTIONS() {
   headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   headers.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Range, Origin, Accept'
+    'Content-Type, Range, Origin, Accept',
   );
   return new Response(null, { status: 204, headers });
 }

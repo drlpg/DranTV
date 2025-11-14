@@ -6,7 +6,7 @@ import { refreshLiveChannels } from '@/lib/live';
 
 // 解析M3U格式的直播源列表
 function parseM3U(
-  content: string
+  content: string,
 ): Array<{ name: string; key: string; url: string; epg?: string }> {
   const sources: Array<{
     name: string;
@@ -69,7 +69,7 @@ function parseM3U(
 
 // 解析TXT格式的直播源列表
 function parseTXT(
-  content: string
+  content: string,
 ): Array<{ name: string; key: string; url: string; epg?: string }> {
   const sources: Array<{
     name: string;
@@ -157,9 +157,9 @@ export async function POST(request: NextRequest) {
     // 拉取配置内容
     console.log(`[Live Import] 开始从URL拉取直播源配置: ${url}`);
 
-    // 添加30秒超时
+    // 添加60秒超时（增加超时时间以适应慢速网络）
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     let response;
     try {
@@ -179,7 +179,11 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('请求超时，请检查订阅链接是否可访问');
+        throw new Error('请求超时（60秒），请检查订阅链接是否可访问');
+      }
+      // 静默处理网络错误，避免日志噪音
+      if (error instanceof Error && error.message.includes('fetch failed')) {
+        throw new Error('网络连接失败，请检查订阅链接');
       }
       throw error;
     }
@@ -225,7 +229,7 @@ export async function POST(request: NextRequest) {
             epg: value.epg,
             disabled: value.disabled || false,
             from: 'subscription' as const,
-          })
+          }),
         );
       } else if (jsonData.sources) {
         // 包含sources字段
@@ -265,7 +269,7 @@ export async function POST(request: NextRequest) {
         // 提取EPG URL（如果有）
         let epgUrl = '';
         const epgMatch = configContent.match(
-          /#EXTM3U[^\n]*(?:x-tvg-url|url-tvg)="([^"]+)"/
+          /#EXTM3U[^\n]*(?:x-tvg-url|url-tvg)="([^"]+)"/,
         );
         if (epgMatch) {
           epgUrl = epgMatch[1];
@@ -297,7 +301,7 @@ export async function POST(request: NextRequest) {
     if (sources.length === 0) {
       return NextResponse.json(
         { error: '未能从配置中解析出直播源数据' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -312,7 +316,7 @@ export async function POST(request: NextRequest) {
     if (newSources.length === 0) {
       return NextResponse.json(
         { error: '所有直播源已存在，没有新增内容' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -341,19 +345,19 @@ export async function POST(request: NextRequest) {
             // 重新获取配置并更新
             const latestConfig = await getAdminConfig();
             const liveSource = latestConfig.LiveConfig?.find(
-              (s) => s.key === source.key
+              (s) => s.key === source.key,
             );
             if (liveSource) {
               liveSource.channelNumber = channelCount;
               await saveAdminConfig(latestConfig);
               console.log(
-                `后台更新频道数成功: ${source.name} (${channelCount})`
+                `后台更新频道数成功: ${source.name} (${channelCount})`,
               );
             }
           } catch (error) {
             console.warn(`后台更新频道数失败: ${source.name}`, error);
           }
-        })
+        }),
       ).catch(() => {
         // 静默处理错误
       });
@@ -373,7 +377,7 @@ export async function POST(request: NextRequest) {
       {
         error: error instanceof Error ? error.message : '导入失败',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -38,7 +38,7 @@ export function clearAllCachedLiveChannels() {
 }
 
 export async function getCachedLiveChannels(
-  key: string
+  key: string,
 ): Promise<LiveChannels | null> {
   const startTime = Date.now();
   console.log('[Live] ========== 开始获取频道缓存 ==========');
@@ -58,7 +58,7 @@ export async function getCachedLiveChannels(
       throw new Error(
         `无法获取配置: ${
           configError instanceof Error ? configError.message : '未知错误'
-        }`
+        }`,
       );
     }
 
@@ -68,7 +68,7 @@ export async function getCachedLiveChannels(
       console.error('[Live] 直播源不存在:', key);
       console.error(
         '[Live] 可用的直播源:',
-        config.LiveConfig?.map((l) => l.key).join(', ')
+        config.LiveConfig?.map((l) => l.key).join(', '),
       );
       throw new Error(`直播源 "${key}" 不存在`);
     }
@@ -83,7 +83,7 @@ export async function getCachedLiveChannels(
         console.log(
           '[Live] 获取频道缓存完成（空），总耗时:',
           Date.now() - startTime,
-          'ms'
+          'ms',
         );
         console.log('[Live] ========== 获取频道缓存结束 ==========');
         return null;
@@ -92,7 +92,7 @@ export async function getCachedLiveChannels(
       console.error('[Live] 刷新直播源失败:', error);
       console.error(
         '[Live] 错误堆栈:',
-        error instanceof Error ? error.stack : 'N/A'
+        error instanceof Error ? error.stack : 'N/A',
       );
       const errorMsg = error instanceof Error ? error.message : '未知错误';
       throw new Error(`刷新直播源失败: ${errorMsg}`);
@@ -112,7 +112,7 @@ export async function getCachedLiveChannels(
       const parsedChannels = JSON.parse(savedChannels);
       console.log(
         '[Live] 解析保存的频道数据成功，频道数:',
-        parsedChannels.length
+        parsedChannels.length,
       );
       // 使用保存的频道列表替换缓存中的频道列表
       if (cachedLiveChannels[key]) {
@@ -135,7 +135,7 @@ export async function getCachedLiveChannels(
   const result = cachedLiveChannels[key] || null;
   console.log(
     '[Live] 返回频道数据:',
-    result ? `${result.channels.length}个频道` : 'null'
+    result ? `${result.channels.length}个频道` : 'null',
   );
   console.log('[Live] 获取频道缓存完成，总耗时:', Date.now() - startTime, 'ms');
   console.log('[Live] ========== 获取频道缓存结束 ==========');
@@ -153,18 +153,24 @@ export async function refreshLiveChannels(liveInfo: {
   disabled?: boolean;
 }): Promise<number> {
   const startTime = Date.now();
-  console.log('[Live Refresh] ========== 开始刷新直播频道 ==========');
-  console.log('[Live Refresh] 时间:', new Date().toISOString());
-  console.log(
-    '[Live Refresh] 直播源:',
-    liveInfo.name,
-    '(' + liveInfo.key + ')'
-  );
-  console.log('[Live Refresh] M3U URL:', liveInfo.url);
 
   // 不删除现有缓存，如果刷新失败可以继续使用旧数据
   const hasCache = !!cachedLiveChannels[liveInfo.key];
-  console.log('[Live Refresh] 是否有缓存:', hasCache);
+
+  // 只在没有缓存或调试模式下输出详细日志
+  const verbose = !hasCache || process.env.DEBUG === 'true';
+
+  if (verbose) {
+    console.log('[Live Refresh] ========== 开始刷新直播频道 ==========');
+    console.log('[Live Refresh] 时间:', new Date().toISOString());
+    console.log(
+      '[Live Refresh] 直播源:',
+      liveInfo.name,
+      '(' + liveInfo.key + ')',
+    );
+    console.log('[Live Refresh] M3U URL:', liveInfo.url);
+    console.log('[Live Refresh] 是否有缓存:', hasCache);
+  }
 
   const ua = liveInfo.ua || defaultUA;
   console.log('[Live Refresh] User-Agent:', ua);
@@ -193,30 +199,35 @@ export async function refreshLiveChannels(liveInfo: {
       console.log('[Live Refresh] 完整URL:', fullUrl);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 增加到60秒
 
       try {
-        console.log('[Live Refresh] 开始请求M3U文件...');
+        if (verbose) console.log('[Live Refresh] 开始请求M3U文件...');
         const response = await fetch(fullUrl, {
           headers: { 'User-Agent': ua },
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        console.log(
-          '[Live Refresh] 响应状态:',
-          response.status,
-          response.statusText
-        );
+        if (verbose) {
+          console.log(
+            '[Live Refresh] 响应状态:',
+            response.status,
+            response.statusText,
+          );
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         data = await response.text();
-        console.log('[Live Refresh] M3U内容长度:', data.length);
+        if (verbose) console.log('[Live Refresh] M3U内容长度:', data.length);
       } catch (fetchError) {
         clearTimeout(timeoutId);
-        console.error('[Live Refresh] 请求失败:', fetchError);
+        // 只在没有缓存时记录错误
+        if (!hasCache) {
+          console.error('[Live Refresh] 请求失败:', fetchError);
+        }
         if (hasCache) {
           console.warn('[Live Refresh] 使用缓存数据');
           return cachedLiveChannels[liveInfo.key].channelNumber;
@@ -226,32 +237,37 @@ export async function refreshLiveChannels(liveInfo: {
     }
     // 3. 网络URL
     else {
-      console.log('[Live Refresh] 使用网络URL');
+      if (verbose) console.log('[Live Refresh] 使用网络URL');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 增加到60秒
 
       let response;
       try {
-        console.log('[Live Refresh] 开始请求M3U文件...');
+        if (verbose) console.log('[Live Refresh] 开始请求M3U文件...');
         response = await fetch(liveInfo.url, {
           headers: {
             'User-Agent': ua,
           },
           signal: controller.signal,
         });
-        console.log(
-          '[Live Refresh] 响应状态:',
-          response.status,
-          response.statusText
-        );
+        if (verbose) {
+          console.log(
+            '[Live Refresh] 响应状态:',
+            response.status,
+            response.statusText,
+          );
+        }
       } catch (fetchError) {
         clearTimeout(timeoutId);
-        console.error('[Live Refresh] 请求失败:', fetchError);
+        // 只在没有缓存时记录错误
+        if (!hasCache) {
+          console.error('[Live Refresh] 请求失败:', fetchError);
+        }
         const errorMsg =
           fetchError instanceof Error ? fetchError.message : '网络请求失败';
 
         if (hasCache) {
-          console.warn('[Live Refresh] 使用缓存数据');
+          if (verbose) console.warn('[Live Refresh] 使用缓存数据');
           return cachedLiveChannels[liveInfo.key].channelNumber;
         }
 
@@ -262,10 +278,12 @@ export async function refreshLiveChannels(liveInfo: {
 
       if (!response.ok) {
         const errorMsg = `HTTP ${response.status}: ${response.statusText}`;
-        console.error('[Live Refresh] 响应错误:', errorMsg);
+        if (!hasCache) {
+          console.error('[Live Refresh] 响应错误:', errorMsg);
+        }
 
         if (hasCache) {
-          console.warn('[Live Refresh] 使用缓存数据');
+          if (verbose) console.warn('[Live Refresh] 使用缓存数据');
           return cachedLiveChannels[liveInfo.key].channelNumber;
         }
 
@@ -273,10 +291,10 @@ export async function refreshLiveChannels(liveInfo: {
       }
 
       data = await response.text();
-      console.log('[Live Refresh] M3U内容长度:', data.length);
+      if (verbose) console.log('[Live Refresh] M3U内容长度:', data.length);
     }
 
-    console.log('[Live Refresh] 开始解析M3U内容...');
+    if (verbose) console.log('[Live Refresh] 开始解析M3U内容...');
     const result = parseM3U(liveInfo.key, data);
     console.log('[Live Refresh] M3U解析完成，频道数:', result.channels.length);
 
@@ -290,7 +308,9 @@ export async function refreshLiveChannels(liveInfo: {
       parseEpg(
         epgUrl,
         liveInfo.ua || defaultUA,
-        result.channels.map((channel) => channel.tvgId).filter((tvgId) => tvgId)
+        result.channels
+          .map((channel) => channel.tvgId)
+          .filter((tvgId) => tvgId),
       ).catch(() => {
         // 静默处理EPG解析失败
         console.warn('[Live Refresh] EPG解析失败（静默处理）');
@@ -305,36 +325,37 @@ export async function refreshLiveChannels(liveInfo: {
       epgUrl: epgUrl,
       epgs: epgs,
     };
-    console.log('[Live Refresh] 频道数据已缓存');
-
-    console.log(
-      '[Live Refresh] 刷新完成，总耗时:',
-      Date.now() - startTime,
-      'ms'
-    );
-    console.log('[Live Refresh] ========== 刷新直播频道结束 ==========');
+    if (verbose) {
+      console.log('[Live Refresh] 频道数据已缓存');
+      console.log(
+        '[Live Refresh] 刷新完成，总耗时:',
+        Date.now() - startTime,
+        'ms',
+      );
+      console.log('[Live Refresh] ========== 刷新直播频道结束 ==========');
+    }
     return result.channels.length;
   } catch (error) {
-    console.error('[Live Refresh] ========== 发生错误 ==========');
-    console.error('[Live Refresh] 刷新失败:', error);
-    console.error(
-      '[Live Refresh] 错误堆栈:',
-      error instanceof Error ? error.stack : 'N/A'
-    );
-    console.error('[Live Refresh] 总耗时:', Date.now() - startTime, 'ms');
-
-    // 如果有缓存，返回缓存的频道数，不抛出错误
+    // 如果有缓存，静默返回缓存数据
     if (hasCache && cachedLiveChannels[liveInfo.key]) {
-      console.warn('[Live Refresh] 使用缓存数据');
-      console.warn(
-        '[Live Refresh] ========== 刷新直播频道结束（使用缓存） =========='
-      );
+      if (verbose) {
+        console.warn('[Live Refresh] 刷新失败，使用缓存数据');
+      }
       return cachedLiveChannels[liveInfo.key].channelNumber;
     }
 
-    // 没有缓存时才抛出错误
+    // 没有缓存时才记录详细错误
+    console.error('[Live Refresh] ========== 发生错误 ==========');
+    console.error('[Live Refresh] 刷新失败:', error);
+    if (verbose) {
+      console.error(
+        '[Live Refresh] 错误堆栈:',
+        error instanceof Error ? error.stack : 'N/A',
+      );
+    }
+    console.error('[Live Refresh] 总耗时:', Date.now() - startTime, 'ms');
     console.error(
-      '[Live Refresh] ========== 刷新直播频道结束（失败） =========='
+      '[Live Refresh] ========== 刷新直播频道结束（失败） ==========',
     );
     throw error;
   }
@@ -343,7 +364,7 @@ export async function refreshLiveChannels(liveInfo: {
 async function parseEpg(
   epgUrl: string,
   ua: string,
-  tvgIds: string[]
+  tvgIds: string[],
 ): Promise<{
   [key: string]: {
     start: string;
@@ -426,7 +447,7 @@ async function parseEpg(
         ) {
           // 处理带有语言属性的title标签，如 <title lang="zh">远方的家2025-60</title>
           const titleMatch = trimmedLine.match(
-            /<title(?:\s+[^>]*)?>(.*?)<\/title>/
+            /<title(?:\s+[^>]*)?>(.*?)<\/title>/,
           );
           if (titleMatch && currentProgram) {
             currentProgram.title = titleMatch[1];
@@ -462,7 +483,7 @@ async function parseEpg(
  */
 function parseM3U(
   sourceKey: string,
-  m3uContent: string
+  m3uContent: string,
 ): {
   tvgUrl: string;
   channels: {
@@ -638,7 +659,7 @@ export function getBaseUrl(m3u8Url: string) {
     if (url.pathname.endsWith('.m3u8')) {
       url.pathname = url.pathname.substring(
         0,
-        url.pathname.lastIndexOf('/') + 1
+        url.pathname.lastIndexOf('/') + 1,
       );
     } else if (!url.pathname.endsWith('/')) {
       url.pathname += '/';

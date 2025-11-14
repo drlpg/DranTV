@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -56,10 +56,17 @@ async function refreshAllLiveChannels() {
         const nums = await refreshLiveChannels(liveInfo);
         liveInfo.channelNumber = nums;
       } catch (error) {
-        console.error(
-          `刷新直播源失败 [${liveInfo.name || liveInfo.key}]:`,
-          error
-        );
+        // 只记录非网络超时的错误，减少日志噪音
+        if (
+          !(error instanceof Error) ||
+          (!error.message.includes('fetch failed') &&
+            !error.message.includes('Connect Timeout'))
+        ) {
+          console.error(
+            `刷新直播源失败 [${liveInfo.name || liveInfo.key}]:`,
+            error,
+          );
+        }
         liveInfo.channelNumber = 0;
       }
     });
@@ -193,7 +200,7 @@ async function refreshSourceSubscription() {
               detail: (value as any).detail,
               disabled: (value as any).disabled || false,
               from: 'config' as const,
-            })
+            }),
           );
         } else if (jsonData.sources) {
           sources = jsonData.sources.map((item: any, index: number) => ({
@@ -348,7 +355,7 @@ async function refreshLiveSubscription() {
               epg: (value as any).epg,
               disabled: (value as any).disabled || false,
               from: 'config' as const,
-            })
+            }),
           );
         } else if (jsonData.sources) {
           sources = jsonData.sources.map((item: any, index: number) => ({
@@ -494,7 +501,7 @@ async function refreshRecordAndFavorites() {
     const getDetail = async (
       source: string,
       id: string,
-      fallbackTitle: string
+      fallbackTitle: string,
     ): Promise<SearchResult | null> => {
       const key = `${source}+${id}`;
       let promise = detailCache.get(key);
@@ -556,7 +563,7 @@ async function refreshRecordAndFavorites() {
                 search_title: record.search_title,
               });
               console.log(
-                `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`
+                `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`,
               );
             }
 
@@ -576,7 +583,7 @@ async function refreshRecordAndFavorites() {
       try {
         let favorites = await db.getAllFavorites(user);
         favorites = Object.fromEntries(
-          Object.entries(favorites).filter(([_, fav]) => fav.origin !== 'live')
+          Object.entries(favorites).filter(([_, fav]) => fav.origin !== 'live'),
         );
         const totalFavorites = Object.keys(favorites).length;
         let processedFavorites = 0;
@@ -607,7 +614,7 @@ async function refreshRecordAndFavorites() {
                 search_title: fav.search_title,
               });
               console.log(
-                `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`
+                `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`,
               );
             }
 
