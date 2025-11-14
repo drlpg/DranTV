@@ -558,6 +558,11 @@ function PlayPageClient() {
       }
     }
 
+    // 如果是相对路径，转换为完整 URL
+    if (newUrl && newUrl.startsWith('/')) {
+      newUrl = `${window.location.origin}${newUrl}`;
+    }
+
     if (newUrl !== videoUrl) {
       setVideoUrl(newUrl);
     }
