@@ -2509,11 +2509,21 @@ function PlayPageClient() {
       artPlayerRef.current.on('error', (err: any) => {
         const isShortDrama = currentSourceRef.current === 'shortdrama';
 
+        // 获取视频元素的错误信息
+        const video = artPlayerRef.current?.video;
+        const videoError = video?.error;
+
         // 记录所有错误，包括空对象
         const errorInfo = {
           error: err,
           errorType: typeof err,
           errorKeys: err ? Object.keys(err) : [],
+          videoError: videoError
+            ? {
+                code: videoError.code,
+                message: videoError.message,
+              }
+            : null,
           isShortDrama,
           currentTime: artPlayerRef.current?.currentTime || 0,
           videoUrl: videoUrl,
