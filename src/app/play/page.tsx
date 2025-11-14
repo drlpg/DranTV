@@ -538,13 +538,16 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
-    // 如果是短剧且URL还没有经过代理处理，再次处理
-    if (
-      detailData.source === 'shortdrama' &&
-      newUrl &&
-      !newUrl.includes('/api/proxy/')
-    ) {
-      newUrl = processShortDramaUrl(newUrl);
+    // 确保所有 M3U8 URL 都通过代理（不仅仅是短剧）
+    if (newUrl && !newUrl.includes('/api/proxy/')) {
+      // 如果是短剧，使用短剧处理函数
+      if (detailData.source === 'shortdrama') {
+        newUrl = processShortDramaUrl(newUrl);
+      }
+      // 如果是 M3U8 格式，使用 M3U8 代理
+      else if (newUrl.includes('.m3u8') || newUrl.includes('m3u8')) {
+        newUrl = `/api/proxy/m3u8?url=${encodeURIComponent(newUrl)}`;
+      }
     }
 
     if (newUrl !== videoUrl) {
