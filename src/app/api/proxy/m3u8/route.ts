@@ -30,7 +30,7 @@ function resolveUrl(baseUrl: string, relativeUrl: string): string {
 function rewriteM3U8Content(
   content: string,
   baseUrl: string,
-  req: Request
+  req: Request,
 ): string {
   const referer = req.headers.get('referer');
   let protocol = 'https';
@@ -56,7 +56,7 @@ function rewriteM3U8Content(
     if (line && !line.startsWith('#')) {
       const resolvedUrl = resolveUrl(baseUrl, line);
       const proxyUrl = `${proxyBase}/segment?url=${encodeURIComponent(
-        resolvedUrl
+        resolvedUrl,
       )}`;
       rewrittenLines.push(proxyUrl);
       continue;
@@ -69,7 +69,7 @@ function rewriteM3U8Content(
         const originalUri = uriMatch[1];
         const resolvedUrl = resolveUrl(baseUrl, originalUri);
         const proxyUrl = `${proxyBase}/segment?url=${encodeURIComponent(
-          resolvedUrl
+          resolvedUrl,
         )}`;
         line = line.replace(uriMatch[0], `URI="${proxyUrl}"`);
       }
@@ -82,7 +82,7 @@ function rewriteM3U8Content(
         const originalUri = uriMatch[1];
         const resolvedUrl = resolveUrl(baseUrl, originalUri);
         const proxyUrl = `${proxyBase}/key?url=${encodeURIComponent(
-          resolvedUrl
+          resolvedUrl,
         )}`;
         line = line.replace(uriMatch[0], `URI="${proxyUrl}"`);
       }
@@ -97,7 +97,7 @@ function rewriteM3U8Content(
         if (nextLine && !nextLine.startsWith('#')) {
           const resolvedUrl = resolveUrl(baseUrl, nextLine);
           const proxyUrl = `${proxyBase}/m3u8?url=${encodeURIComponent(
-            resolvedUrl
+            resolvedUrl,
           )}`;
           rewrittenLines.push(proxyUrl);
         } else {
@@ -126,22 +126,59 @@ export async function GET(request: Request) {
   try {
     const decodedUrl = decodeURIComponent(url);
 
-    response = await fetch(decodedUrl, {
-      cache: 'no-cache',
-      redirect: 'follow',
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-        Referer: new URL(decodedUrl).origin,
-        Origin: new URL(decodedUrl).origin,
-      },
-    });
+    // 添加30秒超时
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const urlObj = new URL(decodedUrl);
+      response = await fetch(decodedUrl, {
+        cache: 'no-cache',
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          Accept: '*/*',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'identity',
+          Referer: urlObj.origin + '/',
+          Origin: urlObj.origin,
+          Connection: 'keep-alive',
+        },
+        // @ts-expect-error - undici specific options
+        connectTimeout: 30000,
+        bodyTimeout: 60000,
+      });
+      clearTimeout(timeoutId);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      // 静默处理超时和连接错误
+      if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        if (
+          error.name === 'AbortError' ||
+          errorMsg.includes('timeout') ||
+          errorMsg.includes('connect timeout') ||
+          errorMsg.includes('fetch failed')
+        ) {
+          return NextResponse.json(
+            { error: 'Request timeout' },
+            { status: 504 },
+          );
+        }
+      }
+      throw error;
+    }
 
     if (!response.ok) {
-      console.error('[M3U8 Proxy] Fetch failed:', response.status);
+      // 只记录非超时的错误
+      if (response.status !== 504 && response.status !== 403) {
+        console.error('[M3U8 Proxy] Fetch failed:', response.status);
+      }
       return NextResponse.json(
         { error: 'Failed to fetch m3u8' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -163,12 +200,12 @@ export async function GET(request: Request) {
       headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
       headers.set(
         'Access-Control-Allow-Headers',
-        'Content-Type, Range, Origin, Accept'
+        'Content-Type, Range, Origin, Accept',
       );
       headers.set('Cache-Control', 'no-cache');
       headers.set(
         'Access-Control-Expose-Headers',
-        'Content-Length, Content-Range'
+        'Content-Length, Content-Range',
       );
       return new Response(modifiedContent, { headers });
     }
@@ -176,26 +213,38 @@ export async function GET(request: Request) {
     const headers = new Headers();
     headers.set(
       'Content-Type',
-      response.headers.get('Content-Type') || 'application/vnd.apple.mpegurl'
+      response.headers.get('Content-Type') || 'application/vnd.apple.mpegurl',
     );
     headers.set('Access-Control-Allow-Origin', '*');
     headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     headers.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Range, Origin, Accept'
+      'Content-Type, Range, Origin, Accept',
     );
     headers.set('Cache-Control', 'no-cache');
     headers.set(
       'Access-Control-Expose-Headers',
-      'Content-Length, Content-Range'
+      'Content-Length, Content-Range',
     );
 
     return new Response(response.body, { status: 200, headers });
   } catch (error) {
-    console.error('[M3U8 Proxy] Error:', error);
+    // 只记录非网络超时的错误
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      if (
+        !errorMsg.includes('timeout') &&
+        !errorMsg.includes('connect timeout') &&
+        !errorMsg.includes('fetch failed')
+      ) {
+        console.error('[M3U8 Proxy] Error:', error);
+      }
+    } else {
+      console.error('[M3U8 Proxy] Error:', error);
+    }
     return NextResponse.json(
       { error: 'Failed to fetch m3u8' },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (response && !responseUsed) {
@@ -214,7 +263,7 @@ export async function OPTIONS() {
   headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   headers.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Range, Origin, Accept'
+    'Content-Type, Range, Origin, Accept',
   );
   return new Response(null, { status: 204, headers });
 }
