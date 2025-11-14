@@ -134,14 +134,6 @@ export async function GET(request: Request) {
       console.error('[Segment Proxy] Error:', error);
     }
 
-    if (reader) {
-      try {
-        (reader as ReadableStreamDefaultReader<Uint8Array>).releaseLock();
-      } catch {
-        // ignore
-      }
-    }
-
     if (response?.body) {
       try {
         response.body.cancel();

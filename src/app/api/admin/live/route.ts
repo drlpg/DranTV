@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
         // 删除数据库中保存的频道数据
         try {
           await db.delete(`live_channels_${key}`);
-          console.log(`[Admin Live API] 已删除频道数据: live_channels_${key}`);
         } catch (error) {
           console.error(`[Admin Live API] 删除频道数据失败:`, error);
         }
@@ -209,10 +208,6 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        console.log(
-          `[Admin Live API] 请求批量删除 ${deleteKeys.length} 个直播源`,
-        );
-
         // 先清理缓存和数据库，再过滤数组（避免索引偏移问题）
         const deleteKeySet = new Set(deleteKeys);
         for (const key of deleteKeys) {
@@ -224,14 +219,9 @@ export async function POST(request: NextRequest) {
             // 删除数据库中保存的频道数据
             try {
               await db.delete(`live_channels_${key}`);
-              console.log(
-                `[Admin Live API] 已删除频道数据: live_channels_${key}`,
-              );
             } catch (error) {
               console.error(`[Admin Live API] 删除频道数据失败:`, error);
             }
-          } else {
-            console.log(`[Admin Live API] 直播源不存在: ${key}`);
           }
         }
 
@@ -243,7 +233,6 @@ export async function POST(request: NextRequest) {
         // 如果删除后没有直播源了，清除订阅配置
         if (config.LiveConfig && config.LiveConfig.length === 0) {
           config.LiveSubscription = undefined;
-          console.log('已清除直播源订阅配置（所有直播源已删除）');
         }
         break;
 
@@ -251,18 +240,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: '未知操作' }, { status: 400 });
     }
 
-    console.log(`[Admin Live API] 操作完成: ${action}`);
-    console.log(
-      `[Admin Live API] 当前直播源数量: ${config.LiveConfig?.length || 0}`,
-    );
-
     // 保存配置
     await db.saveAdminConfig(config);
-    console.log(`[Admin Live API] 配置已保存到数据库`);
 
     // 更新内存缓存
     await setCachedConfig(config);
-    console.log(`[Admin Live API] 内存缓存已更新`);
 
     return NextResponse.json({
       success: true,
