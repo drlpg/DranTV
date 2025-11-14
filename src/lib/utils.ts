@@ -215,11 +215,13 @@ export async function getVideoResolutionFromM3u8(
             type: data.type,
             details: data.details,
             fatal: data.fatal,
+            url: m3u8Url,
+            event: event,
           });
           clearTimeout(timeoutId);
           hls.destroy();
           video.remove();
-          reject(new Error(`HLS播放失败: ${data.type}`));
+          reject(new Error(`HLS播放失败: ${data.type} - ${data.details}`));
         }
       });
 
