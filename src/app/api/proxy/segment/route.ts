@@ -46,16 +46,25 @@ export async function GET(request: Request) {
         headers: fetchHeaders,
         cache: 'no-store',
         signal: controller.signal,
+        // @ts-ignore - undici specific options
+        connectTimeout: 30000, // 30秒连接超时
+        bodyTimeout: 60000, // 60秒响应体超时
       });
       clearTimeout(timeoutId);
     } catch (error) {
       clearTimeout(timeoutId);
-      // 静默处理超时错误，避免日志噪音
-      if (
-        error instanceof Error &&
-        (error.name === 'AbortError' || error.message.includes('timeout'))
-      ) {
-        return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
+      // 静默处理超时和连接错误，避免日志噪音
+      if (error instanceof Error) {
+        const errorMsg = error.message.toLowerCase();
+        if (
+          error.name === 'AbortError' ||
+          errorMsg.includes('timeout') ||
+          errorMsg.includes('connect timeout') ||
+          errorMsg.includes('fetch failed')
+        ) {
+          // 不记录日志，直接返回504
+          return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
+        }
       }
       throw error;
     }
@@ -107,20 +116,15 @@ export async function GET(request: Request) {
         }
 
         reader = response.body.getReader();
-        const isCancelled = false;
 
         function pump(): void {
-          if (isCancelled || !reader) {
+          if (!reader) {
             return;
           }
 
           reader
             .read()
             .then(({ done, value }) => {
-              if (isCancelled) {
-                return;
-              }
-
               if (done) {
                 controller.close();
                 cleanup();
@@ -131,10 +135,8 @@ export async function GET(request: Request) {
               pump();
             })
             .catch((error) => {
-              if (!isCancelled) {
-                controller.error(error);
-                cleanup();
-              }
+              controller.error(error);
+              cleanup();
             });
         }
 
@@ -174,7 +176,19 @@ export async function GET(request: Request) {
     const status = response.status === 206 ? 206 : 200;
     return new Response(stream, { status, headers });
   } catch (error) {
-    console.error('[Segment Proxy] Error:', error);
+    // 只记录非网络超时的错误
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      if (
+        !errorMsg.includes('timeout') &&
+        !errorMsg.includes('connect timeout') &&
+        !errorMsg.includes('fetch failed')
+      ) {
+        console.error('[Segment Proxy] Error:', error);
+      }
+    } else {
+      console.error('[Segment Proxy] Error:', error);
+    }
 
     if (reader) {
       try {

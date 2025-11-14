@@ -213,10 +213,11 @@ export async function POST(request: NextRequest) {
           `[Admin Live API] 请求批量删除 ${deleteKeys.length} 个直播源`,
         );
 
-        // 批量删除所有请求的直播源
+        // 先清理缓存和数据库，再过滤数组（避免索引偏移问题）
+        const deleteKeySet = new Set(deleteKeys);
         for (const key of deleteKeys) {
-          const idx = config.LiveConfig?.findIndex((l) => l.key === key);
-          if (idx !== undefined && idx !== -1) {
+          const source = config.LiveConfig?.find((l) => l.key === key);
+          if (source) {
             // 删除内存缓存
             deleteCachedLiveChannels(key);
 
@@ -229,12 +230,15 @@ export async function POST(request: NextRequest) {
             } catch (error) {
               console.error(`[Admin Live API] 删除频道数据失败:`, error);
             }
-
-            config.LiveConfig?.splice(idx, 1);
           } else {
             console.log(`[Admin Live API] 直播源不存在: ${key}`);
           }
         }
+
+        // 过滤掉要删除的直播源
+        config.LiveConfig = config.LiveConfig?.filter(
+          (source) => !deleteKeySet.has(source.key),
+        );
 
         // 如果删除后没有直播源了，清除订阅配置
         if (config.LiveConfig && config.LiveConfig.length === 0) {
