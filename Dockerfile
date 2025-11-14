@@ -52,10 +52,13 @@ ENV DOCKER_ENV=true
 # 从构建器复制所有必要文件
 COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/next-env.d.ts ./
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --from=builder --chown=nextjs:nodejs /app/src ./src
 COPY --from=builder --chown=nextjs:nodejs /app/standalone-websocket.js ./standalone-websocket.js
 COPY --from=builder --chown=nextjs:nodejs /app/production-final.js ./production-final.js
 
