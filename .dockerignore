@@ -1,2 +1,36 @@
+# 环境变量
 .env
 .env*.local
+
+# 构建产物
+.next
+.next.bak
+out
+
+# 依赖
+node_modules
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 测试
+coverage
+.nyc_output
+
+# 其他
+.DS_Store
+*.pem
+.husky

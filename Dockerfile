@@ -33,9 +33,13 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV DOCKER_ENV=true
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 清理可能存在的旧构建缓存，然后生成生产构建
-RUN rm -rf .next && pnpm run build
+# 在 Docker 环境中构建，确保路径正确
+RUN rm -rf .next && \
+    rm -rf .next.bak && \
+    pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
