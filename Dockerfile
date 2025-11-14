@@ -34,8 +34,8 @@ COPY . .
 
 ENV DOCKER_ENV=true
 
-# 生成生产构建
-RUN pnpm run build
+# 清理可能存在的旧构建缓存，然后生成生产构建
+RUN rm -rf .next && pnpm run build
 
 # ---- 第 3 阶段：生成运行时镜像 ----
 FROM node:20-alpine AS runner
