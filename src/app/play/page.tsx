@@ -2495,25 +2495,31 @@ function PlayPageClient() {
 
       artPlayerRef.current.on('error', (err: any) => {
         const isShortDrama = currentSourceRef.current === 'shortdrama';
-        const errorInfo = {
-          error: err,
-          isShortDrama,
-          currentTime: artPlayerRef.current?.currentTime || 0,
-          videoUrl: videoUrl.includes('/api/proxy/') ? '代理地址' : '原始地址',
-          episode: currentEpisodeIndex + 1,
-        };
 
-        console.error('播放器错误:', errorInfo);
-
-        if (isShortDrama) {
-          // 短剧播放错误的特殊处理
-          console.error('短剧播放错误详情:', {
-            source: currentSourceRef.current,
-            id: currentIdRef.current,
+        // 只在有实际错误信息时记录
+        if (err && Object.keys(err).length > 0) {
+          const errorInfo = {
+            error: err,
+            isShortDrama,
+            currentTime: artPlayerRef.current?.currentTime || 0,
+            videoUrl: videoUrl.includes('/api/proxy/')
+              ? '代理地址'
+              : '原始地址',
             episode: currentEpisodeIndex + 1,
-            url: videoUrl,
-            hasPlayedTime: (artPlayerRef.current?.currentTime || 0) > 0,
-          });
+          };
+
+          console.error('播放器错误:', errorInfo);
+
+          if (isShortDrama) {
+            // 短剧播放错误的特殊处理
+            console.error('短剧播放错误详情:', {
+              source: currentSourceRef.current,
+              id: currentIdRef.current,
+              episode: currentEpisodeIndex + 1,
+              url: videoUrl,
+              hasPlayedTime: (artPlayerRef.current?.currentTime || 0) > 0,
+            });
+          }
         }
 
         if (artPlayerRef.current.currentTime > 0) {
