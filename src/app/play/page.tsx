@@ -1011,9 +1011,6 @@ function PlayPageClient() {
     };
   };
 
-  // 添加初始化标志，防止重复执行
-  const hasInitializedRef = useRef(false);
-
   // 当集数索引变化时自动更新视频地址
   useEffect(() => {
     updateVideoUrl(detail, currentEpisodeIndex);
@@ -1021,9 +1018,6 @@ function PlayPageClient() {
 
   // 进入页面时直接获取全部源信息
   useEffect(() => {
-    // 防止重复初始化
-    if (hasInitializedRef.current) return;
-    hasInitializedRef.current = true;
     const fetchSourceDetail = async (
       source: string,
       id: string,
