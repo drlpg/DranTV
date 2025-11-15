@@ -286,54 +286,32 @@ function PlayPageClient() {
     const batchSize = Math.ceil(sources.length / 2);
     const allResults: Array<{
       source: SearchResult;
-      testResult: {
-        quality: string;
-        loadSpeed: string;
-        pingTime: number;
-      } | null;
-      sourceKey: string;
-    }> = [];
+      testResult: { quality: string; loadSpeed: string; pingTime: number };
+    } | null> = [];
 
     for (let start = 0; start < sources.length; start += batchSize) {
       const batchSources = sources.slice(start, start + batchSize);
       const batchResults = await Promise.all(
         batchSources.map(async (source) => {
-          const sourceKey = `${source.source}-${source.id}`;
           try {
             // 检查是否有第一集的播放地址
             if (!source.episodes || source.episodes.length === 0) {
-              return { source, testResult: null, sourceKey };
+              console.warn(`播放源 ${source.source_name} 没有可用的播放地址`);
+              return null;
             }
 
-            // 始终测试第一集（索引0），确保测速的是用户最可能播放的集数
-            let episodeUrl = source.episodes[0];
-            if (!episodeUrl) {
-              return { source, testResult: null, sourceKey };
-            }
-
-            // 如果不是代理 URL，添加代理
-            if (!episodeUrl.includes('/api/proxy/')) {
-              // 如果是 M3U8，使用代理
-              if (episodeUrl.includes('.m3u8') || episodeUrl.includes('m3u8')) {
-                episodeUrl = `/api/proxy/m3u8?url=${encodeURIComponent(episodeUrl)}`;
-              }
-            }
-
-            // 如果是相对路径的代理 URL，转换为完整 URL
-            if (episodeUrl.startsWith('/api/proxy/')) {
-              episodeUrl = `${window.location.origin}${episodeUrl}`;
-            }
-
+            const episodeUrl =
+              source.episodes.length > 1
+                ? source.episodes[1]
+                : source.episodes[0];
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
             return {
               source,
               testResult,
-              sourceKey,
             };
           } catch (error) {
-            // 测速失败，返回失败标记
-            return { source, testResult: null, sourceKey };
+            return null;
           }
         }),
       );
@@ -351,66 +329,27 @@ function PlayPageClient() {
         hasError?: boolean;
       }
     >();
-    allResults.forEach((result) => {
-      if (result.testResult) {
+    allResults.forEach((result, index) => {
+      const source = sources[index];
+      const sourceKey = `${source.source}-${source.id}`;
+
+      if (result) {
         // 成功的结果
-        newVideoInfoMap.set(result.sourceKey, result.testResult);
-      } else {
-        // 失败的结果，标记为错误
-        newVideoInfoMap.set(result.sourceKey, {
-          quality: '未知',
-          loadSpeed: '未知',
-          pingTime: 0,
-          hasError: true,
-        });
+        newVideoInfoMap.set(sourceKey, result.testResult);
       }
     });
 
     // 过滤出成功的结果用于优选计算
-    const successfulResults = allResults.filter(
-      (result) => result.testResult !== null,
-    ) as Array<{
+    const successfulResults = allResults.filter(Boolean) as Array<{
       source: SearchResult;
       testResult: { quality: string; loadSpeed: string; pingTime: number };
-      sourceKey: string;
     }>;
 
     setPrecomputedVideoInfo(newVideoInfoMap);
 
     if (successfulResults.length === 0) {
-      // 按源名称优先级排序（优先选择知名源）
-      const prioritySources = [
-        '电影天堂',
-        '如意',
-        '暴风',
-        '量子',
-        '非凡',
-        '光速',
-      ];
-      const sortedSources = [...sources].sort((a, b) => {
-        const aPriority = prioritySources.findIndex((name) =>
-          a.source_name?.includes(name),
-        );
-        const bPriority = prioritySources.findIndex((name) =>
-          b.source_name?.includes(name),
-        );
-
-        // 如果都在优先列表中，按优先级排序
-        if (aPriority !== -1 && bPriority !== -1) {
-          return aPriority - bPriority;
-        }
-        // 如果只有一个在优先列表中，优先选择它
-        if (aPriority !== -1) return -1;
-        if (bPriority !== -1) return 1;
-        // 都不在优先列表中，保持原顺序
-        return 0;
-      });
-
-      // 返回第一个有有效剧集的源
-      const validSource = sortedSources.find(
-        (s) => s.episodes && s.episodes.length > 0 && s.episodes[0],
-      );
-      return validSource || sources[0];
+      console.warn('所有播放源测速都失败，使用第一个播放源');
+      return sources[0];
     }
 
     // 找出所有有效速度的最大值，用于线性映射
@@ -452,6 +391,13 @@ function PlayPageClient() {
     // 按综合评分排序，选择最佳播放源
     resultsWithScore.sort((a, b) => b.score - a.score);
 
+    console.log('播放源评分排序结果:');
+    resultsWithScore.forEach((result, index) => {
+      console.log(
+        `${index + 1}. ${result.source.source_name} - 评分: ${result.score.toFixed(2)} (${result.testResult.quality}, ${result.testResult.loadSpeed}, ${result.testResult.pingTime}ms)`,
+      );
+    });
+
     return resultsWithScore[0].source;
   };
 
@@ -468,28 +414,28 @@ function PlayPageClient() {
   ): number => {
     let score = 0;
 
-    // 分辨率评分 (50% 权重)
+    // 分辨率评分 (40% 权重)
     const qualityScore = (() => {
       switch (testResult.quality) {
         case '4K':
           return 100;
         case '2K':
-          return 90;
+          return 85;
         case '1080p':
-          return 80;
+          return 75;
         case '720p':
-          return 65;
+          return 60;
         case '480p':
-          return 45;
+          return 40;
         case 'SD':
-          return 25;
+          return 20;
         default:
           return 0;
       }
     })();
-    score += qualityScore * 0.5;
+    score += qualityScore * 0.4;
 
-    // 下载速度评分 (20% 权重)
+    // 下载速度评分 (40% 权重) - 基于最大速度线性映射
     const speedScore = (() => {
       const speedStr = testResult.loadSpeed;
       if (speedStr === '未知' || speedStr === '测量中...') return 30;
@@ -506,26 +452,21 @@ function PlayPageClient() {
       const speedRatio = speedKBps / maxSpeed;
       return Math.min(100, Math.max(0, speedRatio * 100));
     })();
-    score += speedScore * 0.2;
+    score += speedScore * 0.4;
 
-    // 网络延迟评分 (30% 权重)
+    // 网络延迟评分 (20% 权重) - 基于延迟范围线性映射
     const pingScore = (() => {
       const ping = testResult.pingTime;
-      if (ping <= 0) return 0; // 无效延迟给0分
+      if (ping <= 0) return 0; // 无效延迟给默认分
 
       // 如果所有延迟都相同，给满分
       if (maxPing === minPing) return 100;
 
-      // 使用非线性映射，对低延迟更敏感
-      // 延迟越低，分数越高，使用指数衰减
-      const pingRange = maxPing - minPing;
-      const normalizedPing = (ping - minPing) / pingRange; // 0-1之间
-
-      // 使用平方根函数，使得低延迟区域的差异更明显
-      const pingRatio = 1 - Math.sqrt(normalizedPing);
+      // 线性映射：最低延迟=100分，最高延迟=0分
+      const pingRatio = (maxPing - ping) / (maxPing - minPing);
       return Math.min(100, Math.max(0, pingRatio * 100));
     })();
-    score += pingScore * 0.3;
+    score += pingScore * 0.2;
 
     return Math.round(score * 100) / 100; // 保留两位小数
   };
@@ -546,21 +487,18 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
-    // 确保所有 M3U8 URL 都通过代理（不仅仅是短剧）
-    if (newUrl && !newUrl.includes('/api/proxy/')) {
-      // 如果是短剧，使用短剧处理函数
-      if (detailData.source === 'shortdrama') {
-        newUrl = processShortDramaUrl(newUrl);
-      }
-      // 如果是 M3U8 格式，使用 M3U8 代理
-      else if (newUrl.includes('.m3u8') || newUrl.includes('m3u8')) {
-        newUrl = `/api/proxy/m3u8?url=${encodeURIComponent(newUrl)}`;
-      }
-    }
-
-    // 如果是相对路径，转换为完整 URL
-    if (newUrl && newUrl.startsWith('/')) {
-      newUrl = `${window.location.origin}${newUrl}`;
+    // 如果是短剧且URL还没有经过代理处理，再次处理
+    if (
+      detailData.source === 'shortdrama' &&
+      newUrl &&
+      !newUrl.includes('/api/proxy/video')
+    ) {
+      newUrl = processShortDramaUrl(newUrl);
+      console.log('更新短剧播放地址:', {
+        episode: episodeIndex + 1,
+        originalUrl: detailData.episodes[episodeIndex],
+        processedUrl: newUrl,
+      });
     }
 
     if (newUrl !== videoUrl) {
@@ -595,6 +533,7 @@ function PlayPageClient() {
         wakeLockRef.current = await (navigator as any).wakeLock.request(
           'screen',
         );
+        console.log('Wake Lock 已启用');
       }
     } catch (err) {
       console.warn('Wake Lock 请求失败:', err);
@@ -606,6 +545,7 @@ function PlayPageClient() {
       if (wakeLockRef.current) {
         await wakeLockRef.current.release();
         wakeLockRef.current = null;
+        console.log('Wake Lock 已释放');
       }
     } catch (err) {
       console.warn('Wake Lock 释放失败:', err);
@@ -624,6 +564,8 @@ function PlayPageClient() {
         // 销毁 ArtPlayer 实例
         artPlayerRef.current.destroy();
         artPlayerRef.current = null;
+
+        console.log('播放器资源已清理');
       } catch (err) {
         console.warn('清理播放器资源时出错:', err);
         artPlayerRef.current = null;
@@ -727,6 +669,7 @@ function PlayPageClient() {
           newConfig,
         );
       }
+      console.log('跳过片头片尾配置已保存:', newConfig);
     } catch (err) {
       console.error('保存跳过片头片尾配置失败:', err);
     }
@@ -993,18 +936,16 @@ function PlayPageClient() {
     }
   };
 
-  // 去广告过滤器 - 仅在 HLS 加载时使用
   const createCustomHlsJsLoader = (Hls: any) => {
     return class extends Hls.DefaultConfig.loader {
       constructor(config: any) {
         super(config);
         const load = this.load.bind(this);
         this.load = function (context: any, config: any, callbacks: any) {
-          // 拦截 manifest 和 level 请求进行广告过滤
+          // 拦截manifest和level请求
           if (
-            blockAdEnabledRef.current &&
-            ((context as any).type === 'manifest' ||
-              (context as any).type === 'level')
+            (context as any).type === 'manifest' ||
+            (context as any).type === 'level'
           ) {
             const onSuccess = callbacks.onSuccess;
             callbacks.onSuccess = function (
@@ -1012,14 +953,15 @@ function PlayPageClient() {
               stats: any,
               context: any,
             ) {
-              // 如果是 m3u8 文件，过滤掉广告段
+              // 如果是m3u8文件，处理内容以移除广告分段
               if (response.data && typeof response.data === 'string') {
+                // 过滤掉广告段 - 实现更精确的广告过滤逻辑
                 response.data = filterAdsFromM3U8(response.data);
               }
               return onSuccess(response, stats, context, null);
             };
           }
-          // 执行原始 load 方法
+          // 执行原始load方法
           load(context, config, callbacks);
         };
       }
@@ -1053,11 +995,12 @@ function PlayPageClient() {
           throw new Error('获取视频详情失败');
         }
         const detailData = (await detailResponse.json()) as SearchResult;
-        // 不要在这里设置 availableSources，让调用者决定如何处理
         return [detailData];
       } catch (err) {
         console.error('获取视频详情失败:', err);
         return [];
+      } finally {
+        setSourceSearchLoading(false);
       }
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
@@ -1071,120 +1014,20 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
-        // 标准化标题：移除空格、特殊字符，转小写
-        const normalizeTitle = (title: string) => {
-          return title
-            .replaceAll(' ', '')
-            .replace(/[：:·•\-—]/g, '')
-            .toLowerCase();
-        };
-
-        const normalizedSearchTitle = normalizeTitle(videoTitleRef.current);
-
-        // 处理搜索结果，使用更宽松的匹配规则
-        const exactMatches: SearchResult[] = [];
-        const partialMatches: SearchResult[] = [];
-        const looseMatches: SearchResult[] = [];
-
-        data.results.forEach((result: SearchResult) => {
-          const normalizedResultTitle = normalizeTitle(result.title);
-
-          // 检查年份匹配（宽松匹配：允许年份为空或相差1年）
-          const yearMatch = videoYearRef.current
-            ? !result.year ||
-              result.year.toLowerCase() ===
-                videoYearRef.current.toLowerCase() ||
-              Math.abs(
-                parseInt(result.year) - parseInt(videoYearRef.current),
-              ) <= 1
-            : true;
-
-          // 检查类型匹配
-          const typeMatch = searchType
-            ? (searchType === 'tv' && result.episodes.length > 1) ||
-              (searchType === 'movie' && result.episodes.length === 1)
-            : true;
-
-          // 完全匹配：标题完全相同
-          if (
-            normalizedResultTitle === normalizedSearchTitle &&
-            yearMatch &&
-            typeMatch
-          ) {
-            exactMatches.push(result);
-          }
-          // 部分匹配：标题包含搜索词或搜索词包含标题
-          else if (
-            (normalizedResultTitle.includes(normalizedSearchTitle) ||
-              normalizedSearchTitle.includes(normalizedResultTitle)) &&
-            yearMatch &&
-            typeMatch
-          ) {
-            partialMatches.push(result);
-          }
-          // 宽松匹配：忽略年份，只匹配标题
-          else if (
-            (normalizedResultTitle.includes(normalizedSearchTitle) ||
-              normalizedSearchTitle.includes(normalizedResultTitle)) &&
-            typeMatch
-          ) {
-            looseMatches.push(result);
-          }
-        });
-
-        // 选择匹配级别：完全匹配 > 部分匹配 > 宽松匹配
-        const matchedResults =
-          exactMatches.length > 0
-            ? exactMatches
-            : partialMatches.length > 0
-              ? partialMatches
-              : looseMatches;
-
-        // 按标题和年份分组，统计每组的源数量
-        const groupMap = new Map<string, SearchResult[]>();
-        matchedResults.forEach((result) => {
-          const key = `${normalizeTitle(result.title)}_${result.year}`;
-          if (!groupMap.has(key)) {
-            groupMap.set(key, []);
-          }
-          const group = groupMap.get(key);
-          if (group) {
-            group.push(result);
-          }
-        });
-
-        // 将分组转换为数组并按源数量排序（源多的在前）
-        const sortedGroups = Array.from(groupMap.values()).sort(
-          (a, b) => b.length - a.length,
+        // 处理搜索结果，根据规则过滤
+        const results = data.results.filter(
+          (result: SearchResult) =>
+            result.title.replaceAll(' ', '').toLowerCase() ===
+              videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
+            (videoYearRef.current
+              ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
+              : true) &&
+            (searchType
+              ? (searchType === 'tv' && result.episodes.length > 1) ||
+                (searchType === 'movie' && result.episodes.length === 1)
+              : true),
         );
-
-        // 智能提取最多10个视频源
-        let results: SearchResult[] = [];
-        const MAX_SOURCES = 10;
-
-        if (sortedGroups.length > 0) {
-          const firstGroup = sortedGroups[0];
-
-          if (firstGroup.length >= MAX_SOURCES) {
-            // 第一组有≥10个源，只取前10个
-            results = firstGroup.slice(0, MAX_SOURCES);
-          } else {
-            // 第一组<10个源，从其他组补充
-            results = [...firstGroup];
-
-            for (
-              let i = 1;
-              i < sortedGroups.length && results.length < MAX_SOURCES;
-              i++
-            ) {
-              const group = sortedGroups[i];
-              const remaining = MAX_SOURCES - results.length;
-              results.push(...group.slice(0, remaining));
-            }
-          }
-        }
-
-        // 不在这里设置 availableSources，让调用者统一处理
+        setAvailableSources(results);
         return results;
       } catch (err) {
         setSourceSearchError(err instanceof Error ? err.message : '搜索失败');
@@ -1229,8 +1072,10 @@ function PlayPageClient() {
           setLoadingStage('ready');
           setLoadingMessage('✨ 短剧准备就绪，即将开始播放...');
 
-          // 立即开始播放，无需延迟
-          setLoading(false);
+          // 短暂延迟让用户看到完成状态
+          setTimeout(() => {
+            setLoading(false);
+          }, 1000);
 
           return;
         } catch (error) {
@@ -1273,41 +1118,16 @@ function PlayPageClient() {
       );
 
       let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
-
-      // 如果指定了源和ID，需要获取该源的详细信息
-      if (currentSource && currentId) {
-        const existingSource = sourcesInfo.find(
+      if (
+        currentSource &&
+        currentId &&
+        !sourcesInfo.some(
           (source) =>
             source.source === currentSource && source.id === currentId,
-        );
-
-        // 如果搜索结果中没有该源，或者该源的episodes数据不完整，则获取详情
-        if (
-          !existingSource ||
-          !existingSource.episodes ||
-          existingSource.episodes.length <= 1
-        ) {
-          console.log('获取指定源的详细信息:', currentSource, currentId);
-          const detailInfo = await fetchSourceDetail(currentSource, currentId);
-          if (detailInfo.length > 0) {
-            // 替换或添加详细信息到源列表
-            const detailData = detailInfo[0];
-            const index = sourcesInfo.findIndex(
-              (s) => s.source === currentSource && s.id === currentId,
-            );
-            if (index >= 0) {
-              sourcesInfo[index] = detailData;
-            } else {
-              sourcesInfo.unshift(detailData);
-              // 确保不超过10个源
-              if (sourcesInfo.length > 10) {
-                sourcesInfo = sourcesInfo.slice(0, 10);
-              }
-            }
-          }
-        }
+        )
+      ) {
+        sourcesInfo = await fetchSourceDetail(currentSource, currentId);
       }
-
       if (sourcesInfo.length === 0) {
         setError('未找到匹配结果');
         setLoading(false);
@@ -1315,7 +1135,6 @@ function PlayPageClient() {
       }
 
       let detailData: SearchResult = sourcesInfo[0];
-
       // 指定源和id且无需优选
       if (currentSource && currentId && !needPreferRef.current) {
         const target = sourcesInfo.find(
@@ -1330,20 +1149,6 @@ function PlayPageClient() {
           return;
         }
       }
-      // 未指定源和id，使用第一个源，但需要确保有完整数据
-      else if (!currentSource || !currentId) {
-        if (!detailData.episodes || detailData.episodes.length <= 1) {
-          console.log('获取第一个源的详细信息');
-          const detailInfo = await fetchSourceDetail(
-            detailData.source,
-            detailData.id,
-          );
-          if (detailInfo.length > 0) {
-            detailData = detailInfo[0];
-            sourcesInfo[0] = detailData;
-          }
-        }
-      }
 
       // 未指定源和 id 或需要优选，且开启优选开关
       if (
@@ -1353,47 +1158,10 @@ function PlayPageClient() {
         setLoadingStage('preferring');
         setLoadingMessage('⚡ 正在优选最佳播放源...');
 
-        // 在优选前，确保所有源都有完整的详情数据（最多10个）
-        const sourcesWithDetails = await Promise.all(
-          sourcesInfo.slice(0, 10).map(async (source) => {
-            // 如果episodes数据不完整，获取详情
-            if (!source.episodes || source.episodes.length <= 1) {
-              try {
-                const detailInfo = await fetchSourceDetail(
-                  source.source,
-                  source.id,
-                );
-                return detailInfo.length > 0 ? detailInfo[0] : source;
-              } catch (err) {
-                console.warn(`获取源 ${source.source} 详情失败:`, err);
-                return source;
-              }
-            }
-            return source;
-          }),
-        );
-
-        detailData = await preferBestSource(sourcesWithDetails);
-
-        // 将优选的源移到列表最前面
-        const reorderedSources = [
-          detailData,
-          ...sourcesWithDetails.filter(
-            (s) => !(s.source === detailData.source && s.id === detailData.id),
-          ),
-        ];
-        setAvailableSources(reorderedSources);
+        detailData = await preferBestSource(sourcesInfo);
       }
 
-      // 无论是否优选，都要确保 availableSources 包含所有搜索到的源
-      // 如果上面的优选逻辑没有执行，这里会设置 availableSources
-      if (
-        !optimizationEnabled ||
-        (currentSource && currentId && !needPreferRef.current)
-      ) {
-        // 确保不超过10个源
-        setAvailableSources(sourcesInfo.slice(0, 10));
-      }
+      console.log(detailData.source, detailData.id);
 
       setNeedPrefer(false);
       setCurrentSource(detailData.source);
@@ -1419,8 +1187,10 @@ function PlayPageClient() {
       setLoadingStage('ready');
       setLoadingMessage('✨ 准备就绪，即将开始播放...');
 
-      // 立即开始播放，无需延迟
-      setLoading(false);
+      // 短暂延迟让用户看到完成状态
+      setTimeout(() => {
+        setLoading(false);
+      }, 1000);
     };
 
     initAll();
