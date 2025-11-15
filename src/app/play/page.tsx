@@ -1181,6 +1181,14 @@ function PlayPageClient() {
     };
 
     const initAll = async () => {
+      console.log('[initAll] 开始初始化', {
+        shortdramaId,
+        currentSource,
+        currentId,
+        videoTitle,
+        searchTitle,
+      });
+
       // 检查是否为短剧播放
       if (shortdramaId) {
         try {
@@ -1452,6 +1460,7 @@ function PlayPageClient() {
       setLoading(false);
     };
 
+    console.log('[useEffect] 准备调用 initAll');
     initAll();
   }, [shortdramaId]);
 
