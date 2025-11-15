@@ -3,10 +3,10 @@
 
 const isDev = process.env.NODE_ENV !== 'production';
 
-// 强制使用 webpack（Turbopack 还不完全兼容 Tailwind 的转义语法）
-process.env.NEXT_PRIVATE_WEBPACK = 'true';
-
 const nextConfig = {
+  // Next.js 16 默认使用 Turbopack，但由于 CSS 转义语法兼容性问题，强制使用 webpack
+  turbo: false,
+
   // 移除 standalone 模式，使用标准构建
   // output: 'standalone',
 

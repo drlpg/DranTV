@@ -488,13 +488,13 @@
   background-color: rgb(82, 82, 82) !important;
 }
 [data-theme='minimal'] .fill-blue-500,
-[data-theme='minimal'] .hover\\:fill-blue-500:hover {
+[data-theme='minimal'] [class*='hover:fill-blue-500']:hover {
   fill: rgb(82, 82, 82) !important;
 }
 [data-theme='minimal'] .border-blue-500\/30 {
   border-color: rgb(82, 82, 82, 0.3) !important;
 }
-[data-theme='minimal'] .hover\\:text-blue-600:hover {
+[data-theme='minimal'] [class*='hover:text-blue-600']:hover {
   color: rgb(82, 82, 82) !important;
 }
 [data-theme='minimal'] .bg-blue-100 {
@@ -503,7 +503,7 @@
 [data-theme='minimal'] .text-blue-800 {
   color: rgb(38, 38, 38) !important;
 }
-[data-theme='minimal'] .hover\\:bg-blue-200:hover {
+[data-theme='minimal'] [class*='hover:bg-blue-200']:hover {
   background-color: rgb(229, 229, 229) !important;
 }
 
@@ -540,19 +540,19 @@
   background-color: rgb(163, 163, 163) !important;
 }
 [data-theme='minimal'].dark .fill-blue-500,
-[data-theme='minimal'].dark .hover\\:fill-blue-500:hover {
+[data-theme='minimal'].dark [class*='hover:fill-blue-500']:hover {
   fill: rgb(163, 163, 163) !important;
 }
 [data-theme='minimal'].dark .border-blue-500\/30 {
   border-color: rgb(163, 163, 163, 0.3) !important;
 }
-[data-theme='minimal'].dark .hover\\:text-blue-400:hover {
+[data-theme='minimal'].dark [class*='hover:text-blue-400']:hover {
   color: rgb(163, 163, 163) !important;
 }
 [data-theme='minimal'].dark .bg-blue-900\/40 {
   background-color: rgb(38, 38, 38, 0.4) !important;
 }
-[data-theme='minimal'].dark .hover\\:bg-blue-900\/60:hover {
+[data-theme='minimal'].dark .hoverbg-blue-900\/60:hover {
   background-color: rgb(38, 38, 38, 0.6) !important;
 }
 [data-theme='minimal'].dark .text-blue-200 {
@@ -604,13 +604,13 @@
   background-color: rgb(234, 88, 12) !important;
 }
 [data-theme='warm'] .fill-blue-500,
-[data-theme='warm'] .hover\\:fill-blue-500:hover {
+[data-theme='warm'] [class*='hover:fill-blue-500']:hover {
   fill: rgb(234, 88, 12) !important;
 }
 [data-theme='warm'] .border-blue-500\/30 {
   border-color: rgb(234, 88, 12, 0.3) !important;
 }
-[data-theme='warm'] .hover\\:text-blue-600:hover {
+[data-theme='warm'] [class*='hover:text-blue-600']:hover {
   color: rgb(234, 88, 12) !important;
 }
 [data-theme='warm'] .bg-blue-100 {
@@ -619,7 +619,7 @@
 [data-theme='warm'] .text-blue-800 {
   color: rgb(154, 52, 18) !important;
 }
-[data-theme='warm'] .hover\\:bg-blue-200:hover {
+[data-theme='warm'] [class*='hover:bg-blue-200']:hover {
   background-color: rgb(254, 215, 170) !important;
 }
 
@@ -656,19 +656,19 @@
   background-color: rgb(251, 146, 60) !important;
 }
 [data-theme='warm'].dark .fill-blue-500,
-[data-theme='warm'].dark .hover\\:fill-blue-500:hover {
+[data-theme='warm'].dark [class*='hover:fill-blue-500']:hover {
   fill: rgb(251, 146, 60) !important;
 }
 [data-theme='warm'].dark .border-blue-500\/30 {
   border-color: rgb(251, 146, 60, 0.3) !important;
 }
-[data-theme='warm'].dark .hover\\:text-blue-400:hover {
+[data-theme='warm'].dark [class*='hover:text-blue-400']:hover {
   color: rgb(251, 146, 60) !important;
 }
 [data-theme='warm'].dark .bg-blue-900\/40 {
   background-color: rgb(154, 52, 18, 0.4) !important;
 }
-[data-theme='warm'].dark .hover\\:bg-blue-900\/60:hover {
+[data-theme='warm'].dark .hoverbg-blue-900\/60:hover {
   background-color: rgb(154, 52, 18, 0.6) !important;
 }
 [data-theme='warm'].dark .text-blue-200 {
@@ -887,7 +887,7 @@
 [data-theme='minimal'] .bg-blue-50 {
   background-color: rgb(250, 250, 250) !important;
 }
-[data-theme='minimal'] .hover\\:bg-blue-50:hover {
+[data-theme='minimal'] [class*='hover:bg-blue-50']:hover {
   background-color: rgb(250, 250, 250) !important;
 }
 [data-theme='minimal'] .text-blue-500 {
@@ -912,14 +912,14 @@
 [data-theme='minimal'] .peer:focus ~ .peer-focus\:text-blue-600 {
   color: rgb(82, 82, 82) !important;
 }
-[data-theme='minimal'] .hover\\:text-blue-500:hover {
+[data-theme='minimal'] [class*='hover:text-blue-500']:hover {
   color: rgb(115, 115, 115) !important;
 }
 
 [data-theme='minimal'].dark .bg-blue-50 {
   background-color: rgb(28, 28, 28) !important;
 }
-[data-theme='minimal'].dark .hover\\:bg-blue-50:hover {
+[data-theme='minimal'].dark [class*='hover:bg-blue-50']:hover {
   background-color: rgb(28, 28, 28) !important;
 }
 [data-theme='minimal'].dark .text-blue-500 {
@@ -941,7 +941,7 @@
 [data-theme='minimal'].dark .peer:focus ~ .peer-focus\:dark\:text-blue-400 {
   color: rgb(163, 163, 163) !important;
 }
-[data-theme='minimal'].dark .hover\\:text-blue-500:hover {
+[data-theme='minimal'].dark [class*='hover:text-blue-500']:hover {
   color: rgb(163, 163, 163) !important;
 }
 
@@ -949,20 +949,20 @@
 [data-theme='warm'] .bg-blue-50 {
   background-color: rgb(255, 247, 237) !important;
 }
-[data-theme='warm'] .hover\\:bg-blue-50:hover {
+[data-theme='warm'] [class*='hover:bg-blue-50']:hover {
   background-color: rgb(255, 247, 237) !important;
 }
 [data-theme='warm'] .text-blue-500 {
   color: rgb(249, 115, 22) !important;
 }
-[data-theme='warm'] .hover\\:text-blue-500:hover {
+[data-theme='warm'] [class*='hover:text-blue-500']:hover {
   color: rgb(249, 115, 22) !important;
 }
 
 [data-theme='warm'].dark .bg-blue-50 {
   background-color: rgb(41, 37, 36) !important;
 }
-[data-theme='warm'].dark .hover\\:bg-blue-50:hover {
+[data-theme='warm'].dark [class*='hover:bg-blue-50']:hover {
   background-color: rgb(41, 37, 36) !important;
 }
 [data-theme='warm'].dark .text-blue-500 {
@@ -984,7 +984,7 @@
 [data-theme='warm'].dark .peer:focus ~ .peer-focus\:dark\:text-blue-400 {
   color: rgb(251, 146, 60) !important;
 }
-[data-theme='warm'].dark .hover\\:text-blue-500:hover {
+[data-theme='warm'].dark [class*='hover:text-blue-500']:hover {
   color: rgb(251, 146, 60) !important;
 }
 
@@ -992,22 +992,22 @@
 [data-theme='fresh'] .bg-blue-50 {
   background-color: rgb(240, 253, 244) !important;
 }
-[data-theme='fresh'] .hover\\:bg-blue-50:hover {
+[data-theme='fresh'] [class*='hover:bg-blue-50']:hover {
   background-color: rgb(240, 253, 244) !important;
 }
 /* 保留hover状态的覆盖 */
-[data-theme='fresh'] .hover\\:text-blue-500:hover {
+[data-theme='fresh'] [class*='hover:text-blue-500']:hover {
   color: rgb(63, 204, 113) !important;
 }
 
 [data-theme='fresh'].dark .bg-blue-50 {
   background-color: rgb(31, 41, 35) !important;
 }
-[data-theme='fresh'].dark .hover\\:bg-blue-50:hover {
+[data-theme='fresh'].dark [class*='hover:bg-blue-50']:hover {
   background-color: rgb(31, 41, 35) !important;
 }
 /* 保留hover状态的覆盖 */
-[data-theme='fresh'].dark .hover\\:text-blue-500:hover {
+[data-theme='fresh'].dark [class*='hover:text-blue-500']:hover {
   color: rgb(74, 222, 128) !important;
 }
 
@@ -1082,13 +1082,13 @@
 [data-theme='minimal'] .border-blue-500 {
   border-color: rgb(115, 115, 115) !important;
 }
-[data-theme='minimal'] .hover\\:border-blue-300:hover {
+[data-theme='minimal'] [class*='hover:border-blue-300']:hover {
   border-color: rgb(212, 212, 212) !important;
 }
-[data-theme='minimal'] .hover\\:bg-blue-700:hover {
+[data-theme='minimal'] [class*='hover:bg-blue-700']:hover {
   background-color: rgb(64, 64, 64) !important;
 }
-[data-theme='minimal'] .focus\\:ring-blue-500:focus {
+[data-theme='minimal'] .focusring-blue-500:focus {
   box-shadow: 0 0 0 3px rgb(115, 115, 115, 0.1) !important;
 }
 
@@ -1116,13 +1116,13 @@
 [data-theme='minimal'].dark .border-blue-500 {
   border-color: rgb(163, 163, 163) !important;
 }
-[data-theme='minimal'].dark .hover\\:border-blue-300:hover {
+[data-theme='minimal'].dark [class*='hover:border-blue-300']:hover {
   border-color: rgb(82, 82, 82) !important;
 }
-[data-theme='minimal'].dark .hover\\:bg-blue-700:hover {
+[data-theme='minimal'].dark [class*='hover:bg-blue-700']:hover {
   background-color: rgb(212, 212, 212) !important;
 }
-[data-theme='minimal'].dark .focus\\:ring-blue-500:focus {
+[data-theme='minimal'].dark .focusring-blue-500:focus {
   box-shadow: 0 0 0 3px rgb(163, 163, 163, 0.1) !important;
 }
 
@@ -1151,13 +1151,13 @@
 [data-theme='warm'] .border-blue-500 {
   border-color: rgb(249, 115, 22) !important;
 }
-[data-theme='warm'] .hover\\:border-blue-300:hover {
+[data-theme='warm'] [class*='hover:border-blue-300']:hover {
   border-color: rgb(253, 186, 116) !important;
 }
-[data-theme='warm'] .hover\\:bg-blue-700:hover {
+[data-theme='warm'] [class*='hover:bg-blue-700']:hover {
   background-color: rgb(194, 65, 12) !important;
 }
-[data-theme='warm'] .focus\\:ring-blue-500:focus {
+[data-theme='warm'] .focusring-blue-500:focus {
   box-shadow: 0 0 0 3px rgb(249, 115, 22, 0.1) !important;
 }
 
@@ -1185,13 +1185,13 @@
 [data-theme='warm'].dark .border-blue-500 {
   border-color: rgb(251, 146, 60) !important;
 }
-[data-theme='warm'].dark .hover\\:border-blue-300:hover {
+[data-theme='warm'].dark [class*='hover:border-blue-300']:hover {
   border-color: rgb(194, 65, 12) !important;
 }
-[data-theme='warm'].dark .hover\\:bg-blue-700:hover {
+[data-theme='warm'].dark [class*='hover:bg-blue-700']:hover {
   background-color: rgb(253, 186, 116) !important;
 }
-[data-theme='warm'].dark .focus\\:ring-blue-500:focus {
+[data-theme='warm'].dark .focusring-blue-500:focus {
   box-shadow: 0 0 0 3px rgb(251, 146, 60, 0.1) !important;
 }
 
@@ -1216,10 +1216,10 @@
 }
 
 /* hover状态文字颜色 */
-[data-theme='minimal'] .hover\\:text-blue-300:hover {
+[data-theme='minimal'] [class*='hover:text-blue-300']:hover {
   color: rgb(115, 115, 115) !important;
 }
-[data-theme='minimal'].dark .dark\\:hover\\:text-blue-300:hover {
+[data-theme='minimal'].dark [class*='dark:hover:text-blue-300']:hover {
   color: rgb(163, 163, 163) !important;
 }
 
@@ -1240,10 +1240,10 @@
   color: rgb(251, 146, 60) !important;
 }
 
-[data-theme='warm'] .hover\\:text-blue-300:hover {
+[data-theme='warm'] [class*='hover:text-blue-300']:hover {
   color: rgb(234, 88, 12) !important;
 }
-[data-theme='warm'].dark .dark\\:hover\\:text-blue-300:hover {
+[data-theme='warm'].dark [class*='dark:hover:text-blue-300']:hover {
   color: rgb(251, 146, 60) !important;
 }
 
@@ -1296,7 +1296,7 @@
   .data-\[active\=true\]\:bg-blue-500\10[data-active='true'] {
   background-color: rgb(74, 222, 128, 0.1) !important;
 }
-[data-theme='fresh'].dark .dark\\:hover\\:text-blue-300:hover {
+[data-theme='fresh'].dark [class*='dark:hover:text-blue-300']:hover {
   color: rgb(74, 222, 128) !important;
 }
 
@@ -1316,59 +1316,59 @@
 
 /* 极简主题视频卡片覆盖 */
 [data-theme='minimal'] .fill-blue-500,
-[data-theme='minimal'] .hover\\:fill-blue-500:hover {
+[data-theme='minimal'] [class*='hover:fill-blue-500']:hover {
   fill: rgb(82, 82, 82) !important;
 }
 [data-theme='minimal'] .bg-blue-400 {
   background-color: rgb(115, 115, 115) !important;
 }
-[data-theme='minimal'] .hover\\:bg-blue-600:hover {
+[data-theme='minimal'] [class*='hover:bg-blue-600']:hover {
   background-color: rgb(64, 64, 64) !important;
 }
 
 [data-theme='minimal'].dark .fill-blue-500,
-[data-theme='minimal'].dark .hover\\:fill-blue-500:hover {
+[data-theme='minimal'].dark [class*='hover:fill-blue-500']:hover {
   fill: rgb(163, 163, 163) !important;
 }
-[data-theme='minimal'].dark .hover\\:bg-blue-600:hover {
+[data-theme='minimal'].dark [class*='hover:bg-blue-600']:hover {
   background-color: rgb(212, 212, 212) !important;
 }
 
 /* 暖色主题视频卡片覆盖 */
 [data-theme='warm'] .fill-blue-500,
-[data-theme='warm'] .hover\\:fill-blue-500:hover {
+[data-theme='warm'] [class*='hover:fill-blue-500']:hover {
   fill: rgb(234, 88, 12) !important;
 }
 [data-theme='warm'] .bg-blue-400 {
   background-color: rgb(249, 115, 22) !important;
 }
-[data-theme='warm'] .hover\\:bg-blue-600:hover {
+[data-theme='warm'] [class*='hover:bg-blue-600']:hover {
   background-color: rgb(194, 65, 12) !important;
 }
 
 [data-theme='warm'].dark .fill-blue-500,
-[data-theme='warm'].dark .hover\\:fill-blue-500:hover {
+[data-theme='warm'].dark [class*='hover:fill-blue-500']:hover {
   fill: rgb(251, 146, 60) !important;
 }
-[data-theme='warm'].dark .hover\\:bg-blue-600:hover {
+[data-theme='warm'].dark [class*='hover:bg-blue-600']:hover {
   background-color: rgb(253, 186, 116) !important;
 }
 
 /* 清新主题视频卡片覆盖 */
-[data-theme='fresh'] .hover\\:fill-blue-500:hover {
+[data-theme='fresh'] [class*='hover:fill-blue-500']:hover {
   fill: rgb(63, 204, 113) !important;
 }
 [data-theme='fresh'] .bg-blue-400 {
   background-color: rgb(74, 222, 128) !important;
 }
-[data-theme='fresh'] .hover\\:bg-blue-600:hover {
+[data-theme='fresh'] [class*='hover:bg-blue-600']:hover {
   background-color: rgb(21, 128, 61) !important;
 }
 
-[data-theme='fresh'].dark .hover\\:fill-blue-500:hover {
+[data-theme='fresh'].dark [class*='hover:fill-blue-500']:hover {
   fill: rgb(74, 222, 128) !important;
 }
-[data-theme='fresh'].dark .hover\\:bg-blue-600:hover {
+[data-theme='fresh'].dark [class*='hover:bg-blue-600']:hover {
   background-color: rgb(134, 239, 172) !important;
 }
 
@@ -1445,7 +1445,9 @@ html:not(.dark) body {
 
 /* 通用主题类 */
 .theme-transition {
-  transition: background-color 0.3s ease, border-color 0.3s ease,
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
     color 0.3s ease;
 }
 

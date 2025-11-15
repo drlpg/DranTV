@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 
-export async function middleware(request: NextRequest) {
-  // 在 Docker 环境中暂时跳过 middleware
+export async function proxy(request: NextRequest) {
+  // 在 Docker 环境中暂时跳过 proxy
   if (process.env.DOCKER_ENV === 'true') {
     return NextResponse.next();
   }
@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
     const isValidSignature = await verifySignature(
       authInfo.username,
       authInfo.signature,
-      process.env.LOGIN_PASSWORD || ''
+      process.env.LOGIN_PASSWORD || '',
     );
 
     // 签名验证通过即可
@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
 async function verifySignature(
   data: string,
   signature: string,
-  secret: string
+  secret: string,
 ): Promise<boolean> {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secret);
@@ -84,12 +84,12 @@ async function verifySignature(
       keyData,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
-      ['verify']
+      ['verify'],
     );
 
     // 将十六进制字符串转换为Uint8Array
     const signatureBuffer = new Uint8Array(
-      signature.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+      signature.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [],
     );
 
     // 验证签名
@@ -97,7 +97,7 @@ async function verifySignature(
       'HMAC',
       key,
       signatureBuffer,
-      messageData
+      messageData,
     );
   } catch (error) {
     return false;
@@ -107,7 +107,7 @@ async function verifySignature(
 // 处理认证失败的情况
 function handleAuthFailure(
   request: NextRequest,
-  pathname: string
+  pathname: string,
 ): NextResponse {
   // 如果是 API 路由，返回 401 状态码
   if (pathname.startsWith('/api')) {
@@ -137,7 +137,7 @@ function shouldSkipAuth(pathname: string): boolean {
   return skipPaths.some((path) => pathname.startsWith(path));
 }
 
-// 配置middleware匹配规则
+// 配置proxy匹配规则
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|login|warning|api/login|api/register|api/logout|api/cron|api/server-config|api/debug-env).*)',
