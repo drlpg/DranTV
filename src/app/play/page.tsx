@@ -306,24 +306,12 @@ function PlayPageClient() {
             }
 
             // 始终测试第一集（索引0），确保测速的是用户最可能播放的集数
-            let episodeUrl = source.episodes[0];
+            const episodeUrl = source.episodes[0];
             if (!episodeUrl) {
               return { source, testResult: null, sourceKey };
             }
 
-            // 如果不是代理 URL，添加代理
-            if (!episodeUrl.includes('/api/proxy/')) {
-              // 如果是 M3U8，使用代理
-              if (episodeUrl.includes('.m3u8') || episodeUrl.includes('m3u8')) {
-                episodeUrl = `/api/proxy/m3u8?url=${encodeURIComponent(episodeUrl)}`;
-              }
-            }
-
-            // 如果是相对路径的代理 URL，转换为完整 URL
-            if (episodeUrl.startsWith('/api/proxy/')) {
-              episodeUrl = `${window.location.origin}${episodeUrl}`;
-            }
-
+            // 直接使用原始 URL 进行测速，不使用代理
             const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
             return {
@@ -546,16 +534,13 @@ function PlayPageClient() {
 
     let newUrl = detailData?.episodes[episodeIndex] || '';
 
-    // 确保所有 M3U8 URL 都通过代理（不仅仅是短剧）
-    if (newUrl && !newUrl.includes('/api/proxy/')) {
-      // 如果是短剧，使用短剧处理函数
-      if (detailData.source === 'shortdrama') {
-        newUrl = processShortDramaUrl(newUrl);
-      }
-      // 如果是 M3U8 格式，使用 M3U8 代理
-      else if (newUrl.includes('.m3u8') || newUrl.includes('m3u8')) {
-        newUrl = `/api/proxy/m3u8?url=${encodeURIComponent(newUrl)}`;
-      }
+    // 只对短剧使用代理，普通视频直接播放
+    if (
+      detailData.source === 'shortdrama' &&
+      newUrl &&
+      !newUrl.includes('/api/proxy/')
+    ) {
+      newUrl = processShortDramaUrl(newUrl);
     }
 
     // 如果是相对路径，转换为完整 URL
