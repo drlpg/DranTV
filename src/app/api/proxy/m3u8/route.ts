@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function getBaseUrl(url: string): string {
   try {
@@ -124,22 +125,29 @@ export async function GET(request: Request) {
 
   try {
     const decodedUrl = decodeURIComponent(url);
-    console.log('[M3U8 Proxy] Request:', decodedUrl.substring(0, 100));
 
     // 添加30秒超时
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      // 使用极简请求头，完全模拟 OrangeTV-main 的实现
+      const urlObj = new URL(decodedUrl);
       response = await fetch(decodedUrl, {
         cache: 'no-cache',
         redirect: 'follow',
-        credentials: 'same-origin',
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+          Accept: '*/*',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          Referer: urlObj.origin + '/',
+          Origin: urlObj.origin,
+          Connection: 'keep-alive',
         },
+        // @ts-expect-error - undici specific options
+        connectTimeout: 30000,
+        bodyTimeout: 60000,
       });
       clearTimeout(timeoutId);
     } catch (error) {
@@ -163,14 +171,13 @@ export async function GET(request: Request) {
     }
 
     if (!response.ok) {
-      console.error(
-        '[M3U8 Proxy] Fetch failed:',
-        response.status,
-        decodedUrl.substring(0, 100),
-      );
+      // 只记录非超时的错误
+      if (response.status !== 504 && response.status !== 403) {
+        console.error('[M3U8 Proxy] Fetch failed:', response.status);
+      }
       return NextResponse.json(
-        { error: `Failed to fetch m3u8: ${response.status}` },
-        { status: response.status },
+        { error: 'Failed to fetch m3u8' },
+        { status: 500 },
       );
     }
 
@@ -178,13 +185,6 @@ export async function GET(request: Request) {
     const finalUrl = response.url;
     const m3u8Content = await response.text();
     responseUsed = true;
-
-    console.log(
-      '[M3U8 Proxy] Success:',
-      finalUrl.substring(0, 100),
-      'Content length:',
-      m3u8Content.length,
-    );
 
     const baseUrl = getBaseUrl(finalUrl);
     const modifiedContent = rewriteM3U8Content(m3u8Content, baseUrl, request);
@@ -205,11 +205,21 @@ export async function GET(request: Request) {
     );
     return new Response(modifiedContent, { headers });
   } catch (error) {
-    console.error('[M3U8 Proxy] Error:', error);
+    // 只记录非网络超时的错误
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      if (
+        !errorMsg.includes('timeout') &&
+        !errorMsg.includes('connect timeout') &&
+        !errorMsg.includes('fetch failed')
+      ) {
+        console.error('[M3U8 Proxy] Error:', error);
+      }
+    } else {
+      console.error('[M3U8 Proxy] Error:', error);
+    }
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to fetch m3u8',
-      },
+      { error: 'Failed to fetch m3u8' },
       { status: 500 },
     );
   } finally {

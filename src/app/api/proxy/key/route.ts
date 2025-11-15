@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,10 +15,21 @@ export async function GET(request: Request) {
   try {
     const decodedUrl = decodeURIComponent(url);
 
-    // 使用极简请求头
     const fetchHeaders: Record<string, string> = {
-      'User-Agent': 'Mozilla/5.0',
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      Accept: '*/*',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      Connection: 'keep-alive',
     };
+
+    try {
+      const urlObj = new URL(decodedUrl);
+      fetchHeaders['Referer'] = urlObj.origin + '/';
+      fetchHeaders['Origin'] = urlObj.origin;
+    } catch {
+      // ignore
+    }
 
     // 添加30秒超时
     const controller = new AbortController();
