@@ -1262,15 +1262,28 @@ function PlayPageClient() {
       // 如果指定了源和ID，直接获取详情
       if (currentSource && currentId) {
         console.log('直接获取指定源的详细信息:', currentSource, currentId);
-        const detailInfo = await fetchSourceDetail(currentSource, currentId);
-        if (detailInfo.length > 0) {
-          sourcesInfo = detailInfo;
+        try {
+          const detailInfo = await fetchSourceDetail(currentSource, currentId);
+          console.log('获取详情结果:', detailInfo);
+          if (detailInfo.length > 0) {
+            sourcesInfo = detailInfo;
+          } else {
+            console.warn('详情 API 返回空数组');
+          }
+        } catch (error) {
+          console.error('获取详情失败:', error);
         }
       }
 
       // 如果没有指定源或获取失败，则搜索
       if (sourcesInfo.length === 0 && (searchTitle || videoTitle)) {
-        sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+        console.log('尝试搜索:', searchTitle || videoTitle);
+        try {
+          sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+          console.log('搜索结果数量:', sourcesInfo.length);
+        } catch (error) {
+          console.error('搜索失败:', error);
+        }
       }
 
       // 如果指定了源和ID但搜索结果中没有，再次尝试获取详情
@@ -1308,10 +1321,18 @@ function PlayPageClient() {
       }
 
       if (sourcesInfo.length === 0) {
+        console.error('最终未找到任何源:', {
+          currentSource,
+          currentId,
+          searchTitle,
+          videoTitle,
+        });
         setError('未找到匹配结果');
         setLoading(false);
         return;
       }
+
+      console.log('成功获取源信息，数量:', sourcesInfo.length);
 
       let detailData: SearchResult = sourcesInfo[0];
 
