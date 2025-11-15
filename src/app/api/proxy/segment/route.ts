@@ -25,8 +25,6 @@ export async function GET(request: Request) {
       Accept: '*/*',
       'Accept-Encoding': 'gzip, deflate, br',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
       'Sec-Fetch-Dest': 'empty',
       'Sec-Fetch-Mode': 'cors',
       'Sec-Fetch-Site': 'cross-site',
@@ -39,11 +37,12 @@ export async function GET(request: Request) {
       fetchHeaders['Range'] = range;
     }
 
-    // 只为同源请求添加 Origin 和 Referer
-    const requestOrigin = request.headers.get('origin');
-    if (requestOrigin) {
-      fetchHeaders['Origin'] = requestOrigin;
-      fetchHeaders['Referer'] = requestOrigin + '/';
+    // 设置 Referer 为目标域名
+    try {
+      const urlObj = new URL(decodedUrl);
+      fetchHeaders['Referer'] = urlObj.origin + '/';
+    } catch {
+      // ignore
     }
 
     // 添加30秒超时

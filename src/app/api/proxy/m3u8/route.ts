@@ -141,20 +141,15 @@ export async function GET(request: Request) {
         Accept: '*/*',
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Cache-Control': 'no-cache',
-        Pragma: 'no-cache',
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'cross-site',
         Connection: 'keep-alive',
       };
 
-      // 只为同源请求添加 Origin 和 Referer
-      const requestOrigin = request.headers.get('origin');
-      if (requestOrigin) {
-        headers['Origin'] = requestOrigin;
-        headers['Referer'] = requestOrigin + '/';
-      }
+      // 设置 Referer 为目标域名，模拟从该站点访问
+      // 这对于防盗链检查很重要
+      headers['Referer'] = urlObj.origin + '/';
 
       response = await fetch(decodedUrl, {
         cache: 'no-cache',
