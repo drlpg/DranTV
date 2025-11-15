@@ -11,6 +11,24 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '1.0.58',
+    date: '2025-11-16',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      '升级核心框架至最新稳定版',
+      '优化播放页面视频源显示逻辑',
+      '清理调试日志，提升代码质量',
+      '优化轮播图加载失败处理机制',
+    ],
+    fixed: [
+      '修复播放页面侧边栏视频源显示问题',
+      '修复轮播图图片加载失败显示问题',
+      '修复构建过程中的代码规范问题',
+    ],
+  },
+  {
     version: '1.0.57',
     date: '2025-11-15',
     added: [
