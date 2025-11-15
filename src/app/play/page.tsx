@@ -1038,7 +1038,7 @@ function PlayPageClient() {
 
         console.log('过滤后的结果:', {
           filteredCount: results.length,
-          results: results.map((r) => ({
+          results: results.map((r: SearchResult) => ({
             title: r.title,
             source: r.source,
             id: r.id,
@@ -1174,7 +1174,7 @@ function PlayPageClient() {
 
       console.log('找到播放源:', {
         count: sourcesInfo.length,
-        sources: sourcesInfo.map((s) => ({
+        sources: sourcesInfo.map((s: SearchResult) => ({
           source: s.source,
           id: s.id,
           title: s.title,
