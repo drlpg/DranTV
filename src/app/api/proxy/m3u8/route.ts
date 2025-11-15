@@ -132,17 +132,15 @@ export async function GET(request: Request) {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      // 使用极简请求头，模拟 IPTV 播放器而非浏览器
+      // 使用极简请求头，完全模拟 OrangeTV-main 的实现
       response = await fetch(decodedUrl, {
         cache: 'no-cache',
         redirect: 'follow',
+        credentials: 'same-origin',
         signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0',
         },
-        // @ts-expect-error - undici specific options
-        connectTimeout: 30000,
-        bodyTimeout: 60000,
       });
       clearTimeout(timeoutId);
     } catch (error) {
