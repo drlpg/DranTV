@@ -4,7 +4,6 @@ import { getConfig } from '@/lib/config';
 import { CURRENT_VERSION } from '@/lib/version';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
   const config = await getConfig();

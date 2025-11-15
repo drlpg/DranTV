@@ -8,7 +8,6 @@ import { db } from '@/lib/db';
 import { deleteCachedLiveChannels, refreshLiveChannels } from '@/lib/live';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
