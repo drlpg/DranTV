@@ -21,15 +21,12 @@ export async function GET(request: NextRequest) {
   const tempName = searchParams.get('tempName'); // 临时源名称
 
   if (!searchKeyword) {
-    return new Response(
-      JSON.stringify({ error: '搜索关键词不能为空' }),
-      {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: '搜索关键词不能为空' }), {
+      status: 400,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   const config = await getConfig();
@@ -37,27 +34,26 @@ export async function GET(request: NextRequest) {
 
   // 如果提供了临时 API 地址，创建临时源进行验证
   if (tempApi && tempName) {
-    apiSites = [{
-      key: 'temp',
-      name: tempName,
-      api: tempApi,
-      detail: '',
-      disabled: false,
-      from: 'custom' as const
-    }];
+    apiSites = [
+      {
+        key: 'temp',
+        name: tempName,
+        api: tempApi,
+        detail: '',
+        disabled: false,
+        from: 'custom' as const,
+      },
+    ];
   } else if (sourceKey) {
     // 如果指定了特定源，只验证该源
-    const targetSite = apiSites.find(site => site.key === sourceKey);
+    const targetSite = apiSites.find((site) => site.key === sourceKey);
     if (!targetSite) {
-      return new Response(
-        JSON.stringify({ error: '指定的视频源不存在' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return new Response(JSON.stringify({ error: '指定的视频源不存在' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
     apiSites = [targetSite];
   }
@@ -73,7 +69,10 @@ export async function GET(request: NextRequest) {
       // 辅助函数：安全地向控制器写入数据
       const safeEnqueue = (data: Uint8Array) => {
         try {
-          if (streamClosed || (!controller.desiredSize && controller.desiredSize !== 0)) {
+          if (
+            streamClosed ||
+            (!controller.desiredSize && controller.desiredSize !== 0)
+          ) {
             return false;
           }
           controller.enqueue(data);
@@ -88,7 +87,7 @@ export async function GET(request: NextRequest) {
       // 发送开始事件
       const startEvent = `data: ${JSON.stringify({
         type: 'start',
-        totalSources: apiSites.length
+        totalSources: apiSites.length,
       })}\n\n`;
 
       if (!safeEnqueue(encoder.encode(startEvent))) {
@@ -120,29 +119,45 @@ export async function GET(request: NextRequest) {
               throw new Error(`HTTP ${response.status}`);
             }
 
-            const data = await response.json() as any;
+            const data = (await response.json()) as any;
 
             // 检查结果是否有效
             let status: 'valid' | 'no_results' | 'invalid';
             let resultCount = 0;
+            let resultTitles: string[] = [];
+
             if (
               data &&
               data.list &&
               Array.isArray(data.list) &&
               data.list.length > 0
             ) {
+              // 获取所有返回的标题（最多前5个）
+              const allTitles = data.list
+                .slice(0, 5)
+                .map((item: any) => item.vod_name || '')
+                .filter((title: string) => title);
+
               // 检查是否有标题包含搜索词的结果
               const validResults = data.list.filter((item: any) => {
                 const title = item.vod_name || '';
-                return title.toLowerCase().includes(searchKeyword.toLowerCase());
+                return title
+                  .toLowerCase()
+                  .includes(searchKeyword.toLowerCase());
               });
 
               if (validResults.length > 0) {
                 status = 'valid';
                 resultCount = validResults.length;
+                // 获取匹配的标题（最多前5个）
+                resultTitles = validResults
+                  .slice(0, 5)
+                  .map((item: any) => item.vod_name || '');
               } else {
                 status = 'no_results';
                 resultCount = 0;
+                // 即使没有匹配，也返回实际搜索到的标题，方便调试
+                resultTitles = allTitles;
               }
             } else {
               status = 'no_results';
@@ -157,7 +172,8 @@ export async function GET(request: NextRequest) {
                 type: 'source_result',
                 source: site.key,
                 status,
-                resultCount
+                resultCount,
+                resultTitles,
               })}\n\n`;
 
               if (!safeEnqueue(encoder.encode(sourceEvent))) {
@@ -165,11 +181,9 @@ export async function GET(request: NextRequest) {
                 return;
               }
             }
-
           } finally {
             clearTimeout(timeoutId);
           }
-
         } catch (error) {
           console.warn(`验证失败 ${site.name}:`, error);
 
@@ -182,7 +196,7 @@ export async function GET(request: NextRequest) {
               source: site.key,
               status: 'invalid',
               error: error instanceof Error ? error.message : '未知错误',
-              resultCount: 0
+              resultCount: 0,
             })}\n\n`;
 
             if (!safeEnqueue(encoder.encode(errorEvent))) {
@@ -198,7 +212,7 @@ export async function GET(request: NextRequest) {
             // 发送最终完成事件
             const completeEvent = `data: ${JSON.stringify({
               type: 'complete',
-              completedSources
+              completedSources,
             })}\n\n`;
 
             if (safeEnqueue(encoder.encode(completeEvent))) {
@@ -227,7 +241,7 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET',
       'Access-Control-Allow-Headers': 'Content-Type',

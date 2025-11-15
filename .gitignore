@@ -49,5 +49,4 @@ git-auto.sh
 clear-database.js
 scripts/check-db.js
 
-# 排除的项目文件夹
-OrangeTV-main/
+

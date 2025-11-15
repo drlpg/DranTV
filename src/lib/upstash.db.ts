@@ -30,7 +30,7 @@ function ensureStringArray(value: any[]): string[] {
 // 添加Upstash Redis操作重试包装器
 async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 2 // 减少到2次重试
+  maxRetries = 2, // 减少到2次重试
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -79,10 +79,10 @@ export class UpstashRedisStorage implements IStorage {
 
   async getPlayRecord(
     userName: string,
-    key: string
+    key: string,
   ): Promise<PlayRecord | null> {
     const val = await withRetry(() =>
-      this.client.get(this.prKey(userName, key))
+      this.client.get(this.prKey(userName, key)),
     );
     if (!val) return null;
 
@@ -96,15 +96,15 @@ export class UpstashRedisStorage implements IStorage {
   async setPlayRecord(
     userName: string,
     key: string,
-    record: PlayRecord
+    record: PlayRecord,
   ): Promise<void> {
     await withRetry(() =>
-      this.client.set(this.prKey(userName, key), JSON.stringify(record))
+      this.client.set(this.prKey(userName, key), JSON.stringify(record)),
     );
   }
 
   async getAllPlayRecords(
-    userName: string
+    userName: string,
   ): Promise<Record<string, PlayRecord>> {
     const pattern = `u:${userName}:pr:*`;
     const keys: string[] = await withRetry(() => this.client.keys(pattern));
@@ -117,7 +117,7 @@ export class UpstashRedisStorage implements IStorage {
         try {
           // 截取 source+id 部分
           const keyPart = ensureString(
-            fullKey.replace(`u:${userName}:pr:`, '')
+            fullKey.replace(`u:${userName}:pr:`, ''),
           );
           const record =
             typeof value === 'string'
@@ -143,7 +143,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async getFavorite(userName: string, key: string): Promise<Favorite | null> {
     const val = await withRetry(() =>
-      this.client.get(this.favKey(userName, key))
+      this.client.get(this.favKey(userName, key)),
     );
     if (!val) return null;
 
@@ -157,10 +157,10 @@ export class UpstashRedisStorage implements IStorage {
   async setFavorite(
     userName: string,
     key: string,
-    favorite: Favorite
+    favorite: Favorite,
   ): Promise<void> {
     await withRetry(() =>
-      this.client.set(this.favKey(userName, key), JSON.stringify(favorite))
+      this.client.set(this.favKey(userName, key), JSON.stringify(favorite)),
     );
   }
 
@@ -175,7 +175,7 @@ export class UpstashRedisStorage implements IStorage {
       if (value) {
         try {
           const keyPart = ensureString(
-            fullKey.replace(`u:${userName}:fav:`, '')
+            fullKey.replace(`u:${userName}:fav:`, ''),
           );
           const favorite =
             typeof value === 'string' ? JSON.parse(value) : (value as Favorite);
@@ -201,13 +201,13 @@ export class UpstashRedisStorage implements IStorage {
     // 使用加密存储密码
     const encryptedPassword = encryptPassword(password);
     await withRetry(() =>
-      this.client.set(this.userPwdKey(userName), encryptedPassword)
+      this.client.set(this.userPwdKey(userName), encryptedPassword),
     );
   }
 
   async verifyUser(userName: string, password: string): Promise<boolean> {
     const stored = await withRetry(() =>
-      this.client.get(this.userPwdKey(userName))
+      this.client.get(this.userPwdKey(userName)),
     );
     if (stored === null) return false;
 
@@ -232,7 +232,7 @@ export class UpstashRedisStorage implements IStorage {
   async checkUserExist(userName: string): Promise<boolean> {
     // 使用 EXISTS 判断 key 是否存在
     const exists = await withRetry(() =>
-      this.client.exists(this.userPwdKey(userName))
+      this.client.exists(this.userPwdKey(userName)),
     );
     return exists === 1;
   }
@@ -242,7 +242,7 @@ export class UpstashRedisStorage implements IStorage {
     // 使用加密存储密码
     const encryptedPassword = encryptPassword(newPassword);
     await withRetry(() =>
-      this.client.set(this.userPwdKey(userName), encryptedPassword)
+      this.client.set(this.userPwdKey(userName), encryptedPassword),
     );
   }
 
@@ -257,7 +257,7 @@ export class UpstashRedisStorage implements IStorage {
     // 删除播放记录
     const playRecordPattern = `u:${userName}:pr:*`;
     const playRecordKeys = await withRetry(() =>
-      this.client.keys(playRecordPattern)
+      this.client.keys(playRecordPattern),
     );
     if (playRecordKeys.length > 0) {
       await withRetry(() => this.client.del(...playRecordKeys));
@@ -266,7 +266,7 @@ export class UpstashRedisStorage implements IStorage {
     // 删除收藏夹
     const favoritePattern = `u:${userName}:fav:*`;
     const favoriteKeys = await withRetry(() =>
-      this.client.keys(favoritePattern)
+      this.client.keys(favoritePattern),
     );
     if (favoriteKeys.length > 0) {
       await withRetry(() => this.client.del(...favoriteKeys));
@@ -275,7 +275,7 @@ export class UpstashRedisStorage implements IStorage {
     // 删除跳过片头片尾配置
     const skipConfigPattern = `u:${userName}:skip:*`;
     const skipConfigKeys = await withRetry(() =>
-      this.client.keys(skipConfigPattern)
+      this.client.keys(skipConfigPattern),
     );
     if (skipConfigKeys.length > 0) {
       await withRetry(() => this.client.del(...skipConfigKeys));
@@ -289,7 +289,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async getSearchHistory(userName: string): Promise<string[]> {
     const result = await withRetry(() =>
-      this.client.lrange(this.shKey(userName), 0, -1)
+      this.client.lrange(this.shKey(userName), 0, -1),
     );
     // 确保返回的都是字符串类型
     return ensureStringArray(result as any[]);
@@ -363,10 +363,10 @@ export class UpstashRedisStorage implements IStorage {
   async getSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<SkipConfig | null> {
     const val = await withRetry(() =>
-      this.client.get(this.skipConfigKey(userName, source, id))
+      this.client.get(this.skipConfigKey(userName, source, id)),
     );
     if (!val) return null;
 
@@ -381,28 +381,28 @@ export class UpstashRedisStorage implements IStorage {
     userName: string,
     source: string,
     id: string,
-    config: SkipConfig
+    config: SkipConfig,
   ): Promise<void> {
     await withRetry(() =>
       this.client.set(
         this.skipConfigKey(userName, source, id),
-        JSON.stringify(config)
-      )
+        JSON.stringify(config),
+      ),
     );
   }
 
   async deleteSkipConfig(
     userName: string,
     source: string,
-    id: string
+    id: string,
   ): Promise<void> {
     await withRetry(() =>
-      this.client.del(this.skipConfigKey(userName, source, id))
+      this.client.del(this.skipConfigKey(userName, source, id)),
     );
   }
 
   async getAllSkipConfigs(
-    userName: string
+    userName: string,
   ): Promise<{ [key: string]: SkipConfig }> {
     const pattern = `u:${userName}:skip:*`;
     const keys = await withRetry(() => this.client.keys(pattern));
@@ -446,14 +446,14 @@ export class UpstashRedisStorage implements IStorage {
 
   async getUserAvatar(userName: string): Promise<string | null> {
     const val = await withRetry(() =>
-      this.client.get(this.avatarKey(userName))
+      this.client.get(this.avatarKey(userName)),
     );
     return val ? ensureString(val) : null;
   }
 
   async setUserAvatar(userName: string, avatarBase64: string): Promise<void> {
     await withRetry(() =>
-      this.client.set(this.avatarKey(userName), avatarBase64)
+      this.client.set(this.avatarKey(userName), avatarBase64),
     );
   }
 
@@ -468,7 +468,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async getDanmu(videoId: string): Promise<any[]> {
     const val = await withRetry(() =>
-      this.client.lrange(this.danmuKey(videoId), 0, -1)
+      this.client.lrange(this.danmuKey(videoId), 0, -1),
     );
     if (!val || !Array.isArray(val)) return [];
 
@@ -492,7 +492,7 @@ export class UpstashRedisStorage implements IStorage {
       mode: number;
       time: number;
       timestamp: number;
-    }
+    },
   ): Promise<void> {
     const danmuData = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -500,7 +500,7 @@ export class UpstashRedisStorage implements IStorage {
       ...danmu,
     };
     await withRetry(() =>
-      this.client.rpush(this.danmuKey(videoId), JSON.stringify(danmuData))
+      this.client.rpush(this.danmuKey(videoId), JSON.stringify(danmuData)),
     );
   }
 
@@ -517,7 +517,7 @@ export class UpstashRedisStorage implements IStorage {
     if (filteredList.length > 0) {
       const danmuStrings = filteredList.map((item) => JSON.stringify(item));
       await withRetry(() =>
-        this.client.rpush(this.danmuKey(videoId), danmuStrings)
+        this.client.rpush(this.danmuKey(videoId), danmuStrings),
       );
     }
   }
@@ -533,7 +533,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async getUserMachineCode(userName: string): Promise<string | null> {
     const val = await withRetry(() =>
-      this.client.get(this.machineCodeKey(userName))
+      this.client.get(this.machineCodeKey(userName)),
     );
     if (!val) return null;
 
@@ -549,7 +549,7 @@ export class UpstashRedisStorage implements IStorage {
   async setUserMachineCode(
     userName: string,
     machineCode: string,
-    deviceInfo?: string
+    deviceInfo?: string,
   ): Promise<void> {
     const data = {
       machineCode,
@@ -559,12 +559,12 @@ export class UpstashRedisStorage implements IStorage {
 
     // 保存用户的机器码 - 统一使用JSON序列化
     await withRetry(() =>
-      this.client.set(this.machineCodeKey(userName), JSON.stringify(data))
+      this.client.set(this.machineCodeKey(userName), JSON.stringify(data)),
     );
 
     // 在机器码列表中记录绑定关系
     await withRetry(() =>
-      this.client.hset(this.machineCodeListKey(), { [machineCode]: userName })
+      this.client.hset(this.machineCodeListKey(), { [machineCode]: userName }),
     );
   }
 
@@ -578,7 +578,7 @@ export class UpstashRedisStorage implements IStorage {
     // 从机器码列表中删除绑定关系
     if (userMachineCode) {
       await withRetry(() =>
-        this.client.hdel(this.machineCodeListKey(), userMachineCode)
+        this.client.hdel(this.machineCodeListKey(), userMachineCode),
       );
     }
   }
@@ -622,7 +622,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async isMachineCodeBound(machineCode: string): Promise<string | null> {
     const val = await withRetry(() =>
-      this.client.hget(this.machineCodeListKey(), machineCode)
+      this.client.hget(this.machineCodeListKey(), machineCode),
     );
     return val ? ensureString(val) : null;
   }
@@ -665,7 +665,7 @@ export class UpstashRedisStorage implements IStorage {
   async saveMessage(message: ChatMessage): Promise<void> {
     // 保存消息详情 - 使用JSON序列化
     await withRetry(() =>
-      this.client.set(this.messageKey(message.id), JSON.stringify(message))
+      this.client.set(this.messageKey(message.id), JSON.stringify(message)),
     );
 
     // 将消息ID添加到对话的消息列表中（按时间排序）
@@ -673,14 +673,14 @@ export class UpstashRedisStorage implements IStorage {
       this.client.zadd(this.conversationMessagesKey(message.conversation_id), {
         score: message.timestamp,
         member: message.id,
-      })
+      }),
     );
   }
 
   async getMessages(
     conversationId: string,
     limit = 50,
-    offset = 0
+    offset = 0,
   ): Promise<ChatMessage[]> {
     // 从有序集合中获取消息ID列表（按时间倒序）
     const messageIds = await withRetry(() =>
@@ -688,14 +688,14 @@ export class UpstashRedisStorage implements IStorage {
         this.conversationMessagesKey(conversationId),
         offset,
         offset + limit - 1,
-        { rev: true }
-      )
+        { rev: true },
+      ),
     );
 
     const messages: ChatMessage[] = [];
     for (const messageId of messageIds) {
       const messageData = await withRetry(() =>
-        this.client.get(this.messageKey(messageId as string))
+        this.client.get(this.messageKey(messageId as string)),
       );
       if (messageData) {
         try {
@@ -715,7 +715,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async markMessageAsRead(messageId: string): Promise<void> {
     const messageData = await withRetry(() =>
-      this.client.get(this.messageKey(messageId))
+      this.client.get(this.messageKey(messageId)),
     );
     if (messageData) {
       try {
@@ -725,7 +725,7 @@ export class UpstashRedisStorage implements IStorage {
             : (messageData as ChatMessage);
         message.is_read = true;
         await withRetry(() =>
-          this.client.set(this.messageKey(messageId), JSON.stringify(message))
+          this.client.set(this.messageKey(messageId), JSON.stringify(message)),
         );
       } catch (error) {
         // 静默处理错误
@@ -736,7 +736,7 @@ export class UpstashRedisStorage implements IStorage {
   // 对话管理
   async getConversations(userName: string): Promise<Conversation[]> {
     const conversationIds = await withRetry(() =>
-      this.client.smembers(this.userConversationsKey(userName))
+      this.client.smembers(this.userConversationsKey(userName)),
     );
 
     const conversations: Conversation[] = [];
@@ -753,7 +753,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async getConversation(conversationId: string): Promise<Conversation | null> {
     const conversationData = await withRetry(() =>
-      this.client.get(this.conversationKey(conversationId))
+      this.client.get(this.conversationKey(conversationId)),
     );
 
     if (!conversationData) return null;
@@ -772,8 +772,8 @@ export class UpstashRedisStorage implements IStorage {
     await withRetry(() =>
       this.client.set(
         this.conversationKey(conversation.id),
-        JSON.stringify(conversation)
-      )
+        JSON.stringify(conversation),
+      ),
     );
 
     // 将对话ID添加到每个参与者的对话列表中
@@ -781,15 +781,15 @@ export class UpstashRedisStorage implements IStorage {
       await withRetry(() =>
         this.client.sadd(
           this.userConversationsKey(participant),
-          conversation.id
-        )
+          conversation.id,
+        ),
       );
     }
   }
 
   async updateConversation(
     conversationId: string,
-    updates: Partial<Conversation>
+    updates: Partial<Conversation>,
   ): Promise<void> {
     const conversation = await this.getConversation(conversationId);
     if (conversation) {
@@ -797,8 +797,8 @@ export class UpstashRedisStorage implements IStorage {
       await withRetry(() =>
         this.client.set(
           this.conversationKey(conversationId),
-          JSON.stringify(conversation)
-        )
+          JSON.stringify(conversation),
+        ),
       );
     }
   }
@@ -811,19 +811,19 @@ export class UpstashRedisStorage implements IStorage {
         await withRetry(() =>
           this.client.srem(
             this.userConversationsKey(participant),
-            conversationId
-          )
+            conversationId,
+          ),
         );
       }
 
       // 删除对话详情
       await withRetry(() =>
-        this.client.del(this.conversationKey(conversationId))
+        this.client.del(this.conversationKey(conversationId)),
       );
 
       // 删除对话的消息列表
       await withRetry(() =>
-        this.client.del(this.conversationMessagesKey(conversationId))
+        this.client.del(this.conversationMessagesKey(conversationId)),
       );
     }
   }
@@ -831,13 +831,13 @@ export class UpstashRedisStorage implements IStorage {
   // 好友管理
   async getFriends(userName: string): Promise<Friend[]> {
     const friendIds = await withRetry(() =>
-      this.client.smembers(this.userFriendsKey(userName))
+      this.client.smembers(this.userFriendsKey(userName)),
     );
 
     const friends: Friend[] = [];
     for (const friendId of friendIds) {
       const friendData = await withRetry(() =>
-        this.client.get(this.friendKey(friendId))
+        this.client.get(this.friendKey(friendId)),
       );
       if (friendData) {
         try {
@@ -858,19 +858,19 @@ export class UpstashRedisStorage implements IStorage {
   async addFriend(userName: string, friend: Friend): Promise<void> {
     // 保存好友详情 - 使用JSON序列化
     await withRetry(() =>
-      this.client.set(this.friendKey(friend.id), JSON.stringify(friend))
+      this.client.set(this.friendKey(friend.id), JSON.stringify(friend)),
     );
 
     // 将好友ID添加到用户的好友列表中
     await withRetry(() =>
-      this.client.sadd(this.userFriendsKey(userName), friend.id)
+      this.client.sadd(this.userFriendsKey(userName), friend.id),
     );
   }
 
   async removeFriend(userName: string, friendId: string): Promise<void> {
     // 从用户的好友列表中移除
     await withRetry(() =>
-      this.client.srem(this.userFriendsKey(userName), friendId)
+      this.client.srem(this.userFriendsKey(userName), friendId),
     );
 
     // 删除好友详情
@@ -879,10 +879,10 @@ export class UpstashRedisStorage implements IStorage {
 
   async updateFriendStatus(
     friendId: string,
-    status: Friend['status']
+    status: Friend['status'],
   ): Promise<void> {
     const friendData = await withRetry(() =>
-      this.client.get(this.friendKey(friendId))
+      this.client.get(this.friendKey(friendId)),
     );
     if (friendData) {
       try {
@@ -892,7 +892,7 @@ export class UpstashRedisStorage implements IStorage {
             : (friendData as Friend);
         friend.status = status;
         await withRetry(() =>
-          this.client.set(this.friendKey(friendId), JSON.stringify(friend))
+          this.client.set(this.friendKey(friendId), JSON.stringify(friend)),
         );
       } catch (error) {
         // 静默处理错误
@@ -903,13 +903,13 @@ export class UpstashRedisStorage implements IStorage {
   // 好友申请管理
   async getFriendRequests(userName: string): Promise<FriendRequest[]> {
     const requestIds = await withRetry(() =>
-      this.client.smembers(this.userFriendRequestsKey(userName))
+      this.client.smembers(this.userFriendRequestsKey(userName)),
     );
 
     const requests: FriendRequest[] = [];
     for (const requestId of requestIds) {
       const requestData = await withRetry(() =>
-        this.client.get(this.friendRequestKey(requestId))
+        this.client.get(this.friendRequestKey(requestId)),
       );
       if (requestData) {
         try {
@@ -935,28 +935,28 @@ export class UpstashRedisStorage implements IStorage {
     await withRetry(() =>
       this.client.set(
         this.friendRequestKey(request.id),
-        JSON.stringify(request)
-      )
+        JSON.stringify(request),
+      ),
     );
 
     // 将申请ID添加到双方的申请列表中
     await withRetry(() =>
       this.client.sadd(
         this.userFriendRequestsKey(request.from_user),
-        request.id
-      )
+        request.id,
+      ),
     );
     await withRetry(() =>
-      this.client.sadd(this.userFriendRequestsKey(request.to_user), request.id)
+      this.client.sadd(this.userFriendRequestsKey(request.to_user), request.id),
     );
   }
 
   async updateFriendRequest(
     requestId: string,
-    status: FriendRequest['status']
+    status: FriendRequest['status'],
   ): Promise<void> {
     const requestData = await withRetry(() =>
-      this.client.get(this.friendRequestKey(requestId))
+      this.client.get(this.friendRequestKey(requestId)),
     );
     if (requestData) {
       try {
@@ -969,8 +969,8 @@ export class UpstashRedisStorage implements IStorage {
         await withRetry(() =>
           this.client.set(
             this.friendRequestKey(requestId),
-            JSON.stringify(request)
-          )
+            JSON.stringify(request),
+          ),
         );
       } catch (error) {
         // 静默处理错误
@@ -980,7 +980,7 @@ export class UpstashRedisStorage implements IStorage {
 
   async deleteFriendRequest(requestId: string): Promise<void> {
     const requestData = await withRetry(() =>
-      this.client.get(this.friendRequestKey(requestId))
+      this.client.get(this.friendRequestKey(requestId)),
     );
     if (requestData) {
       try {
@@ -993,14 +993,14 @@ export class UpstashRedisStorage implements IStorage {
         await withRetry(() =>
           this.client.srem(
             this.userFriendRequestsKey(request.from_user),
-            requestId
-          )
+            requestId,
+          ),
         );
         await withRetry(() =>
           this.client.srem(
             this.userFriendRequestsKey(request.to_user),
-            requestId
-          )
+            requestId,
+          ),
         );
       } catch (error) {
         // 静默处理错误
@@ -1015,7 +1015,7 @@ export class UpstashRedisStorage implements IStorage {
   async searchUsers(query: string): Promise<Friend[]> {
     const allUsers = await this.getAllUsers();
     const matchedUsers = allUsers.filter((username) =>
-      username.toLowerCase().includes(query.toLowerCase())
+      username.toLowerCase().includes(query.toLowerCase()),
     );
 
     // 转换为Friend格式返回
@@ -1073,7 +1073,7 @@ function getUpstashRedisClient(): Redis {
 
     if (!upstashUrl || !upstashToken) {
       throw new Error(
-        'UPSTASH_URL and UPSTASH_TOKEN env variables must be set'
+        'UPSTASH_URL and UPSTASH_TOKEN env variables must be set',
       );
     }
 
@@ -1089,10 +1089,6 @@ function getUpstashRedisClient(): Redis {
       // 禁用自动反序列化，保持字符串原样存储
       automaticDeserialization: false,
     });
-
-    console.log(
-      '[Upstash] 创建新的客户端实例，automaticDeserialization: false'
-    );
 
     (global as any)[globalKey] = client;
   }

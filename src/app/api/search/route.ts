@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getAvailableApiSites, getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
+import { clearSearchCacheByQuery } from '@/lib/search-cache';
 import { yellowWords } from '@/lib/yellow';
 
 // 短剧搜索函数
@@ -84,6 +85,12 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
+  const clearCache = searchParams.get('clearCache') === 'true';
+
+  // 如果请求清除缓存，先清除
+  if (clearCache && query) {
+    clearSearchCacheByQuery(query);
+  }
 
   if (!query) {
     const cacheTime = await getCacheTime();
@@ -102,7 +109,8 @@ export async function GET(request: NextRequest) {
 
   const config = await getConfig();
   const apiSites = await getAvailableApiSites(authInfo.username);
-  const maxTotalResults = (config.SiteConfig.SearchDownstreamMaxPage || 5) * 10;
+  const maxTotalResults = (config.SiteConfig.SearchDownstreamMaxPage || 5) * 20;
+  const maxResultsPerSource = 5; // 每个源最多返回5个结果
 
   // 优先执行视频源搜索，添加超时控制和错误处理
   const searchPromises = apiSites.map((site) =>
@@ -127,7 +135,12 @@ export async function GET(request: NextRequest) {
     const successResults = results
       .filter((result) => result.status === 'fulfilled')
       .map((result) => (result as PromiseFulfilledResult<any>).value);
-    let flattenedResults = successResults.flat();
+
+    // 限制每个源的结果数量，然后合并
+    const limitedResults = successResults.map((sourceResults) =>
+      sourceResults.slice(0, maxResultsPerSource),
+    );
+    let flattenedResults = limitedResults.flat();
 
     // 过滤黄色内容
     if (!config.SiteConfig.DisableYellowFilter) {

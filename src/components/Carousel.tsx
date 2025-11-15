@@ -84,7 +84,7 @@ export default function Carousel({
 
   const goToPrevious = () => {
     setCurrentIndex(
-      (prev) => (prev - 1 + activeItems.length) % activeItems.length
+      (prev) => (prev - 1 + activeItems.length) % activeItems.length,
     );
   };
 
@@ -173,25 +173,38 @@ export default function Carousel({
             } ${item.link ? 'cursor-pointer' : ''}`}
             onClick={() => handleItemClick(item)}
           >
-            {/* 加载中状态 - 在图片加载完成前显示 */}
-            {!loadedIds.has(item.id) && !failedIds.has(item.id) && (
-              <div className='absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10'>
+            {/* 图片加载失败时显示占位符 */}
+            {failedIds.has(item.id) ? (
+              <div className='absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center'>
                 <img
-                  src='/img/loading.svg'
-                  alt='加载中'
-                  className='w-12 h-3 sm:w-20 sm:h-5 object-contain opacity-80'
+                  src='/img/placeholder-minimal.svg'
+                  alt='占位符'
+                  className='w-full h-full object-cover opacity-50'
                 />
               </div>
+            ) : (
+              <>
+                {/* 加载中状态 - 在图片加载完成前显示 */}
+                {!loadedIds.has(item.id) && (
+                  <div className='absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10'>
+                    <img
+                      src='/img/loading.svg'
+                      alt='加载中'
+                      className='w-12 h-3 sm:w-20 sm:h-5 object-contain opacity-80'
+                    />
+                  </div>
+                )}
+                {/* 实际图片 - 使用原生img以确保onError正确触发 */}
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className='absolute inset-0 w-full h-full object-cover'
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  onLoad={() => handleImageLoad(item.id)}
+                  onError={() => handleImageError(item.id)}
+                />
+              </>
             )}
-            {/* 实际图片 - 使用原生img以确保onError正确触发 */}
-            <img
-              src={item.image}
-              alt={item.title}
-              className='absolute inset-0 w-full h-full object-cover'
-              loading={index === 0 ? 'eager' : 'lazy'}
-              onLoad={() => handleImageLoad(item.id)}
-              onError={() => handleImageError(item.id)}
-            />
             {/* 推荐徽章 */}
             {item.rate && (
               <div className='absolute top-2 left-2 md:top-4 md:left-4 bg-blue-500/80 backdrop-blur-md text-white text-xs md:text-sm font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-md transition-all duration-300 ease-out hover:scale-110'>

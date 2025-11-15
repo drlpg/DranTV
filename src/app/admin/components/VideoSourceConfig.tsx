@@ -19,10 +19,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import {
-  GripVertical,
-} from 'lucide-react';
-import { useCallback,useEffect, useMemo, useState } from 'react';
+import { GripVertical } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { AlertModal } from './modals/AlertModal';
@@ -56,7 +54,7 @@ const VideoSourceConfig = ({
 
   // 批量操作相关状态
   const [selectedSources, setSelectedSources] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // 搜索相关状态
@@ -81,7 +79,7 @@ const VideoSourceConfig = ({
       (source) =>
         source.name.toLowerCase().includes(keyword) ||
         source.key.toLowerCase().includes(keyword) ||
-        source.api.toLowerCase().includes(keyword)
+        source.api.toLowerCase().includes(keyword),
     );
   }, [sources, searchKeyword]);
 
@@ -119,8 +117,14 @@ const VideoSourceConfig = ({
       status: 'valid' | 'no_results' | 'invalid' | 'validating';
       message: string;
       resultCount: number;
+      resultTitles?: string[];
     }>
   >([]);
+
+  // 移动端点击显示详情的状态
+  const [showValidationDetail, setShowValidationDetail] = useState<
+    string | null
+  >(null);
 
   // 单个视频源验证状态
   const [singleValidationResult, setSingleValidationResult] = useState<{
@@ -160,7 +164,7 @@ const VideoSourceConfig = ({
         delay: 150, // 长按 150ms 后触发，避免与滚动冲突
         tolerance: 5,
       },
-    })
+    }),
   );
 
   // 初始化
@@ -212,7 +216,7 @@ const VideoSourceConfig = ({
     if (!target) return;
     const action = target.disabled ? 'enable' : 'disable';
     withLoading(`toggleSource_${key}`, () =>
-      callSourceApi({ action, key })
+      callSourceApi({ action, key }),
     ).catch(() => {
       console.error('操作失败', action, key);
     });
@@ -220,7 +224,7 @@ const VideoSourceConfig = ({
 
   const handleDelete = (key: string) => {
     withLoading(`deleteSource_${key}`, () =>
-      callSourceApi({ action: 'delete', key })
+      callSourceApi({ action: 'delete', key }),
     ).catch(() => {
       console.error('操作失败', 'delete', key);
     });
@@ -293,7 +297,7 @@ const VideoSourceConfig = ({
   const handleSaveOrder = () => {
     const order = sources.map((s) => s.key);
     withLoading('saveSourceOrder', () =>
-      callSourceApi({ action: 'sort', order })
+      callSourceApi({ action: 'sort', order }),
     )
       .then(() => {
         setOrderChanged(false);
@@ -325,7 +329,7 @@ const VideoSourceConfig = ({
           }
           throw new Error(
             data.error ||
-              `保存失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+              `保存失败 (${resp.status}): ${resp.statusText || '未知错误'}`,
           );
         }
 
@@ -357,12 +361,12 @@ const VideoSourceConfig = ({
           // 特殊处理504超时错误
           if (resp.status === 504) {
             throw new Error(
-              '清除超时，可能是数据量较大。操作可能已部分完成，请刷新页面查看状态。'
+              '清除超时，可能是数据量较大。操作可能已部分完成，请刷新页面查看状态。',
             );
           }
           throw new Error(
             data.error ||
-              `清除失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+              `清除失败 (${resp.status}): ${resp.statusText || '未知错误'}`,
           );
         }
 
@@ -402,12 +406,12 @@ const VideoSourceConfig = ({
           // 特殊处理504超时错误
           if (resp.status === 504) {
             throw new Error(
-              '导入超时，可能是订阅源响应较慢或包含大量数据。请稍后重试或检查订阅链接是否可访问。'
+              '导入超时，可能是订阅源响应较慢或包含大量数据。请稍后重试或检查订阅链接是否可访问。',
             );
           }
           throw new Error(
             data.error ||
-              `导入失败 (${resp.status}): ${resp.statusText || '未知错误'}`
+              `导入失败 (${resp.status}): ${resp.statusText || '未知错误'}`,
           );
         }
 
@@ -419,7 +423,7 @@ const VideoSourceConfig = ({
           showSuccess(
             data.message ||
               `成功导入 ${data.sources.length} 个视频源${formatInfo}`,
-            showAlert
+            showAlert,
           );
           // 刷新配置以获取最新数据
           await refreshConfig();
@@ -470,8 +474,8 @@ const VideoSourceConfig = ({
         // 使用EventSource接收流式数据
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
-            validationKeyword.trim()
-          )}`
+            validationKeyword.trim(),
+          )}`,
         );
 
         eventSource.onmessage = (event) => {
@@ -480,7 +484,6 @@ const VideoSourceConfig = ({
 
             switch (data.type) {
               case 'start':
-                console.log(`开始检测 ${data.totalSources} 个视频源`);
                 break;
 
               case 'source_result':
@@ -501,11 +504,12 @@ const VideoSourceConfig = ({
                               data.status === 'valid'
                                 ? '搜索正常'
                                 : data.status === 'no_results'
-                                ? '无法搜索到结果'
-                                : '连接失败',
-                            resultCount: data.status === 'valid' ? 1 : 0,
+                                  ? '无法搜索到结果'
+                                  : '连接失败',
+                            resultCount: data.resultCount || 0,
+                            resultTitles: data.resultTitles || [],
                           }
-                        : r
+                        : r,
                     );
                   } else {
                     return [
@@ -520,9 +524,10 @@ const VideoSourceConfig = ({
                           data.status === 'valid'
                             ? '搜索正常'
                             : data.status === 'no_results'
-                            ? '无法搜索到结果'
-                            : '连接失败',
-                        resultCount: data.status === 'valid' ? 1 : 0,
+                              ? '无法搜索到结果'
+                              : '连接失败',
+                        resultCount: data.resultCount || 0,
+                        resultTitles: data.resultTitles || [],
                       },
                     ];
                   }
@@ -530,11 +535,58 @@ const VideoSourceConfig = ({
                 break;
 
               case 'complete':
-                console.log(
-                  `检测完成，共检测 ${data.completedSources} 个视频源`
-                );
                 eventSource.close();
                 setIsValidating(false);
+
+                // 自动排序：将有效的视频源移到前面
+                setValidationResults((prev) => {
+                  const sorted = [...prev].sort((a, b) => {
+                    // 有效的排在前面
+                    if (a.status === 'valid' && b.status !== 'valid') return -1;
+                    if (a.status !== 'valid' && b.status === 'valid') return 1;
+                    // 其他状态保持原顺序
+                    return 0;
+                  });
+
+                  // 统计有效源数量
+                  const validCount = sorted.filter(
+                    (r) => r.status === 'valid',
+                  ).length;
+
+                  // 获取有效源的key集合
+                  const validKeys = new Set(
+                    sorted
+                      .filter((r) => r.status === 'valid')
+                      .map((r) => r.key),
+                  );
+
+                  // 对sources列表进行排序
+                  setSources((prevSources) => {
+                    const sortedSources = [...prevSources].sort((a, b) => {
+                      const aValid = validKeys.has(a.key);
+                      const bValid = validKeys.has(b.key);
+
+                      if (aValid && !bValid) return -1;
+                      if (!aValid && bValid) return 1;
+                      return 0;
+                    });
+
+                    return sortedSources;
+                  });
+
+                  // 显示排序完成提示
+                  if (validCount > 0) {
+                    showAlert({
+                      type: 'success',
+                      title: '检测完成',
+                      message: `已将 ${validCount} 个有效视频源移至列表前端`,
+                      showConfirm: true,
+                    });
+                  }
+
+                  return sorted;
+                });
+
                 break;
             }
           } catch (error) {
@@ -584,7 +636,7 @@ const VideoSourceConfig = ({
   const handleValidateSource = async (
     api: string,
     name: string,
-    isNewSource = false
+    isNewSource = false,
   ) => {
     if (!api.trim()) {
       showAlert({
@@ -617,10 +669,10 @@ const VideoSourceConfig = ({
         // 构建检测 URL，使用临时 API 地址
         const eventSource = new EventSource(
           `/api/admin/source/validate?q=${encodeURIComponent(
-            testKeyword
+            testKeyword,
           )}&tempApi=${encodeURIComponent(
-            api.trim()
-          )}&tempName=${encodeURIComponent(name)}`
+            api.trim(),
+          )}&tempName=${encodeURIComponent(name)}`,
         );
 
         eventSource.onmessage = (event) => {
@@ -630,7 +682,6 @@ const VideoSourceConfig = ({
 
             switch (data.type) {
               case 'start':
-                console.log(`开始检测视频源: ${name}`);
                 break;
 
               case 'source_result':
@@ -662,7 +713,6 @@ const VideoSourceConfig = ({
                 break;
 
               case 'complete':
-                console.log(`检测完成: ${name}`);
                 eventSource.close();
                 setValidating(false);
                 break;
@@ -754,6 +804,12 @@ const VideoSourceConfig = ({
     const result = validationResults.find((r) => r.key === sourceKey);
     if (!result) return null;
 
+    // 构建详细信息
+    let detailMessage = result.message;
+    if (result.resultTitles && result.resultTitles.length > 0) {
+      detailMessage += `\n找到 ${result.resultCount} 个结果:\n${result.resultTitles.join('\n')}`;
+    }
+
     switch (result.status) {
       case 'validating':
         return {
@@ -762,6 +818,9 @@ const VideoSourceConfig = ({
             'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
           icon: '⟳',
           message: result.message,
+          detailMessage,
+          resultTitles: result.resultTitles,
+          resultCount: result.resultCount,
         };
       case 'valid':
         return {
@@ -770,6 +829,9 @@ const VideoSourceConfig = ({
             'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300',
           icon: '✓',
           message: result.message,
+          detailMessage,
+          resultTitles: result.resultTitles,
+          resultCount: result.resultCount,
         };
       case 'no_results':
         return {
@@ -778,6 +840,9 @@ const VideoSourceConfig = ({
             'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300',
           icon: '⚠',
           message: result.message,
+          detailMessage,
+          resultTitles: result.resultTitles,
+          resultCount: result.resultCount,
         };
       case 'invalid':
         return {
@@ -786,6 +851,9 @@ const VideoSourceConfig = ({
             'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300',
           icon: '✗',
           message: result.message,
+          detailMessage,
+          resultTitles: result.resultTitles,
+          resultCount: result.resultCount,
         };
       default:
         return null;
@@ -885,12 +953,51 @@ const VideoSourceConfig = ({
               );
             }
             return (
-              <span
-                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${status.className}`}
-                title={status.message}
-              >
-                {status.icon} {status.text}
-              </span>
+              <div className='relative group'>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${status.className} ${
+                    status.resultTitles && status.resultTitles.length > 0
+                      ? 'cursor-pointer md:cursor-help'
+                      : 'cursor-help'
+                  }`}
+                  onClick={(e) => {
+                    // 移动端点击显示弹窗
+                    if (
+                      status.resultTitles &&
+                      status.resultTitles.length > 0 &&
+                      window.innerWidth < 768
+                    ) {
+                      e.stopPropagation();
+                      setShowValidationDetail(source.key);
+                    }
+                  }}
+                  title={
+                    status.resultTitles && status.resultTitles.length === 0
+                      ? status.message
+                      : undefined
+                  }
+                >
+                  {status.icon} {status.text}
+                  {status.resultCount > 0 && ` (${status.resultCount})`}
+                </span>
+                {/* 桌面端悬停提示 */}
+                {status.resultTitles && status.resultTitles.length > 0 && (
+                  <div className='hidden md:group-hover:block absolute right-0 top-full mt-1 z-50 w-64 p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+                    <div className='text-xs text-gray-700 dark:text-gray-300'>
+                      <div className='font-medium mb-1'>
+                        搜索结果 ({status.resultCount}个):
+                      </div>
+                      <ul className='list-disc list-inside space-y-0.5'>
+                        {status.resultTitles.map((title, idx) => (
+                          <li key={idx} className='truncate' title={title}>
+                            {title}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })()}
         </div>
@@ -960,7 +1067,7 @@ const VideoSourceConfig = ({
         setSelectedSources(new Set());
       }
     },
-    [filteredSources]
+    [filteredSources],
   );
 
   // 单个选择
@@ -978,7 +1085,7 @@ const VideoSourceConfig = ({
 
   // 批量操作
   const handleBatchOperation = async (
-    action: 'batch_enable' | 'batch_disable' | 'batch_delete'
+    action: 'batch_enable' | 'batch_disable' | 'batch_delete',
   ) => {
     if (selectedSources.size === 0) {
       showAlert({
@@ -1017,7 +1124,7 @@ const VideoSourceConfig = ({
       onConfirm: async () => {
         try {
           await withLoading(`batchSource_${action}`, () =>
-            callSourceApi({ action, keys })
+            callSourceApi({ action, keys }),
           );
           showAlert({
             type: 'success',
@@ -1208,7 +1315,7 @@ const VideoSourceConfig = ({
                 onClick={() => {
                   if (
                     confirm(
-                      '确定要清除订阅配置吗？\n\n这将删除所有通过订阅导入的视频源，但会保留手动添加的视频源。'
+                      '确定要清除订阅配置吗？\n\n这将删除所有通过订阅导入的视频源，但会保留手动添加的视频源。',
                     )
                   ) {
                     handleClearSubscription();
@@ -1428,10 +1535,10 @@ const VideoSourceConfig = ({
                       newSourceValidationResult.status === 'valid'
                         ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
                         : newSourceValidationResult.status === 'validating'
-                        ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
-                        : newSourceValidationResult.status === 'no_results'
-                        ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
-                        : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                          ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                          : newSourceValidationResult.status === 'no_results'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                            : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                     }`}
                   >
                     {newSourceValidationResult.status === 'valid' && '✓ '}
@@ -1540,7 +1647,7 @@ const VideoSourceConfig = ({
                 value={editingSource.name}
                 onChange={(e) =>
                   setEditingSource((prev) =>
-                    prev ? { ...prev, name: e.target.value } : null
+                    prev ? { ...prev, name: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -1566,7 +1673,7 @@ const VideoSourceConfig = ({
                 value={editingSource.api}
                 onChange={(e) =>
                   setEditingSource((prev) =>
-                    prev ? { ...prev, api: e.target.value } : null
+                    prev ? { ...prev, api: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -1581,7 +1688,7 @@ const VideoSourceConfig = ({
                 value={editingSource.detail || ''}
                 onChange={(e) =>
                   setEditingSource((prev) =>
-                    prev ? { ...prev, detail: e.target.value } : null
+                    prev ? { ...prev, detail: e.target.value } : null,
                   )
                 }
                 className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
@@ -1601,10 +1708,10 @@ const VideoSourceConfig = ({
                         singleValidationResult.status === 'valid'
                           ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
                           : singleValidationResult.status === 'validating'
-                          ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
-                          : singleValidationResult.status === 'no_results'
-                          ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
-                          : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                            ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300'
+                            : singleValidationResult.status === 'no_results'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300'
+                              : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
                       }`}
                     >
                       {singleValidationResult.status === 'valid' && '✓ '}
@@ -1818,7 +1925,7 @@ const VideoSourceConfig = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* 通用弹窗组件 */}
@@ -1831,6 +1938,78 @@ const VideoSourceConfig = ({
         timer={alertModal.timer}
         showConfirm={alertModal.showConfirm}
       />
+
+      {/* 验证详情弹窗 */}
+      {showValidationDetail &&
+        createPortal(
+          <div
+            className='fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4'
+            onClick={() => setShowValidationDetail(null)}
+          >
+            <div
+              className='bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full relative'
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 关闭按钮 */}
+              <button
+                onClick={() => setShowValidationDetail(null)}
+                className='absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+              >
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                </svg>
+              </button>
+
+              <div className='p-6'>
+                <h3 className='text-lg font-medium text-gray-900 dark:text-gray-100 mb-4'>
+                  搜索结果
+                </h3>
+                {(() => {
+                  const status = getValidationStatus(showValidationDetail);
+                  if (
+                    !status ||
+                    !status.resultTitles ||
+                    status.resultTitles.length === 0
+                  ) {
+                    return (
+                      <p className='text-sm text-gray-600 dark:text-gray-400'>
+                        暂无搜索结果
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className='space-y-3'>
+                      <p className='text-sm text-gray-600 dark:text-gray-400'>
+                        找到 {status.resultCount} 个结果:
+                      </p>
+                      <ul className='space-y-2'>
+                        {status.resultTitles.map((title, idx) => (
+                          <li
+                            key={idx}
+                            className='text-sm text-gray-700 dark:text-gray-300 p-2 bg-gray-50 dark:bg-gray-700 rounded'
+                          >
+                            {title}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
 
       {/* 批量操作确认弹窗 */}
       {confirmModal.isOpen &&
@@ -1907,7 +2086,7 @@ const VideoSourceConfig = ({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

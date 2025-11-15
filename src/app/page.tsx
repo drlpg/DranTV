@@ -86,18 +86,39 @@ function HomeClient() {
         setLoading(true);
 
         // 使用缓存API并行获取所有数据，包括TMDB
-        const [
-          moviesData,
-          tvShowsData,
-          varietyShowsData,
-          bangumiCalendarData,
-          carouselConfigData,
-        ] = await Promise.all([
+        // 优先加载轮播图配置和电影数据，不等待其他数据
+        const [carouselConfigData, moviesData] = await Promise.all([
+          fetch('/api/carousel-config')
+            .then((res) => res.json())
+            .catch(() => ({
+              mode: 'default',
+              autoPlayInterval: 10000,
+              maxItems: 5,
+              customItems: [],
+            })),
           getCachedDoubanCategories({
             kind: 'movie',
             category: '热门',
             type: '全部',
           }),
+        ]);
+
+        // 立即设置轮播图配置
+        setCarouselConfig(carouselConfigData);
+
+        // 立即设置电影数据并显示轮播图
+        if (moviesData.code === 200) {
+          setHotMovies(moviesData.list);
+
+          // 立即显示轮播图（使用 poster 作为后备）
+          setCarouselReady(true);
+        } else if (carouselConfigData.mode === 'custom') {
+          // 自定义模式直接显示
+          setCarouselReady(true);
+        }
+
+        // 异步加载其他数据，不阻塞轮播图
+        Promise.all([
           getCachedDoubanCategories({
             kind: 'tv',
             category: 'tv',
@@ -109,30 +130,18 @@ function HomeClient() {
             type: 'show',
           }),
           GetBangumiCalendarData(),
-          fetch('/api/carousel-config')
-            .then((res) => res.json())
-            .catch(() => ({
-              mode: 'default',
-              autoPlayInterval: 10000,
-              maxItems: 5,
-              customItems: [],
-            })),
-        ]);
-
-        // 设置轮播图配置
-        setCarouselConfig(carouselConfigData);
-
-        // 并行处理电影数据和TMDB横版海报
-        if (moviesData.code === 200) {
-          // 先设置原始数据，避免阻塞
-          setHotMovies(moviesData.list);
-
-          // 如果是默认模式，立即标记轮播图可以显示（使用 poster）
-          if (carouselConfigData.mode === 'default') {
-            setCarouselReady(true);
+        ]).then(([tvShowsData, varietyShowsData, bangumiCalendarData]) => {
+          if (tvShowsData.code === 200) {
+            setHotTvShows(tvShowsData.list);
           }
+          if (varietyShowsData.code === 200) {
+            setHotVarietyShows(varietyShowsData.list);
+          }
+          setBangumiCalendarData(bangumiCalendarData);
+        });
 
-          // 异步获取TMDB横版海报，不阻塞其他数据显示
+        // 异步获取TMDB横版海报，不阻塞轮播图显示
+        if (moviesData.code === 200) {
           const top10Movies = moviesData.list.slice(0, 10);
           fetch('/api/tmdb/backdrop', {
             method: 'POST',
@@ -154,7 +163,7 @@ function HomeClient() {
                     return { ...movie, backdrop: backdrops[index] };
                   }
                   return movie;
-                }
+                },
               );
               setHotMovies(updatedMovies);
             })
@@ -162,16 +171,6 @@ function HomeClient() {
               // TMDB失败时保持原始数据
             });
         }
-
-        if (tvShowsData.code === 200) {
-          setHotTvShows(tvShowsData.list);
-        }
-
-        if (varietyShowsData.code === 200) {
-          setHotVarietyShows(varietyShowsData.list);
-        }
-
-        setBangumiCalendarData(bangumiCalendarData);
 
         // 如果是自定义模式，现在可以显示轮播图了
         if (carouselConfigData.mode === 'custom') {
@@ -235,7 +234,7 @@ function HomeClient() {
       'favoritesUpdated',
       (newFavorites: Record<string, any>) => {
         updateFavoriteItems(newFavorites);
-      }
+      },
     );
 
     return unsubscribe;
@@ -358,7 +357,7 @@ function HomeClient() {
                               image: movie.backdrop || movie.poster,
                               rate: movie.rate,
                               link: `/play?title=${encodeURIComponent(
-                                movie.title.trim()
+                                movie.title.trim(),
                               )}${
                                 movie.year ? `&year=${movie.year}` : ''
                               }&stype=movie`,
@@ -508,7 +507,7 @@ function HomeClient() {
                         // 找到当前星期对应的番剧数据
                         const todayAnimes =
                           bangumiCalendarData.find(
-                            (item) => item.weekday.en === currentWeekday
+                            (item) => item.weekday.en === currentWeekday,
                           )?.items || [];
 
                         return todayAnimes.map((anime, index) => (
