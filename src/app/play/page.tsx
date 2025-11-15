@@ -1014,6 +1014,14 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
+        console.log('搜索API返回结果:', {
+          totalResults: data.results.length,
+          searchQuery: query,
+          videoTitle: videoTitleRef.current,
+          videoYear: videoYearRef.current,
+          searchType: searchType,
+        });
+
         // 处理搜索结果，根据规则过滤
         const results = data.results.filter(
           (result: SearchResult) =>
@@ -1027,6 +1035,18 @@ function PlayPageClient() {
                 (searchType === 'movie' && result.episodes.length === 1)
               : true),
         );
+
+        console.log('过滤后的结果:', {
+          filteredCount: results.length,
+          results: results.map((r) => ({
+            title: r.title,
+            source: r.source,
+            id: r.id,
+            year: r.year,
+            episodes: r.episodes?.length,
+          })),
+        });
+
         setAvailableSources(results);
         return results;
       } catch (err) {
@@ -1104,7 +1124,18 @@ function PlayPageClient() {
         }
       }
 
+      console.log('初始化播放页面，参数:', {
+        currentSource,
+        currentId,
+        videoTitle,
+        searchTitle,
+        videoYear,
+        searchType,
+        needPrefer,
+      });
+
       if (!currentSource && !currentId && !videoTitle && !searchTitle) {
+        console.error('缺少必要参数');
         setError('缺少必要参数');
         setLoading(false);
         return;
@@ -1129,10 +1160,27 @@ function PlayPageClient() {
         sourcesInfo = await fetchSourceDetail(currentSource, currentId);
       }
       if (sourcesInfo.length === 0) {
+        console.error('未找到匹配结果，搜索参数:', {
+          searchTitle: searchTitle || videoTitle,
+          currentSource,
+          currentId,
+          videoTitle: videoTitleRef.current,
+          videoYear: videoYearRef.current,
+        });
         setError('未找到匹配结果');
         setLoading(false);
         return;
       }
+
+      console.log('找到播放源:', {
+        count: sourcesInfo.length,
+        sources: sourcesInfo.map((s) => ({
+          source: s.source,
+          id: s.id,
+          title: s.title,
+          episodes: s.episodes?.length,
+        })),
+      });
 
       let detailData: SearchResult = sourcesInfo[0];
       // 指定源和id且无需优选
