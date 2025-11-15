@@ -132,30 +132,14 @@ export async function GET(request: Request) {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const urlObj = new URL(decodedUrl);
-
-      // 构建更完整的浏览器请求头
-      const headers: Record<string, string> = {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        Accept: '*/*',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cross-site',
-        Connection: 'keep-alive',
-      };
-
-      // 设置 Referer 为目标域名，模拟从该站点访问
-      // 这对于防盗链检查很重要
-      headers['Referer'] = urlObj.origin + '/';
-
+      // 使用极简请求头，模拟 IPTV 播放器而非浏览器
       response = await fetch(decodedUrl, {
         cache: 'no-cache',
         redirect: 'follow',
         signal: controller.signal,
-        headers,
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+        },
         // @ts-expect-error - undici specific options
         connectTimeout: 30000,
         bodyTimeout: 60000,
