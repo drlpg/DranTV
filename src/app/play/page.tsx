@@ -1005,12 +1005,28 @@ function PlayPageClient() {
     };
     const fetchSourcesData = async (query: string): Promise<SearchResult[]> => {
       // 根据搜索词获取全部源信息
+      console.log('🔍 开始搜索:', {
+        query,
+        videoTitle: videoTitleRef.current,
+        videoYear: videoYearRef.current,
+        searchType,
+      });
+
       try {
         const response = await fetch(
           `/api/search?q=${encodeURIComponent(query.trim())}`,
         );
+
+        console.log('📡 搜索API响应:', {
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+        });
+
         if (!response.ok) {
-          throw new Error('搜索失败');
+          throw new Error(
+            `搜索失败: ${response.status} ${response.statusText}`,
+          );
         }
         const data = await response.json();
 
@@ -1077,6 +1093,12 @@ function PlayPageClient() {
         setAvailableSources(results);
         return results;
       } catch (err) {
+        console.error('❌ 搜索失败:', {
+          error: err,
+          message: err instanceof Error ? err.message : '搜索失败',
+          query,
+          videoTitle: videoTitleRef.current,
+        });
         setSourceSearchError(err instanceof Error ? err.message : '搜索失败');
         setAvailableSources([]);
         return [];
