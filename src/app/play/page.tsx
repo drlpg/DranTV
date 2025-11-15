@@ -1276,6 +1276,13 @@ function PlayPageClient() {
       }
 
       // 如果没有指定源或获取失败，则搜索
+      console.log('检查是否需要搜索:', {
+        sourcesInfoLength: sourcesInfo.length,
+        searchTitle,
+        videoTitle,
+        shouldSearch: sourcesInfo.length === 0 && (searchTitle || videoTitle),
+      });
+
       if (sourcesInfo.length === 0 && (searchTitle || videoTitle)) {
         console.log('尝试搜索:', searchTitle || videoTitle);
         try {
@@ -1284,6 +1291,8 @@ function PlayPageClient() {
         } catch (error) {
           console.error('搜索失败:', error);
         }
+      } else if (sourcesInfo.length === 0) {
+        console.error('无法搜索：没有搜索标题');
       }
 
       // 如果指定了源和ID但搜索结果中没有，再次尝试获取详情
