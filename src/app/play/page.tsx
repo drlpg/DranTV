@@ -1020,21 +1020,48 @@ function PlayPageClient() {
           videoTitle: videoTitleRef.current,
           videoYear: videoYearRef.current,
           searchType: searchType,
+          sampleResults: data.results.slice(0, 3).map((r: SearchResult) => ({
+            title: r.title,
+            normalizedTitle: r.title.replaceAll(' ', '').toLowerCase(),
+            source: r.source,
+            year: r.year,
+            episodes: r.episodes?.length,
+          })),
         });
 
         // 处理搜索结果，根据规则过滤
-        const results = data.results.filter(
-          (result: SearchResult) =>
+        const results = data.results.filter((result: SearchResult) => {
+          const titleMatch =
             result.title.replaceAll(' ', '').toLowerCase() ===
-              videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
-            (videoYearRef.current
-              ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
-              : true) &&
-            (searchType
-              ? (searchType === 'tv' && result.episodes.length > 1) ||
-                (searchType === 'movie' && result.episodes.length === 1)
-              : true),
-        );
+            videoTitleRef.current.replaceAll(' ', '').toLowerCase();
+          const yearMatch = videoYearRef.current
+            ? result.year.toLowerCase() === videoYearRef.current.toLowerCase()
+            : true;
+          const typeMatch = searchType
+            ? (searchType === 'tv' && result.episodes.length > 1) ||
+              (searchType === 'movie' && result.episodes.length === 1)
+            : true;
+
+          // 调试每个不匹配的结果
+          if (!titleMatch || !yearMatch || !typeMatch) {
+            console.log('❌ 过滤掉:', {
+              title: result.title,
+              normalizedTitle: result.title.replaceAll(' ', '').toLowerCase(),
+              expectedTitle: videoTitleRef.current
+                .replaceAll(' ', '')
+                .toLowerCase(),
+              titleMatch,
+              year: result.year,
+              expectedYear: videoYearRef.current,
+              yearMatch,
+              episodesCount: result.episodes?.length,
+              searchType,
+              typeMatch,
+            });
+          }
+
+          return titleMatch && yearMatch && typeMatch;
+        });
 
         console.log('过滤后的结果:', {
           filteredCount: results.length,
