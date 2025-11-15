@@ -2053,72 +2053,20 @@ function PlayPageClient() {
               console.log('[HLS] Manifest parsed successfully');
             });
 
-            let hasTriedDirectUrl = false;
-
             hls.on(Hls.Events.ERROR, function (event: any, data: any) {
-              // 记录所有错误
-              console.log('[HLS] Error event:', {
+              const errorInfo = {
                 type: data.type,
                 details: data.details,
                 fatal: data.fatal,
-                response: data.response,
-              });
+                isShortDrama,
+                url: url.includes('/api/proxy/video') ? '代理地址' : '原始地址',
+              };
+              console.error('HLS播放错误:', errorInfo);
 
-              // 只处理致命错误
-              if (data?.fatal) {
-                const errorInfo = {
-                  type: data.type,
-                  details: data.details,
-                  fatal: data.fatal,
-                  isShortDrama,
-                  url: url.includes('/api/proxy/m3u8')
-                    ? '代理地址'
-                    : '原始地址',
-                  response: data.response,
-                };
-                console.error('HLS致命错误:', errorInfo);
-
+              if (data.fatal) {
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
-                    // 如果是代理 URL 加载失败，且是 manifestLoadError，尝试直接访问原始 URL
-                    if (
-                      !hasTriedDirectUrl &&
-                      url.includes('/api/proxy/m3u8') &&
-                      data.details === 'manifestLoadError'
-                    ) {
-                      hasTriedDirectUrl = true;
-                      console.log('[HLS] 代理加载失败，尝试直接访问原始 URL');
-
-                      // 从代理 URL 中提取原始 URL
-                      try {
-                        const proxyUrl = new URL(url);
-                        const originalUrl = proxyUrl.searchParams.get('url');
-                        if (originalUrl) {
-                          const decodedUrl = decodeURIComponent(originalUrl);
-                          console.log(
-                            '[HLS] 切换到原始 URL:',
-                            decodedUrl.substring(0, 100),
-                          );
-
-                          // 销毁当前 HLS 实例
-                          hls.destroy();
-
-                          // 创建新的 HLS 实例加载原始 URL
-                          const newHls = new Hls(hlsConfig);
-                          newHls.loadSource(decodedUrl);
-                          newHls.attachMedia(video);
-                          video.hls = newHls;
-
-                          artPlayerRef.current?.notice?.show?.(
-                            '代理失败，尝试直接播放',
-                          );
-                          return;
-                        }
-                      } catch (error) {
-                        console.error('[HLS] 提取原始 URL 失败:', error);
-                      }
-                    }
-
+                    console.log('网络错误，尝试恢复...', data.details);
                     if (isShortDrama && data.details === 'manifestLoadError') {
                       // 短剧清单加载失败，尝试重新加载
                       setTimeout(() => {
@@ -2131,9 +2079,11 @@ function PlayPageClient() {
                     }
                     break;
                   case Hls.ErrorTypes.MEDIA_ERROR:
+                    console.log('媒体错误，尝试恢复...', data.details);
                     hls.recoverMediaError();
                     break;
                   default:
+                    console.log('无法恢复的错误:', data.type, data.details);
                     if (isShortDrama) {
                       // 短剧播放失败时给出更明确的提示
                       artPlayerRef.current?.notice?.show?.(
@@ -2143,6 +2093,9 @@ function PlayPageClient() {
                     hls.destroy();
                     break;
                 }
+              } else {
+                // 非致命错误，记录但继续播放
+                console.warn('HLS非致命错误:', errorInfo);
               }
             });
           },
