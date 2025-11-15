@@ -1257,10 +1257,24 @@ function PlayPageClient() {
           : '🔍 正在搜索播放源...',
       );
 
-      let sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+      let sourcesInfo: SearchResult[] = [];
 
-      // 如果指定了源和ID，需要获取该源的详细信息
+      // 如果指定了源和ID，直接获取详情
       if (currentSource && currentId) {
+        console.log('直接获取指定源的详细信息:', currentSource, currentId);
+        const detailInfo = await fetchSourceDetail(currentSource, currentId);
+        if (detailInfo.length > 0) {
+          sourcesInfo = detailInfo;
+        }
+      }
+
+      // 如果没有指定源或获取失败，则搜索
+      if (sourcesInfo.length === 0 && (searchTitle || videoTitle)) {
+        sourcesInfo = await fetchSourcesData(searchTitle || videoTitle);
+      }
+
+      // 如果指定了源和ID但搜索结果中没有，再次尝试获取详情
+      if (currentSource && currentId && sourcesInfo.length > 0) {
         const existingSource = sourcesInfo.find(
           (source) =>
             source.source === currentSource && source.id === currentId,
