@@ -1019,6 +1019,8 @@ function PlayPageClient() {
   // 进入页面时直接获取全部源信息
   // 使用空依赖项确保在组件挂载时执行一次
   useEffect(() => {
+    console.log('[useEffect] 执行开始 - 第一行');
+
     const fetchSourceDetail = async (
       source: string,
       id: string,
@@ -1176,7 +1178,8 @@ function PlayPageClient() {
     };
 
     const initAll = async () => {
-      console.log('[initAll] 开始初始化', {
+      console.log('[initAll] 开始初始化 - 这条日志应该总是显示');
+      console.log('[initAll] 参数:', {
         shortdramaId,
         currentSource,
         currentId,
