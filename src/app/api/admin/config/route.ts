@@ -7,7 +7,6 @@ import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
@@ -16,7 +15,7 @@ export async function GET(request: NextRequest) {
       {
         error: '不支持本地存储进行管理员配置',
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -29,11 +28,11 @@ export async function GET(request: NextRequest) {
     console.log('[Admin Config API] 配置获取成功');
     console.log(
       '[Admin Config API] LiveConfig 数量:',
-      config.LiveConfig?.length || 0
+      config.LiveConfig?.length || 0,
     );
     console.log(
       '[Admin Config API] SourceConfig 数量:',
-      config.SourceConfig?.length || 0
+      config.SourceConfig?.length || 0,
     );
 
     // 打印前3个直播源的信息用于调试
@@ -44,7 +43,7 @@ export async function GET(request: NextRequest) {
           key: l.key,
           name: l.name,
           disabled: l.disabled,
-        }))
+        })),
       );
     }
 
@@ -103,7 +102,7 @@ export async function GET(request: NextRequest) {
         '返回公开配置给',
         userRole,
         '，包含主题配置:',
-        !!publicConfig.ThemeConfig
+        !!publicConfig.ThemeConfig,
       );
       return NextResponse.json(result, {
         headers: {
@@ -118,7 +117,7 @@ export async function GET(request: NextRequest) {
         error: '获取配置失败',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

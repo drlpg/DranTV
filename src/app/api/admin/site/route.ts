@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       {
         error: '不支持本地存储进行管理员配置',
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (username !== process.env.LOGIN_USERNAME) {
       // 管理员
       const user = adminConfig.UserConfig.Users.find(
-        (u) => u.username === username
+        (u) => u.username === username,
       );
       if (!user || user.role !== 'admin' || user.banned) {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         headers: {
           'Cache-Control': 'no-store', // 不缓存结果
         },
-      }
+      },
     );
   } catch (error) {
     console.error('更新站点配置失败:', error);
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         error: '更新站点配置失败',
         details: (error as Error).message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

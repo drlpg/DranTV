@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       console.warn('[Precheck] 服务器无法访问URL，让客户端尝试:', decodedUrl);
       return NextResponse.json(
         { success: true, type: 'm3u8' },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       console.warn('[Precheck] 服务器返回错误，让客户端尝试:', response.status);
       return NextResponse.json(
         { success: true, type: 'm3u8' },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
