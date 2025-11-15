@@ -11,6 +11,23 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: '1.0.59',
+    date: '2025-11-16',
+    added: [
+      // 无新增内容
+    ],
+    changed: [
+      '升级核心框架至最新版本',
+      '迁移 middleware 到 proxy 规范',
+      '优化 CSS 兼容性，支持 Turbopack 构建',
+      '清理代码，提升整体质量',
+    ],
+    fixed: [
+      '修复 Turbopack 构建时的 CSS 解析错误',
+      '修复 Next.js 16 兼容性问题',
+    ],
+  },
+  {
     version: '1.0.58',
     date: '2025-11-16',
     added: [
