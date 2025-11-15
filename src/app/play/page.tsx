@@ -1865,6 +1865,17 @@ function PlayPageClient() {
   };
 
   useEffect(() => {
+    console.log('[Player Init Check]', {
+      hasDeps: !!dynamicDeps,
+      hasArtplayer: !!dynamicDeps?.Artplayer,
+      hasHls: !!dynamicDeps?.Hls,
+      hasDanmuku: !!dynamicDeps?.artplayerPluginDanmuku,
+      videoUrl,
+      loading,
+      currentEpisodeIndex,
+      hasArtRef: !!artRef.current,
+    });
+
     if (
       !dynamicDeps?.Artplayer ||
       !dynamicDeps?.Hls ||
@@ -1877,6 +1888,7 @@ function PlayPageClient() {
       return;
     }
 
+    console.log('[Player Init] Starting player initialization');
     const { Artplayer, Hls, artplayerPluginDanmuku } = dynamicDeps;
 
     // 确保选集索引有效
