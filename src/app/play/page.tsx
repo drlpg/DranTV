@@ -1017,6 +1017,7 @@ function PlayPageClient() {
   }, [detail, currentEpisodeIndex]);
 
   // 进入页面时直接获取全部源信息
+  // 使用空依赖项确保在组件挂载时执行一次
   useEffect(() => {
     const fetchSourceDetail = async (
       source: string,
@@ -1456,7 +1457,8 @@ function PlayPageClient() {
 
     console.log('[useEffect] 准备调用 initAll');
     initAll();
-  }, [shortdramaId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 播放记录处理
   useEffect(() => {
