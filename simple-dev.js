@@ -10,11 +10,11 @@ console.log('🔌 启动 WebSocket 服务器...');
 const { createStandaloneWebSocketServer } = require('./standalone-websocket');
 const wss = createStandaloneWebSocketServer(wsPort);
 
-// 使用 spawn 启动 Next.js dev，强制使用 webpack
-console.log('🚀 启动 Next.js 开发服务器（使用 webpack）...');
+// 使用 spawn 启动 Next.js dev
+console.log('🚀 启动 Next.js 开发服务器...');
 const nextProcess = spawn(
   'npx',
-  ['next', 'dev', '--webpack', '-H', hostname, '-p', port.toString()],
+  ['next', 'dev', '-H', hostname, '-p', port.toString()],
   {
     stdio: 'inherit',
     shell: true,
