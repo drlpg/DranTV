@@ -18,26 +18,32 @@ export async function GET(request: Request) {
     const decodedUrl = decodeURIComponent(url);
     console.log('[Segment Proxy] Request:', decodedUrl.substring(0, 100));
 
-    // 透传 Range 请求头
+    // 构建更完整的浏览器请求头
     const fetchHeaders: Record<string, string> = {
       'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       Accept: '*/*',
+      'Accept-Encoding': 'gzip, deflate, br',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+      'Sec-Fetch-Dest': 'empty',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'cross-site',
       Connection: 'keep-alive',
     };
 
+    // 透传 Range 请求头
     const range = request.headers.get('Range');
     if (range) {
       fetchHeaders['Range'] = range;
     }
 
-    try {
-      const urlObj = new URL(decodedUrl);
-      fetchHeaders['Referer'] = urlObj.origin + '/';
-      fetchHeaders['Origin'] = urlObj.origin;
-    } catch {
-      // ignore
+    // 只为同源请求添加 Origin 和 Referer
+    const requestOrigin = request.headers.get('origin');
+    if (requestOrigin) {
+      fetchHeaders['Origin'] = requestOrigin;
+      fetchHeaders['Referer'] = requestOrigin + '/';
     }
 
     // 添加30秒超时

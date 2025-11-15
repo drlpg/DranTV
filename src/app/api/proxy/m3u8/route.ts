@@ -133,19 +133,34 @@ export async function GET(request: Request) {
 
     try {
       const urlObj = new URL(decodedUrl);
+
+      // 构建更完整的浏览器请求头
+      const headers: Record<string, string> = {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        Accept: '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'cross-site',
+        Connection: 'keep-alive',
+      };
+
+      // 只为同源请求添加 Origin 和 Referer
+      const requestOrigin = request.headers.get('origin');
+      if (requestOrigin) {
+        headers['Origin'] = requestOrigin;
+        headers['Referer'] = requestOrigin + '/';
+      }
+
       response = await fetch(decodedUrl, {
         cache: 'no-cache',
         redirect: 'follow',
         signal: controller.signal,
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-          Accept: '*/*',
-          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-          Referer: urlObj.origin + '/',
-          Origin: urlObj.origin,
-          Connection: 'keep-alive',
-        },
+        headers,
         // @ts-expect-error - undici specific options
         connectTimeout: 30000,
         bodyTimeout: 60000,
