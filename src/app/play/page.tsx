@@ -2068,6 +2068,8 @@ function PlayPageClient() {
               console.log('[HLS] Manifest parsed successfully');
             });
 
+            let hasTriedDirectUrl = false;
+
             hls.on(Hls.Events.ERROR, function (event: any, data: any) {
               // 记录所有错误
               console.log('[HLS] Error event:', {
@@ -2093,6 +2095,46 @@ function PlayPageClient() {
 
                 switch (data.type) {
                   case Hls.ErrorTypes.NETWORK_ERROR:
+                    // 如果是代理 URL 加载失败，且是 manifestLoadError，尝试直接访问原始 URL
+                    if (
+                      !hasTriedDirectUrl &&
+                      url.includes('/api/proxy/m3u8') &&
+                      data.details === 'manifestLoadError' &&
+                      data.response?.code === 403
+                    ) {
+                      hasTriedDirectUrl = true;
+                      console.log('[HLS] 代理失败(403)，尝试直接访问原始 URL');
+
+                      // 从代理 URL 中提取原始 URL
+                      try {
+                        const proxyUrl = new URL(url);
+                        const originalUrl = proxyUrl.searchParams.get('url');
+                        if (originalUrl) {
+                          const decodedUrl = decodeURIComponent(originalUrl);
+                          console.log(
+                            '[HLS] 切换到原始 URL:',
+                            decodedUrl.substring(0, 100),
+                          );
+
+                          // 销毁当前 HLS 实例
+                          hls.destroy();
+
+                          // 创建新的 HLS 实例加载原始 URL
+                          const newHls = new Hls(hlsConfig);
+                          newHls.loadSource(decodedUrl);
+                          newHls.attachMedia(video);
+                          video.hls = newHls;
+
+                          artPlayerRef.current?.notice?.show?.(
+                            '代理失败，尝试直接播放',
+                          );
+                          return;
+                        }
+                      } catch (error) {
+                        console.error('[HLS] 提取原始 URL 失败:', error);
+                      }
+                    }
+
                     if (isShortDrama && data.details === 'manifestLoadError') {
                       // 短剧清单加载失败，尝试重新加载
                       setTimeout(() => {
