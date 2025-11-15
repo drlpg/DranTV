@@ -2099,11 +2099,10 @@ function PlayPageClient() {
                     if (
                       !hasTriedDirectUrl &&
                       url.includes('/api/proxy/m3u8') &&
-                      data.details === 'manifestLoadError' &&
-                      data.response?.code === 403
+                      data.details === 'manifestLoadError'
                     ) {
                       hasTriedDirectUrl = true;
-                      console.log('[HLS] 代理失败(403)，尝试直接访问原始 URL');
+                      console.log('[HLS] 代理加载失败，尝试直接访问原始 URL');
 
                       // 从代理 URL 中提取原始 URL
                       try {
